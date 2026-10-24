@@ -71,6 +71,10 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
   touched again; `config/wirecat/` goes there, because community's installer owns it. An entry ending in `/` is a
   folder. The most specific entry wins: an exact path beats a folder, a deeper folder beats a shallower one, and a
   seed wins a tie. Only listed files are copied. A listed file missing from the package stops `new`.
+- `template.json` and `kit/` are never copied, whatever the lists say. Nothing else is filtered: a listed folder
+  must hold only files a new CLI keeps. Put the template's own CI (the kit's tests, `new` for each category) in a
+  workflow file the lists leave out, and keep `kit/` out of shared configs, or every new CLI inherits a broken job.
+- `docs/dev/DESIGN.md` is always a seed: it holds the CLI's interview answers.
 - `package.json` is always a seed. `new` rewrites it: `name` becomes `--package`, `version` becomes `0.0.0`, and
   `repository`, `homepage` and `bugs` point at `<owner>/<name>`. It also drops every `bin`, `files` entry and script
   that points into `kit/`, and the `&& pnpm kit:…` parts of other scripts. `src/version.ts` gets `VERSION = "0.0.0"`.

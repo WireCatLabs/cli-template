@@ -1,4 +1,5 @@
-import { writeFileSync } from "node:fs"
+import { existsSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { runNew } from "../src/new.js"
@@ -45,13 +46,19 @@ const setup = async () => {
   writeFileSync(join(dir, "README.md"), "# cal\n\nOur own words.\n")
   commitAll(dir)
   const fetched: string[] = []
+  const disposed: string[] = []
   const fetchVersion = async (_name: string, version: string) => {
     fetched.push(version)
-    return { source: sources.get(version) as TemplateSource, dispose: async () => {} }
+    return {
+      source: sources.get(version) as TemplateSource,
+      dispose: async () => {
+        disposed.push(version)
+      },
+    }
   }
   const upgrade = (options: UpgradeOptions, terminal = io()) =>
     runUpgrade(dir, sources.get("0.2.0") as TemplateSource, fetchVersion, options, terminal)
-  return { dir, upgrade, fetched }
+  return { dir, upgrade, fetched, disposed }
 }
 
 const manifest = (dir: string) => JSON.parse(read(dir, "template.json"))
@@ -77,7 +84,7 @@ describe("upgrade", () => {
   })
 
   it("--apply merges each change, keeps the CLI's edits, marks the conflict and leaves seeds alone", async () => {
-    const { dir, upgrade, fetched } = await setup()
+    const { dir, upgrade, fetched, disposed } = await setup()
 
     const out = await upgrade({ dryRun: false, mode: "apply" })
 
@@ -91,6 +98,8 @@ describe("upgrade", () => {
     expect(read(dir, "docs/new-page.md")).toBe("# cal pages\n")
     expect(read(dir, "README.md")).toBe("# cal\n\nOur own words.\n")
     expect(fetched).toEqual(["0.1.0"])
+    expect(disposed).toEqual(["0.1.0"])
+    expect(existsSync(tmpdir())).toBe(true)
     expect(out).toContain("stays on 0.1.0 until they are resolved")
     expect(manifest(dir)).toMatchObject({
       version: "0.1.0",

@@ -2,7 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import { fixture, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
+import { fixture, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
 
 afterAll(removeTempDirs)
 
@@ -43,12 +43,27 @@ describe("the packed bin", () => {
   it("runs new without a terminal from flags alone", () => {
     const cwd = tempDir("packed-new")
 
-    const result = cli(cwd, ["new", "demo", ...flags(NOTES_FLAGS)])
+    const result = cli(cwd, [
+      "new",
+      "demo",
+      ...flags({
+        command: "demo",
+        package: "@example/demo-cli",
+        owner: "example",
+        category: "notes",
+        "content-lang": "en",
+        "sign-in": "none",
+        api: "official-docs",
+        filters: "time",
+        "never-store": "tokens",
+        untrusted: "none",
+      }),
+    ])
 
     expect(result.stderr).toBe("")
     expect(result.status).toBe(0)
     expect(read(cwd, "demo/.gitignore")).toBe("node_modules\ndist\n")
-    expect(existsSync(join(cwd, "demo/src/bin/cal.ts"))).toBe(true)
+    expect(existsSync(join(cwd, "demo/src/bin/demo.ts"))).toBe(true)
     expect(existsSync(join(cwd, "demo/kit"))).toBe(false)
   })
 

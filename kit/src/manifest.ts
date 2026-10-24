@@ -29,8 +29,11 @@ export const DEFAULT_PLACEHOLDERS: Placeholders = {
   repository: "WireCatLabs/app-cli",
 }
 
-// package.json belongs to the CLI from the first copy: its name, bin and dependencies are the CLI's own.
-const ALWAYS_SEEDS = ["package.json"]
+// package.json and the interview's answers belong to the CLI from the first copy.
+const ALWAYS_SEEDS = ["package.json", "docs/dev/DESIGN.md"]
+
+// The copy tool and the template's own manifest are never part of a CLI, whatever template.json lists.
+const NEVER_COPIED = [MANIFEST, "kit/"]
 
 export const sha256 = (content: Buffer | string): string => createHash("sha256").update(content).digest("hex")
 
@@ -125,6 +128,7 @@ const specificity = (entry: string): number => (entry.endsWith("/") ? entry.leng
 export type Kind = "file" | "seed"
 
 export const classify = (path: string, files: string[], seeds: string[]): Kind | undefined => {
+  if (NEVER_COPIED.some((entry) => matches(entry, path))) return undefined
   if (ALWAYS_SEEDS.includes(path)) return "seed"
   const best = (entries: string[]) =>
     entries.reduce((top, entry) => (matches(entry, path) ? Math.max(top, specificity(entry)) : top), -1)

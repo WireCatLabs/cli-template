@@ -36,7 +36,7 @@ describe("new", () => {
     expect(existsSync(join(dir, ".git"))).toBe(true)
     expect(statSync(join(dir, "bin/release")).mode & 0o111).not.toBe(0)
     for (const file of walk(dir).filter((path) => !path.endsWith("template.json"))) {
-      expect(read(file, ""), file).not.toMatch(/(?<![A-Za-z0-9_])(app|APP)(?![A-Za-z0-9])/)
+      expect(read(file, ""), file).not.toMatch(/(?<![A-Za-z0-9_])(app|APP)(?![A-Za-z0-9])|kit\//)
     }
     expect(read(dir, "README.md")).toBe(
       "# cal\n\nInstall @example/cal-cli from example/cal-cli. An application for happy apps.\n",
