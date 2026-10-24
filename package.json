@@ -1,0 +1,70 @@
+{
+  "name": "@wirecat/cli-template",
+  "version": "0.1.0",
+  "description": "Start a new WireCat CLI: a working skeleton on cli-base and cli-core, copied by new and kept current by upgrade",
+  "license": "Apache-2.0",
+  "author": "Viacheslav Ptsarev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WireCatLabs/cli-template.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": "^22.16.0 || >=24"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "scripts": {
+    "build": "tsc --build --force",
+    "typecheck": "tsc --build --force --emitDeclarationOnly && tsc -p tsconfig.test.json && tsc -p tsconfig.scripts.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:matrix": "vitest run >/dev/null && pnpm build >/dev/null && pnpm test:matrix:check",
+    "test:matrix:check": "cli-dev test-matrix --program scripts/command-program.ts --untested scripts/test-matrix-untested.ts --name app --check && git diff --exit-code -- docs/dev/test-matrix.md",
+    "generate": "pnpm build && node --experimental-strip-types scripts/commands.ts",
+    "generate:check": "pnpm build && node --experimental-strip-types scripts/commands.ts --check",
+    "smoke": "node --experimental-strip-types scripts/smoke.ts",
+    "smoke:bun": "bun scripts/smoke.ts",
+    "package:check": "pnpm smoke",
+    "docs:check": "cli-dev docs-check --pages && cspell --no-progress --no-summary README.md 'docs/*.md' && rumdl check --config config/wirecat/rumdl.toml README.md CLAUDE.md AGENTS.md docs/*.md docs/dev/*.md && pnpm docs:lint",
+    "docs:lint": "markdownlint-cli2",
+    "contracts:check": "cli-contract contracts/plan.json",
+    "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json",
+    "version:check": "cli-dev version",
+    "version:sync": "cli-dev version --sync",
+    "standards:check": "node config/wirecat/check.mjs",
+    "lint:commands": "pnpm build && cli-dev lint --cli dist/bin/app.js",
+    "audit:commands": "pnpm build && cli-dev audit --cli dist/bin/app.js --for app --lint app=lint",
+    "ci:quick": "pnpm typecheck && pnpm build && pnpm lint:commands",
+    "release:check": "pnpm standards:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check",
+    "prepare": "lefthook install || true",
+    "prepack": "pnpm build",
+    "docs:spell": "cspell lint --config cspell.json --no-progress README.md"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.0",
+    "@wirecat/cli-base": "0.51.1",
+    "@wirecat/cli-core": "0.412.0",
+    "commander": "15.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@cspell/dict-en-gb": "5.0.34",
+    "@cspell/dict-es-es": "3.0.9",
+    "@cspell/dict-ru_ru": "2.3.3",
+    "@modelcontextprotocol/client": "2.3.1",
+    "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.0.5",
+    "@wirecat/cli-testing": "0.5.3",
+    "cspell": "10.3.6",
+    "lefthook": "2.1.16",
+    "markdownlint-cli2": "0.23.3",
+    "rumdl": "0.3.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
