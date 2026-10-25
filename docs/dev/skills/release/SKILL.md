@@ -26,4 +26,4 @@ and runs `bin/release`.
 7. **The owner** merges it and runs `bin/release` on a clean `main`. `bin/release --local` publishes from this
    computer when GitHub Actions cannot, with `NPM_TOKEN`, the npm token in the keyring, or the owner's own npm login.
    The keyring is read only when `NPM_KEYRING_ACCOUNT` names the account the token is stored under (service `npm`);
-   there is no default account.
+   there is no default account. When that lookup fails, `bin/release` stops; it does not fall back to the npm login.
