@@ -5,14 +5,14 @@ description: Use clidev, a WireCat CLI started from cli-template, from an agent 
 
 # clidev
 
-Every account command starts with the owner's profile: `clidev personal doctor`. Never pick a profile yourself; if none
+Every account command starts with the owner's profile: `clidev personal config show`. Never pick a profile yourself; if none
 is given, run a command without one and read the profiles the error lists.
 
 Find your way with the tool itself, not this file:
 
 - `clidev commands --json` is the full command tree; `clidev commands config --json` one group.
 - `clidev help config set` is one command's help, with what it returns.
-- `clidev personal doctor --json` says what is set up on this computer.
+- `clidev doctor --json` says what is set up on this computer.
 
 ## Rules
 

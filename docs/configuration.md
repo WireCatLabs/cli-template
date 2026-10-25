@@ -1,6 +1,6 @@
 # Settings
 
-Settings live in one file, `config.json`, in the folder `clidev personal doctor` shows. Each profile has its own part,
+Settings live in one file, `config.json`, in the folder `clidev doctor` shows. Each profile has its own part,
 and `defaults` apply to every profile. This page lists how to see and change them.
 
 ```sh

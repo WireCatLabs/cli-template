@@ -5,7 +5,7 @@
 Every command, option and exit code, generated from the program itself. For the same list as JSON, run
 `clidev commands --json`.
 
-**The first word is the profile**, a name you choose: `clidev personal doctor`. `CLIDEV_PROFILE`
+**The first word is the profile**, a name you choose: `clidev personal config show`. `CLIDEV_PROFILE`
 does the same for a whole shell session. No profile is assumed: a command that uses an account stops without one and
 lists the profiles on this computer.
 
@@ -62,7 +62,7 @@ clidev doctor
 
 **Returns:** check this installation: version, paths, config, profiles; no keyring or network
 
-**Example:** `clidev personal doctor`, `clidev personal doctor --json`
+**Example:** `clidev doctor`, `clidev doctor --json`
 
 ## `clidev skill`
 
@@ -224,7 +224,7 @@ clidev runs list [query] [options]
 | `--limit <n>` | how many to show. Default: `20`. |
 | `--page <n>` | which page, starting at 1. Default: `1`. |
 
-**Returns:** run — run_id, command, started_at, status, cli_version, profile, completed_at, requests, and 15 more; every field: clidev commands info runs list
+**Returns:** run — run_id, command, started_at, status, cli_version, profile, completed_at, requests, and 20 more; every field: clidev commands info runs list
 
 **Example:** `clidev personal runs list --limit 10`
 
@@ -244,7 +244,7 @@ clidev runs show <run-id> [options]
 |---|---|
 | `--problems` | only failed responses, warnings and crashes. |
 
-**Returns:** run details — run_id, command, started_at, status, cli_version, directory, event_count, events, and 14 more; every field: clidev commands info runs show
+**Returns:** run details — run_id, command, started_at, status, cli_version, directory, event_count, events, and 19 more; every field: clidev commands info runs show
 
 **Example:** `clidev personal runs show run-101`
 
