@@ -1,10 +1,6 @@
 {
   "version": "0.2",
-  "import": [
-    "./config/wirecat/cspell.json",
-    "@cspell/dict-en-gb/cspell-ext.json",
-    "@cspell/dict-ru_ru/cspell-ext.json"
-  ],
-  "ignorePaths": ["docs/dev/**", "CHANGELOG.md"],
-  "words": ["clidev", "cyrillic", "latin", "wirecat"]
+  "import": ["./config/wirecat/cspell.json"],
+  "ignorePaths": ["docs/commands.md", "docs/dev/**", "CHANGELOG.md"],
+  "words": ["clidev"]
 }

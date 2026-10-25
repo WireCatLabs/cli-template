@@ -11,9 +11,15 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/testing/**", "src/bin/**"],
+      exclude: [
+        "src/**/*.test.ts",
+        // Test setup: the sandbox and the argv log run only under vitest.
+        "src/testing/**",
+        // The entry point: one line handing argv to run(), which the suite drives directly.
+        "src/bin/**",
+      ],
       reporter: ["text-summary", "json-summary"],
-      thresholds: { lines: 90, statements: 90, functions: 80, branches: 70 },
+      thresholds: { lines: 90, statements: 90, functions: 80, branches: 70, perFile: { lines: 50 } },
     },
   },
 })

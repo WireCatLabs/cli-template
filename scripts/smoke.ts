@@ -1,11 +1,21 @@
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { packContents } from "@wirecat/cli-base/release"
 
 const root = resolve(import.meta.dirname, "..")
-const { name, version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
+const { name, version, files } = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
+  name: string
+  version: string
+  files: string[]
+}
+// npm reads `files` like .gitignore: a name with no leading slash also matches the same name in any folder.
+const shipped = files
+  .map((entry) => entry.replace(/^\//, ""))
+  .map((entry) => (statSync(join(root, entry), { throwIfNoEntry: false })?.isDirectory() ? `${entry}/` : entry))
+assert.deepEqual(packContents(root, ["package.json", ...shipped], "package.json and the paths in its files list")(), [])
 const temp = mkdtempSync(join(tmpdir(), "clidev-package-"))
 try {
   const userConfig = join(temp, "npm-user-config")
