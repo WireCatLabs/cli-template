@@ -6,7 +6,7 @@ import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
 import { ask, choiceList, INTERVIEW, labelOf, NAME_QUESTIONS, parseAnswer, type Question } from "./interview.js"
 import { type CliManifest, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { renderTemplate, type TemplateSource } from "./source.js"
+import { PACKED_AS, renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
 
@@ -167,7 +167,8 @@ export const cliPackageJson = (text: string, names: Names): string => {
   if (typeof pkg.bin === "object" && pkg.bin) {
     next.bin = Object.fromEntries(Object.entries(pkg.bin).filter(([, value]) => !isKit(value)))
   }
-  if (Array.isArray(pkg.files)) next.files = pkg.files.filter((entry) => !isKit(entry))
+  if (Array.isArray(pkg.files))
+    next.files = pkg.files.filter((entry) => !isKit(entry) && !Object.values(PACKED_AS).includes(entry))
   if (typeof pkg.scripts === "object" && pkg.scripts) {
     next.scripts = Object.fromEntries(
       Object.entries(pkg.scripts as Record<string, string>)

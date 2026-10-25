@@ -46,7 +46,7 @@
     "tsconfig.scripts.json",
     "tsconfig.test.json",
     "vitest.config.ts",
-    ".gitignore"
+    "gitignore"
   ],
   "scripts": {
     "build": "tsc --build --force && pnpm kit:build",
@@ -76,8 +76,9 @@
     "prepare": "lefthook install || true",
     "prepack": "pnpm build",
     "docs:spell": "cspell lint --config cspell.json --no-progress README.md",
-    "kit:build": "tsc -p kit",
-    "kit:typecheck": "tsc -p kit/tsconfig.test.json"
+    "kit:build": "tsc -p kit && node -e \"require('node:fs').copyFileSync('.gitignore', 'gitignore')\"",
+    "kit:typecheck": "tsc -p kit/tsconfig.test.json",
+    "kit:e2e": "bash kit/e2e.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.0",

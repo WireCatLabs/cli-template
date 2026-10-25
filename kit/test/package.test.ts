@@ -9,12 +9,13 @@ afterAll(removeTempDirs)
 const repoRoot = join(import.meta.dirname, "../..")
 let bin = ""
 
-// Runs the bin from a real npm tarball: npm drops some files (a nested .gitignore, .npmrc) that a run from
-// the source tree would still find.
+// Runs the bin from a tarball installed by npm: npm drops some files when it packs (a nested .gitignore, .npmrc)
+// and renames .gitignore to .npmignore when it installs, so a run from the source tree or a tar unpack still finds them.
 beforeAll(() => {
   const template = fixture("0.1.0", {
     ...V1,
     ".gitignore": "node_modules\ndist\n",
+    gitignore: "node_modules\ndist\n",
     "template.json": JSON.stringify({
       files: [".github/", ".gitignore", "AGENTS.md", "bin/release", "docs/meta.json"],
       seeds: ["src/", "README.md", "docs/", "skills/", "vitest.config.ts", "config/wirecat/"],
@@ -35,8 +36,9 @@ beforeAll(() => {
     cwd: template,
     encoding: "utf8",
   })
-  execFileSync("tar", ["-xzf", join(packed, tarball.trim()), "-C", packed])
-  bin = join(packed, "package/kit/dist/main.js")
+  const installed = tempDir("installed")
+  execFileSync("npm", ["install", "--no-save", "--ignore-scripts", "--prefix", installed, join(packed, tarball.trim())])
+  bin = join(installed, "node_modules/@wirecat/cli-template/kit/dist/main.js")
 }, 60_000)
 
 const flags = (values: Record<string, string>) => Object.entries(values).flatMap(([key, value]) => [`--${key}`, value])
@@ -69,6 +71,7 @@ describe("the packed bin", () => {
     expect(read(cwd, "demo/.gitignore")).toBe("node_modules\ndist\n")
     expect(existsSync(join(cwd, "demo/src/bin/demo.ts"))).toBe(true)
     expect(existsSync(join(cwd, "demo/kit"))).toBe(false)
+    expect(JSON.parse(read(cwd, "demo/package.json")).files).not.toContain("gitignore")
   })
 
   it("exits 1 and lists the missing answers", () => {

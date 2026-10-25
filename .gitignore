@@ -39,4 +39,6 @@ coverage/
 /.claude/workflows
 
 *.tgz
+# The package's copy of this file, made by kit:build.
+/gitignore
 /CLEANUP.md

@@ -43,7 +43,7 @@ const packageJson = (version: string) =>
         "dist",
         "kit/dist",
         ".github",
-        ".gitignore",
+        "gitignore",
         "AGENTS.md",
         "bin",
         "docs",
