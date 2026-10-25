@@ -73,6 +73,22 @@ it("skill install writes the skill for Claude Code", async () => {
   expect(existsSync(join(homedir(), ".claude", "skills", "clidev-cli", "SKILL.md"))).toBe(true)
 })
 
+it("skill status and skill show --for read what skill install wrote", async () => {
+  expect((await ran(["skill", "install", "--for", "claude", "--json"])).code).toBe(0)
+  const status = await ran(["skill", "status", "--json"])
+  expect(status.code).toBe(0)
+  expect(JSON.parse(status.out).targets).toEqual([
+    expect.objectContaining({ target: "claude", state: "current" }),
+    expect.objectContaining({ target: "agents", installed: null, state: "missing" }),
+  ])
+  const shown = await ran(["skill", "show", "--for", "claude", "--json"])
+  expect(shown.code).toBe(0)
+  expect(JSON.parse(shown.out)).toMatchObject({
+    target: "claude",
+    content: expect.stringContaining("name: clidev-cli"),
+  })
+})
+
 it("help prints the first screen", async () => {
   const { code, out } = await ran(["help"])
   expect(code).toBe(0)

@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { expect, it } from "vitest"
 import { doctorReport } from "./commands/doctor.js"
@@ -58,9 +58,42 @@ it("doctor reports an unknown setting with the command that removes it", async (
 })
 
 it("doctor reports settings an environment variable breaks, and still answers", () => {
-  const report = doctorReport({ ...process.env, CLIDEV_EMBEDDING_DIMS: "many" })
+  const { report } = doctorReport({ ...process.env, CLIDEV_EMBEDDING_DIMS: "many" })
   expect(report).toMatchObject({ config: { issues: [] }, settings: { error: expect.any(String) }, profiles: null })
 })
+
+it.skipIf(process.platform === "win32")(
+  "doctor names a config file and folder others can read, with the chmod that fixes each",
+  async () => {
+    const dir = process.env.CLIDEV_CONFIG_DIR ?? ""
+    const file = join(dir, "config.json")
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(file, "{}")
+    chmodSync(file, 0o644)
+    chmodSync(dir, 0o775)
+    try {
+      const { code, out, err } = await ran(["doctor", "--json"])
+      expect(code).toBe(0)
+      expect(json(out).item.files).toEqual({
+        checked: true,
+        ok: false,
+        problems: [
+          { path: file, mode: "0644", want: "0600" },
+          { path: dir, mode: "0775", want: "0700" },
+        ],
+      })
+      expect(err).toContain(`to make it private: chmod 600 '${file}'`)
+      expect(err).toContain(`to make it private: chmod 700 '${dir}'`)
+
+      chmodSync(dir, 0o700)
+      expect((await ran(["personal", "config", "set", "--defaults", "limit", "5"])).code).toBe(0)
+      expect(statSync(file).mode & 0o777).toBe(0o600)
+      expect(json((await ran(["doctor", "--json"])).out).item.files).toEqual({ checked: true, ok: true, problems: [] })
+    } finally {
+      rmSync(file)
+    }
+  },
+)
 
 it("config show names the profile it was given", async () => {
   const { code, out } = await ran(["personal", "config", "show", "--json"])

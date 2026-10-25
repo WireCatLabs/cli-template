@@ -5,11 +5,26 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.428.0 and cli-base 0.57.0.** `config set` saves `config.json` readable by its
+  owner only (`0600`); it used to rewrite it as `0644`. Anything that reads the file as another user can no longer
+  read it after the next save. `skill status` and `skill show --for claude|agents` are new shared commands. A run
+  record gains `cli_command`, `argv`, `agent` and, for a failed run, `error`.
+
 ### Fixed
 
 - **The skeleton compiles against cli-core on `@modelcontextprotocol/server` 2.4.** It moves to server 2.4.0; until a
   cli-core release ranges the server `^2.4.0`, an override in `pnpm-workspace.yaml` gives cli-core the same copy,
   since two copies fail to compile `src/mcp.ts`.
+
+### Security
+
+- **`doctor` reports a `config.json` or config folder that other users can read, with the `chmod` that fixes it.**
+  `doctor --json` gains `files: { checked, ok, problems }`, each problem `{ path, mode, want }`: the file wants `0600`,
+  its folder `0700`. stderr prints `to make it private: chmod 600 '<path>'` for each; nothing is changed on disk.
+  `files` is in the answer also when the settings are refused. Windows is not checked (`checked: false`). `src/` is
+  copied once, so a CLI started from an older template copies `src/commands/doctor.ts`.
 
 ## 0.1.6 — 25.10.2026
 

@@ -13,5 +13,5 @@ Check the installation, then pick a profile name for your account, such as `pers
 clidev doctor
 ```
 
-`doctor` needs no network and opens no keyring. It shows the version, where settings live and the profiles that
-exist. Next: [use it](usage.md).
+`doctor` needs no network and opens no keyring. It shows the version, where settings live, the profiles that
+exist, and whether other users of the computer can read the settings. Next: [use it](usage.md).
