@@ -16,5 +16,11 @@
     "members": ["clidev", "tg", "max", "memo", "zm", "wa"],
     "covers": ["skill"],
     "differences": []
+  },
+  {
+    "name": "template-runs",
+    "members": ["clidev", "tg", "max", "wa", "memo", "drive", "zm"],
+    "covers": ["runs"],
+    "differences": []
   }
 ]
