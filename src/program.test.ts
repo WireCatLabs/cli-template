@@ -86,7 +86,7 @@ it("upgrade --check installs nothing when npm cannot be reached", async () => {
   expect(json(out).item).toMatchObject({ current: IDENTITY.version, latest: null, updated: false })
 })
 
-it("keeps a failed command as a run, and runs list, show and path read it back (WC-LIFE-15)", async () => {
+it("keeps a failed command as a run, and runs list, show and path read it back", async () => {
   expect((await ran(["--no-such-flag"])).code).toBe(2)
   const listed = await ran(["runs", "list", "--limit", "5", "--page", "1", "--json"])
   expect(listed.code).toBe(0)

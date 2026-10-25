@@ -224,7 +224,7 @@ clidev runs list [query] [options]
 | `--limit <n>` | how many to show. Default: `20`. |
 | `--page <n>` | which page, starting at 1. Default: `1`. |
 
-**Returns:** run — run_id, command, profile, started_at, status, cli_version, completed_at, requests, and 15 more; every field: clidev commands info runs list
+**Returns:** run — run_id, command, started_at, status, cli_version, profile, completed_at, requests, and 15 more; every field: clidev commands info runs list
 
 **Example:** `clidev personal runs list --limit 10`
 
@@ -244,7 +244,7 @@ clidev runs show <run-id> [options]
 |---|---|
 | `--problems` | only failed responses, warnings and crashes. |
 
-**Returns:** run details — run_id, command, profile, started_at, status, cli_version, directory, event_count, and 14 more; every field: clidev commands info runs show
+**Returns:** run details — run_id, command, started_at, status, cli_version, directory, event_count, events, and 14 more; every field: clidev commands info runs show
 
 **Example:** `clidev personal runs show run-101`
 

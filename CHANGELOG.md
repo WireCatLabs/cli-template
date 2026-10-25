@@ -3,10 +3,14 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-## Unreleased
+## 0.1.5 — 25.10.2026
 
 ### Changed — may break callers
 
+- **The skeleton runs on cli-core 0.424.0.** When no profile exists on the computer, the error shows the command
+  that was typed with a profile added, such as `clidev personal mcp`. It used to suggest a `setup` command, which the
+  skeleton does not have. A run made without a profile is now recorded with no profile instead of as `default`, so
+  `runs list` and `runs show` leave `profile` out for such a run.
 - **`doctor --json` reports the config file's problems as `config: { path, found, issues }`, the shape the shared
   messenger doctor has (cli-core 0.423.0).** `config.exists` and `config.error` are gone. Each issue has a `kind`
   (`invalid_json`, `unknown_setting`, `invalid_value`, …), the `file`, the `key`, `line` and `column` for invalid JSON,
