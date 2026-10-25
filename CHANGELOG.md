@@ -5,7 +5,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol -->
 
-## Unreleased
+## 0.1.7 — 25.10.2026
 
 ### Changed — may break callers
 
