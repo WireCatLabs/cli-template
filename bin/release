@@ -36,7 +36,7 @@ git fetch -q --tags origin
 [ "$(git branch --show-current)" = main ] || { echo "run from main" >&2; exit 1; }
 [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "uncommitted changes" >&2; exit 1; }
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "update main to origin/main first" >&2; exit 1; }
-# One release at a time on this machine, across every package (WC-REL-3).
+# One release at a time per package on this machine (WC-REL-3).
 . ./config/wirecat/release-lock.sh
 wirecat_release_lock "${WIRECAT_RELEASE_WAIT_SECONDS:-0}"
 git fetch -q origin
