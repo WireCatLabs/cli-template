@@ -15,6 +15,19 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   lefthook 2.2.2 and markdownlint-cli2 0.24.0. `config/wirecat/` is copied once, so a CLI started from an older
   template runs community's `python3 scripts/adopt-standards.py <path to the CLI>`, then `pnpm install`. Do not do
   this while that CLI's `bin/release` runs: the release holds the old lock and a second one would take the new.
+- **The skeleton runs on cli-core 0.434.0 and cli-base 0.57.1.** `upgrade`'s help shows only `clidev upgrade
+  --check` as an example; a CLI that keeps help or `commands --json` snapshots refreshes them once. For a CLI that
+  adds the shared store: it moves to version 34 with a vector index from `@wirecat/cli-core-sqlite` 1.1.0, now
+  required on every platform, and a store opened by this version refuses older builds of the same CLI. The
+  Anthropic adapter (SDK 1.x) refuses `temperature`, `top_p` and `top_k`, and sends the key as
+  `Authorization: Bearer`.
+
+### Fixed
+
+- **One copy of `@modelcontextprotocol/server` without an override.** cli-core now ranges it `^2.4.0`, so the
+  `pnpm-workspace.yaml` override for cli-core's copy is gone. markdownlint-cli2 0.24.0 pins patched `markdown-it`
+  and `smol-toml` itself; only the `katex` override stays. A CLI started from an older template may drop the same
+  lines from its own `pnpm-workspace.yaml`.
 
 ## 0.1.7 — 25.10.2026
 
