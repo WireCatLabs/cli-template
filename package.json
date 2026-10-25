@@ -1,6 +1,6 @@
 {
   "name": "@wirecat/cli-template",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Start a new WireCat CLI: a working skeleton on cli-base and cli-core, copied by new and kept current by upgrade",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
@@ -63,7 +63,7 @@
     "smoke": "node --experimental-strip-types scripts/smoke.ts",
     "smoke:bun": "bun scripts/smoke.ts",
     "package:check": "pnpm smoke",
-    "docs:check": "cli-dev docs-check --rules scripts/docs-rules.ts --pages && pnpm docs:spell && rumdl check --config config/wirecat/rumdl.toml README.md CLAUDE.md AGENTS.md docs/*.md docs/dev/*.md && pnpm docs:lint",
+    "docs:check": "cli-dev docs-check --rules scripts/docs-rules.ts --pages && pnpm docs:spell && rumdl check --config config/wirecat/rumdl.toml README.md SECURITY.md CLAUDE.md AGENTS.md docs/*.md docs/dev/*.md && pnpm docs:lint",
     "docs:lint": "markdownlint-cli2",
     "contracts:check": "cli-contract contracts/plan.json",
     "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json",
@@ -84,7 +84,7 @@
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.0",
     "@wirecat/cli-base": "0.53.0",
-    "@wirecat/cli-core": "0.423.0",
+    "@wirecat/cli-core": "0.424.0",
     "commander": "15.0.0"
   },
   "devDependencies": {
