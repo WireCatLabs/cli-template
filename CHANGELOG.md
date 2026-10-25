@@ -10,6 +10,8 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **`new` writes the content languages into the CLI's identity.** The `--content-lang` codes go into
   `contentLanguages` in `src/identity.ts`, so the CLI's first run ticks them in advance in the search-language question.
   `docs/dev/DESIGN.md` still records them with the speech-model order.
+- **`scripts/audit.sh` reads `config/parity-groups.json` when the repository has one.** That file replaces
+  cli-base's parity groups for the audit. The template uses it to compare itself with the published CLIs.
 
 ### Changed — may break callers
 

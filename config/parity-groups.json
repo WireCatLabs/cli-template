@@ -1,0 +1,20 @@
+[
+  {
+    "name": "template",
+    "members": ["clidev", "tg", "max", "memo", "drive", "zm", "wa"],
+    "covers": ["commands", "upgrade"],
+    "differences": []
+  },
+  {
+    "name": "template-config",
+    "members": ["clidev", "tg", "max", "wa"],
+    "covers": ["config"],
+    "differences": []
+  },
+  {
+    "name": "template-skill",
+    "members": ["clidev", "tg", "max", "memo", "zm", "wa"],
+    "covers": ["skill"],
+    "differences": []
+  }
+]
