@@ -85,5 +85,8 @@ jobs:
           echo "${VALE_SHA256}  vale.tar.gz" | sha256sum -c -
           tar -xzf vale.tar.gz vale
       # Style findings are annotations until the rules are tuned; the tone rule (an error) fails.
-      - run: ./vale --output line README.md docs/*.md | sed 's/^/::warning::/' || true
-      - run: ./vale --minAlertLevel error README.md docs/*.md
+      # kit/ is the template's own; a CLI made from it has none.
+      - run: |
+          pages="README.md CHANGELOG.md docs/*.md $(git ls-files kit/README.md)"
+          ./vale --output line $pages | sed 's/^/::warning::/' || true
+          ./vale --minAlertLevel error $pages

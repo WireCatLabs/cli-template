@@ -3,6 +3,8 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+<!-- cspell:words katex smol -->
+
 ## Unreleased
 
 ### Changed — may break callers
@@ -11,9 +13,17 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   owner only (`0600`); it used to rewrite it as `0644`. Anything that reads the file as another user can no longer
   read it after the next save. `skill status` and `skill show --for claude|agents` are new shared commands. A run
   record gains `cli_command`, `argv`, `agent` and, for a failed run, `error`.
+- **`bin/release --local` reads the keyring only for the account in `NPM_KEYRING_ACCOUNT`.** It used to look up one
+  fixed account name; now nothing is looked up while the variable is unset, and the token comes from `NPM_TOKEN` or
+  your npm login. To keep using the keyring, `export NPM_KEYRING_ACCOUNT=<account>` with the account the token is
+  stored under (service `npm`). A failed lookup says so on stderr and never prints the token.
+- **The prose check in `ci.yml` reads `CHANGELOG.md` too.** A tone error in the changelog now fails the `prose` job
+  after `upgrade`. A new CLI's `docs:check` and `docs:spell` also cover `CHANGELOG.md`.
 
 ### Fixed
 
+- **A CLI's `SECURITY.md` and `docs/security.md` still link its own repository,** and the template's copies link
+  cli-template instead of a repository that does not exist. `new` rewrites the two links.
 - **The skeleton compiles against cli-core on `@modelcontextprotocol/server` 2.4.** It moves to server 2.4.0; until a
   cli-core release ranges the server `^2.4.0`, an override in `pnpm-workspace.yaml` gives cli-core the same copy,
   since two copies fail to compile `src/mcp.ts`.

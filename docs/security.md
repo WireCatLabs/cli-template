@@ -8,5 +8,5 @@ to any service yet.
 
 `config.json` is saved readable by you only (`0600`), and its folder is created for you only (`0700`). A file or
 folder made by an older version may be open to other users of the computer: `clidev doctor` lists each under
-`files.problems` and prints the `chmod` that fixes it. Windows is not checked. Report a vulnerability as [SECURITY.md](https://github.com/WireCatLabs/clidev-cli/blob/main/SECURITY.md)
+`files.problems` and prints the `chmod` that fixes it. Windows is not checked. Report a vulnerability as [SECURITY.md](https://github.com/WireCatLabs/cli-template/blob/main/SECURITY.md)
 says.
