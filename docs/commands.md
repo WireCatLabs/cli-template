@@ -70,15 +70,19 @@ the instructions an agent is given for this tool
 
 ### `clidev skill show`
 
-print SKILL.md — `clidev skill install` puts it where Claude Code, Codex and Gemini CLI look for it
+print SKILL.md — `clidev skill install` puts it where Claude Code, Codex and Gemini CLI look for it; --for prints the copy already there
 
 ```sh
-clidev skill show [name]
+clidev skill show [name] [options]
 ```
 
 | Argument | | What it is |
 |---|---|---|
 | `name` | optional | one of the skills shipped for a task: follow-ups, link-conversations. |
+
+| Option | What it does |
+|---|---|
+| `--for <agents>` | print the copy installed for these agents instead of this version's. One of: `claude`, `agents`. |
 
 **Returns:** print the tool's instructions for AI agents
 
@@ -101,6 +105,18 @@ clidev skill install [options]
 **Returns:** install the tool's instructions for AI agents
 
 **Example:** `clidev skill install --for agents`
+
+### `clidev skill status`
+
+for each place `clidev skill install` writes to: the path, the version installed there, and whether it is current, stale, missing or unversioned
+
+```sh
+clidev skill status
+```
+
+**Returns:** whether the installed instructions for AI agents match this version
+
+**Example:** `clidev skill status`, `clidev skill status --json`
 
 ## `clidev mcp`
 
