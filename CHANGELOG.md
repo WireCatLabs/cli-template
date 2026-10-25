@@ -3,6 +3,19 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.421.0 and cli-base 0.53.0.** A new CLI gets cli-core's changes since 0.412.0,
+  including the `contentLanguages` field on its identity. cli-base stays on 0.53, because cli-core 0.421.0 accepts
+  only cli-base 0.53.
+
+### Security
+
+- **markdownlint-cli2's markdown-it, katex and smol-toml move past their advisories.** `pnpm-workspace.yaml` raises
+  them to markdown-it 15.0.3, katex 0.18.2 and smol-toml 1.9.1 while markdownlint-cli2 stays at the shared version.
+
 ## 0.1.2 — 25.10.2026
 
 ### Changed — may break callers

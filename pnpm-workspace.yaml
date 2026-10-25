@@ -4,3 +4,8 @@ allowBuilds:
   lefthook: true
 minimumReleaseAgeExclude:
   - '@wirecat/*'
+# markdownlint-cli2 is pinned to community's version, whose markdown-it, katex and smol-toml have advisories.
+overrides:
+  markdown-it: ^15.0.3
+  katex: ^0.18.2
+  smol-toml: ^1.9.1
