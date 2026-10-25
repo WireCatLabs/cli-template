@@ -149,6 +149,7 @@ describe("new from this repository", () => {
 
     const made = walk(join(cwd, "cal-cli")).filter((path) => !path.endsWith("template.json"))
     for (const file of made) expect(read(file, ""), file).not.toMatch(/clidev/i)
+    expect(existsSync(join(cwd, "cal-cli", "config/parity-groups.json"))).toBe(false)
   })
 
   it("writes the content languages into the identity and keeps them in DESIGN.md", async () => {

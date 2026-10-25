@@ -79,6 +79,10 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
   `cspell.json`, `tsconfig*.json` and `.markdownlint-cli2.jsonc`. Do not add a kit-only workflow: `.github/` is
   template-owned and would carry it into every new CLI.
 - `README.md` and `CHANGELOG.md` describe the template, so `new` writes short ones for the new CLI.
+- `config/parity-groups.json` puts the template in parity groups with the published CLIs, so `scripts/audit.sh`
+  compares its `commands`, `upgrade`, `config` and `skill` paths with theirs. It is in neither list, so a new CLI does
+  not get it: the file replaces cli-base's `PARITY_GROUPS`, and a new CLI joins those groups instead (step 4 of
+  `new`'s output).
 - `docs/dev/DESIGN.md` is always a seed: it holds the CLI's interview answers.
 - `package.json` is always a seed. `new` rewrites it: `name` becomes `--package`, `version` becomes `0.0.0`, and
   `repository`, `homepage` and `bugs` point at `<owner>/<name>`. It also drops every `bin`, `files` entry and script
