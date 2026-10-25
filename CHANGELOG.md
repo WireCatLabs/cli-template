@@ -40,6 +40,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   fails when `npm pack` would ship a path that `files` does not name.
 - **The monthly run starts at 03:02 UTC, inside the window the handbook gives.** The last step `new` prints asks for
   a free minute in that window; it spoke of a day and of a placeholder CI rejects, and no check rejects one.
+- **The 0.1.4 notes cite a handbook rule and a lint rule that no published cli-base has.** The run-log rule and
+  cli-base's `missing-run-log` lint rule are only on cli-base's main branch. They are in no release up to 0.55.1, so
+  nothing reports a CLI without `runs` until a cli-base release ships them. The 0.1.4 section stays as it was released.
+- **The README introduces the skeleton in full:** profiles, settings and permissions, limits, security, and what to do
+  when it does not work.
+- **The Reference CLIs page says how a new CLI's records join search.** A CLI with a provider of its own registers it
+  with cli-core's `registerProvider`; until it does, search lists its accounts as skipped. The page said that cli-core
+  had no provider registry, and that search would read such records as messages.
 
 ## 0.1.4 — 25.10.2026
 

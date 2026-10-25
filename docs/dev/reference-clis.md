@@ -15,5 +15,9 @@ A messenger CLI sets `messenger: true` in `src/identity.ts`, and `new --category
 category keeps the template's `messenger: false`, so the shared help, `commands` and `config` do not speak of chats,
 messages and senders.
 
-Until cli-core has a provider registry, a CLI made from this template is not listed as a provider of its own, and
-`search` finds its records as messages.
+cli-core keeps a provider registry (WC-ARCH-21). A CLI whose provider is not built into cli-core calls
+`registerProvider(store, { name, kind, aliases, command })` from `@wirecat/cli-core/store` on every run that opens
+the shared store. `kind` is one of `messages`, `mail`, `notes`, `documents`, `meetings` or `events`. Until the CLI
+has run once on a computer, `search` there leaves its accounts out and lists them under `skipped`. The reference CLIs
+do not show this call: their providers are built into cli-core. The skeleton opens no store and has no provider, so
+it registers nothing; the call comes with the CLI's first store code.

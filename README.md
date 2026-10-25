@@ -42,6 +42,32 @@ none is ever assumed. `CLIDEV_PROFILE=personal` does the same for a whole shell 
 `clidev skill show` prints the rules an agent follows with this tool. `clidev personal mcp` serves every command to an
 agent, writes included: the profile's permissions decide what runs. See [MCP and permissions](docs/usage.md#agents).
 
+## Profiles
+
+A profile is a name you choose for one account, such as `personal` or `work`. It is the first word of every command
+that uses an account. No profile is ever assumed: a command without one stops and lists the profiles on this
+computer. The skeleton has no sign-in yet; the CLI built from it adds one.
+
+## Settings and permissions
+
+`clidev personal config show` lists each setting and where it came from. A profile's `permissions` say what a command
+may do: `allow`, `ask`, `readonly` or `deny`. `CLIDEV_READ_ONLY=1` refuses every write. See
+[Settings](docs/configuration.md).
+
+## Limits
+
+The skeleton connects to no service, keeps no messages and has no commands of its own beyond the shared ones above.
+
+## Security
+
+`clidev` keeps its settings and state on this computer and sends nothing to any service yet. See
+[Security](docs/security.md), and report a vulnerability privately as [SECURITY.md](SECURITY.md) says.
+
+## When it does not work
+
+Run `clidev personal doctor` first: it checks the installation without the network.
+[When something goes wrong](docs/troubleshooting.md) lists the usual symptoms.
+
 ## Documentation
 
 - [Install](docs/installation.md)
