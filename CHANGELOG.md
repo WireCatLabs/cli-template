@@ -25,6 +25,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   Each excluded file now says why it is excluded.
 - **Only `src/mcp.ts` may import the MCP SDK.** `biome.json` refuses `@modelcontextprotocol/*` anywhere else in
   `src/`, so commands and services do not learn the protocol.
+- **`bin/release` takes the next free version when npm already has the one in `package.json`, or a higher one.** It
+  used to stop and ask for a new pull request. Now it raises the number (after `x.y.0` the next minor, else the next
+  patch), lands that through its own pull request once the checks pass, and publishes it, as tg, max and memo do. A
+  pre-release version is still chosen by hand. A CLI made from the template gets this with `upgrade`.
 
 ### Fixed
 
