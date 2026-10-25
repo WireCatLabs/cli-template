@@ -4,7 +4,7 @@
 # pull request and publishes that (WC-REL-5). Nothing is published until `pnpm release:check` passes.
 #
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml, npm trusted publishing)
-#   bin/release --local   # publishes from this computer: NPM_TOKEN if exported, else your own `npm login`
+#   bin/release --local   # publishes from this computer: NPM_TOKEN if exported, else the keyring, else `npm login`
 #
 # A package that is not on npm yet is published the same way; its first version needs --local until npm trusts
 # release.yml. The npm token is never printed and never written to a file (WC-REL-14).
@@ -147,8 +147,13 @@ if [ "$mode" = ci ]; then
   exit 0
 fi
 
+# The same keyring entry as the other WireCat CLIs. Without NPM_TOKEN or the entry, npm reads your own login from
+# ~/.npmrc as usual.
+if [ -z "$publish_token" ] && command -v secret-tool >/dev/null 2>&1; then
+  publish_token=$(secret-tool lookup service npm account leemour 2>/dev/null) || publish_token=""
+fi
+
 # Our own npm config names the variable, not the value, so the token stays in the publish process's environment.
-# Without NPM_TOKEN, npm reads your own login from ~/.npmrc as usual.
 config=$(mktemp)
 trap 'rm -f "$config"' EXIT
 if [ -n "$publish_token" ]; then
@@ -156,7 +161,11 @@ if [ -n "$publish_token" ]; then
   printf '//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n' > "$config"
   set -- --userconfig "$config"
 else
-  npm whoami >/dev/null 2>&1 || { echo "not logged in to npm: run npm login, or export NPM_TOKEN" >&2; exit 1; }
+  npm whoami >/dev/null 2>&1 || {
+    echo "no npm token: export NPM_TOKEN, store one with: secret-tool store --label=npm service npm account leemour," >&2
+    echo "or run npm login" >&2
+    exit 1
+  }
   set --
 fi
 
