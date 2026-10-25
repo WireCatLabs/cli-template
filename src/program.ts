@@ -14,37 +14,37 @@ import {
 } from "@wirecat/cli-core/cli"
 import { appUpdate } from "@wirecat/cli-core/update"
 import type { Command } from "commander"
-import { APP, PACKAGE, SKILL } from "./app.js"
 import { doctorCommand } from "./commands/doctor.js"
 import { mcpCommand } from "./commands/mcp.js"
 import { configuration } from "./config.js"
+import { IDENTITY, PACKAGE, SKILL } from "./identity.js"
 
 const update = appUpdate({
   packageName: PACKAGE,
-  command: APP.command,
-  version: APP.version,
+  command: IDENTITY.command,
+  version: IDENTITY.version,
   entry: import.meta.url,
   statePath: (env) =>
-    join(resolvePaths({ appName: APP.appName, prefix: APP.envPrefix, env }).state, "update-check.json"),
+    join(resolvePaths({ appName: IDENTITY.appName, prefix: IDENTITY.envPrefix, env }).state, "update-check.json"),
   enabled: (env) => configuration.resolveSettings({}, { env, needsProfile: false }).updateCheck,
-  offVariables: [`${APP.envPrefix}_NO_UPDATE_CHECK`],
+  offVariables: [`${IDENTITY.envPrefix}_NO_UPDATE_CHECK`],
 })
 
 export const definition = (): ProgramDefinition => ({
-  app: APP,
+  app: IDENTITY,
   configuration: { resolveSettings: configuration.resolveSettings },
   commands: () => [
-    commandsCommand(APP),
+    commandsCommand(IDENTITY),
     doctorCommand(),
-    skillCommand(APP, SKILL),
+    skillCommand(IDENTITY, SKILL),
     mcpCommand(),
-    upgradeCommand(APP, PACKAGE, (command) => ({
+    upgradeCommand(IDENTITY, PACKAGE, (command) => ({
       ...outputFor(command),
       installer: () => update.installer({}),
       latest: () => update.latest({}),
       install: (argv) => update.runUpdate(argv, {}),
     })),
-    configCommand(APP, configuration),
+    configCommand(IDENTITY, configuration),
   ],
 })
 

@@ -1,2 +1,2 @@
-export { APP } from "./app.js"
+export { IDENTITY } from "./identity.js"
 export { createProgram, definition, run } from "./program.js"

@@ -13,8 +13,12 @@
     "node": "^22.16.0 || >=24"
   },
   "packageManager": "pnpm@11.20.0",
+  "bin": {
+    "cli-template": "kit/dist/main.js"
+  },
   "files": [
     "dist",
+    "kit/dist",
     ".github",
     "bin",
     "config",
@@ -36,7 +40,6 @@
     "biome.json",
     "cspell.json",
     "lefthook.yml",
-    "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "template.json",
     "tsconfig.json",
@@ -46,8 +49,8 @@
     ".gitignore"
   ],
   "scripts": {
-    "build": "tsc --build --force",
-    "typecheck": "tsc --build --force --emitDeclarationOnly && tsc -p tsconfig.test.json && tsc -p tsconfig.scripts.json",
+    "build": "tsc --build --force && pnpm kit:build",
+    "typecheck": "tsc --build --force --emitDeclarationOnly && tsc -p tsconfig.test.json && tsc -p tsconfig.scripts.json && pnpm kit:typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "test": "vitest run",
@@ -72,7 +75,9 @@
     "release:check": "pnpm standards:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check",
     "prepare": "lefthook install || true",
     "prepack": "pnpm build",
-    "docs:spell": "cspell lint --config cspell.json --no-progress README.md"
+    "docs:spell": "cspell lint --config cspell.json --no-progress README.md",
+    "kit:build": "tsc -p kit",
+    "kit:typecheck": "tsc -p kit/tsconfig.test.json"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.0",

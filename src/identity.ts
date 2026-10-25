@@ -3,7 +3,7 @@ import { VERSION } from "./version.js"
 
 export const PACKAGE = "@wirecat/app-cli"
 
-export const APP: AppIdentity = {
+export const IDENTITY: AppIdentity = {
   command: "app",
   appName: "app-cli",
   envPrefix: "APP",

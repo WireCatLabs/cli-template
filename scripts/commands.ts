@@ -2,13 +2,13 @@ import { resolve } from "node:path"
 import { writeArtifacts } from "@wirecat/cli-base/codegen"
 import { COMMANDS_PAGE_LABELS, commandsPage, describeOptions, describeProgram } from "@wirecat/cli-base/commands"
 import { commandHelpMarkdown } from "@wirecat/cli-core/cli"
-import { APP } from "../dist/app.js"
+import { IDENTITY } from "../dist/identity.js"
 import { createProgram } from "../dist/program.js"
 
 const root = resolve(import.meta.dirname, "..")
 const program = createProgram()
 const page = commandsPage({
-  cli: APP.command,
+  cli: IDENTITY.command,
   commands: describeProgram(program),
   options: describeOptions(program),
   labels: COMMANDS_PAGE_LABELS.en,
@@ -17,9 +17,9 @@ const page = commandsPage({
     banner: "<!-- Generated from the command tree by pnpm generate. Do not edit. -->",
     title: "Commands",
     intro: `Every command, option and exit code, generated from the program itself. For the same list as JSON, run
-\`${APP.command} commands --json\`.
+\`${IDENTITY.command} commands --json\`.
 
-**The first word is the profile**, a name you choose: \`${APP.command} personal doctor\`. \`${APP.envPrefix}_PROFILE\`
+**The first word is the profile**, a name you choose: \`${IDENTITY.command} personal doctor\`. \`${IDENTITY.envPrefix}_PROFILE\`
 does the same for a whole shell session. No profile is assumed: a command that uses an account stops without one and
 lists the profiles on this computer.`,
     globalHeading: "Options for every command",
