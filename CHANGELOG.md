@@ -5,6 +5,18 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Changed — may break callers
+
+- **`doctor --json` reports the config file's problems as `config: { path, found, issues }`, the shape the shared
+  messenger doctor has (cli-core 0.423.0).** `config.exists` and `config.error` are gone. Each issue has a `kind`
+  (`invalid_json`, `unknown_setting`, `invalid_value`, …), the `file`, the `key`, `line` and `column` for invalid JSON,
+  a sentence that says what the value has to be, and `fix`, the `config unset` command that removes it. A profile lock
+  or an environment variable the settings refuse is reported in `settings.error`. A CLI started from an older template
+  copies `src/commands/doctor.ts`.
+- **The skeleton runs on cli-core 0.423.0.** `config set` and `unset` no longer list `default_profile`,
+  `analysis_provider`, `analysis_model` or `analysis_base_url`; analysis is set with `models.analysis.*`. A file that
+  still has one of them is refused with the `config unset` that removes it.
+
 ### Fixed
 
 - **`<profile> mcp` stops when the stop comes before its server is up.** A stop that arrived while the server was
