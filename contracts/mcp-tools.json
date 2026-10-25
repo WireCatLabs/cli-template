@@ -18,7 +18,7 @@
           "type": "object"
         },
         "command": {
-          "description": "a command app_tools_search returned: \"messages list\"",
+          "description": "a command clidev_tools_search returned: \"messages list\"",
           "minLength": 1,
           "type": "string"
         }
@@ -26,7 +26,7 @@
       "required": ["command"],
       "type": "object"
     },
-    "name": "app_read",
+    "name": "clidev_read",
     "outputSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "anyOf": [
@@ -464,7 +464,7 @@
       "required": [],
       "type": "object"
     },
-    "name": "app_tools_search",
+    "name": "clidev_tools_search",
     "outputSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {},
@@ -492,7 +492,7 @@
           "type": "object"
         },
         "command": {
-          "description": "a command app_tools_search returned: \"messages list\"",
+          "description": "a command clidev_tools_search returned: \"messages list\"",
           "minLength": 1,
           "type": "string"
         }
@@ -500,7 +500,7 @@
       "required": ["command"],
       "type": "object"
     },
-    "name": "app_write",
+    "name": "clidev_write",
     "outputSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "anyOf": [

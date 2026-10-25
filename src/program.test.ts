@@ -29,7 +29,7 @@ it("doctor answers without a config file", async () => {
 })
 
 it("doctor reports an unreadable config as a field", async () => {
-  const dir = process.env.APP_CONFIG_DIR ?? ""
+  const dir = process.env.CLIDEV_CONFIG_DIR ?? ""
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, "config.json"), "not json")
   try {
@@ -50,7 +50,7 @@ it("config show names the profile it was given", async () => {
 it("skill show prints the packaged skill", async () => {
   const { code, out } = await ran(["skill", "show"])
   expect(code).toBe(0)
-  expect(out).toContain(readFileSync(new URL("../skills/app-cli/SKILL.md", import.meta.url), "utf8").split("\n")[0])
+  expect(out).toContain(readFileSync(new URL("../skills/clidev-cli/SKILL.md", import.meta.url), "utf8").split("\n")[0])
 })
 
 it("mcp without a profile stops and says so", async () => {

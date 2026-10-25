@@ -1,15 +1,15 @@
 import type { AppIdentity } from "@wirecat/cli-core/cli"
 import { VERSION } from "./version.js"
 
-export const PACKAGE = "@wirecat/app-cli"
+export const PACKAGE = "@wirecat/clidev-cli"
 
 export const IDENTITY: AppIdentity = {
-  command: "app",
-  appName: "app-cli",
-  envPrefix: "APP",
+  command: "clidev",
+  appName: "clidev-cli",
+  envPrefix: "CLIDEV",
   description: "a new WireCat CLI, started from cli-template",
   version: VERSION,
-  issues: "https://github.com/WireCatLabs/app-cli/issues/new",
+  issues: "https://github.com/WireCatLabs/clidev-cli/issues/new",
 }
 
-export const SKILL = new URL("../skills/app-cli/SKILL.md", import.meta.url)
+export const SKILL = new URL("../skills/clidev-cli/SKILL.md", import.meta.url)

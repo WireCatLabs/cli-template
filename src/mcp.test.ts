@@ -34,12 +34,12 @@ const structured = (result: unknown) => (result as { structuredContent: Record<s
 it("offers search, read and write", async () => {
   const client = await connect()
   const { tools } = await client.listTools()
-  expect(tools.map((tool) => tool.name).sort()).toEqual(["app_read", "app_tools_search", "app_write"])
+  expect(tools.map((tool) => tool.name).sort()).toEqual(["clidev_read", "clidev_tools_search", "clidev_write"])
 })
 
 it("finds writes as well as reads", async () => {
   const client = await connect()
-  const found = structured(await client.callTool({ name: "app_tools_search", arguments: {} }))
+  const found = structured(await client.callTool({ name: "clidev_tools_search", arguments: {} }))
   const items = found.items as { command: string; writes: boolean }[]
   expect(items.some((item) => item.writes)).toBe(true)
   expect(items.map((item) => item.command)).not.toContain("mcp")
@@ -47,7 +47,7 @@ it("finds writes as well as reads", async () => {
 
 it("runs a command through the CLI and answers with its result", async () => {
   const client = await connect()
-  const answer = structured(await client.callTool({ name: "app_read", arguments: { command: "doctor" } }))
+  const answer = structured(await client.callTool({ name: "clidev_read", arguments: { command: "doctor" } }))
   expect(answer.item).toMatchObject({ version: expect.any(String), profiles: [] })
 })
 
@@ -71,7 +71,7 @@ it("serves until the command is stopped", async () => {
   await expect(serving).resolves.toBeUndefined()
 })
 
-it("app <profile> mcp starts the server and ends on a signal", async () => {
+it("clidev <profile> mcp starts the server and ends on a signal", async () => {
   const stop = new AbortController()
   const serving = run(["personal", "mcp"], {
     signal: stop.signal,

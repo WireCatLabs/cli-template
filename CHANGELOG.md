@@ -3,6 +3,15 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The template's placeholder is `clidev`, not `app`.** Readers took `app` for a real command. The template's files
+  now say `clidev`, `clidev-cli`, `@wirecat/clidev-cli` and `WireCatLabs/clidev-cli`, and `new` replaces them with
+  your CLI's names as before. `clidev` is not cli-base's `cli-dev` tool, which `new` leaves alone. A CLI made from
+  0.1.0 or 0.1.1 upgrades cleanly: `upgrade` renames each template version with its own placeholders.
+
 ## 0.1.1 — 25.10.2026
 
 ### Fixed

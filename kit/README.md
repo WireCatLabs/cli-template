@@ -64,7 +64,7 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
   "files": [".github/", "bin/release", "AGENTS.md", "docs/meta.json"],
   "seeds": ["src/", "README.md", "docs/", "config/wirecat/"],
   "placeholders": {
-    "command": "app", "name": "app-cli", "package": "@wirecat/app-cli", "repository": "WireCatLabs/app-cli"
+    "command": "clidev", "name": "clidev-cli", "package": "@wirecat/clidev-cli", "repository": "WireCatLabs/clidev-cli"
   }
 }
 ```
@@ -82,11 +82,15 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
 - `package.json` is always a seed. `new` rewrites it: `name` becomes `--package`, `version` becomes `0.0.0`, and
   `repository`, `homepage` and `bugs` point at `<owner>/<name>`. It also drops every `bin`, `files` entry and script
   that points into `kit/`, and the `&& pnpm kit:…` parts of other scripts. `src/version.ts` gets `VERSION = "0.0.0"`.
-- `placeholders` is optional; the defaults are shown above. The command word is replaced as a whole word, so `app`
-  changes but `application` does not. Its upper-case form changes too: `APP_HOME` becomes `CAL_HOME`. Followed by a
-  colon and a space it is a key and stays, so cli-core's `app: APP` becomes `app: CAL`. `name` (`app-cli`) is the repository
-  name: `skills/app-cli/` becomes `skills/cal-cli/`. The word `app` cannot appear in prose for any other meaning.
-  Paths are renamed the same way: `src/bin/app.ts` becomes `src/bin/cal.ts`.
+- `placeholders` names the words `new` and `upgrade` replace. The command word is replaced as a whole word, so
+  `clidev` changes but `clidevs` and cli-base's `cli-dev` do not. Its upper-case form changes too: `CLIDEV_HOME`
+  becomes `CAL_HOME`. Followed by a colon and a space it is a key and stays: `clidev: CLIDEV` becomes `clidev: CAL`.
+  `name` (`clidev-cli`) is the repository name: `skills/clidev-cli/` becomes `skills/cal-cli/`. The word `clidev`
+  cannot appear in prose for any other meaning. Paths are renamed the same way: `src/bin/clidev.ts` becomes
+  `src/bin/cal.ts`.
+- Each template version is renamed with its own `placeholders`, so `upgrade` from 0.1.0 or 0.1.1, which used `app`,
+  merges cleanly. A key missing from `placeholders` means its `app` value (`app`, `app-cli`, `@wirecat/app-cli`,
+  `WireCatLabs/app-cli`): those versions left `name` out.
 - The version is `package.json`'s, never a second copy.
 - `AGENTS.md` can hold the block that `new` fills with the reference CLI:
 

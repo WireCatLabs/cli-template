@@ -6,5 +6,5 @@
     "@cspell/dict-ru_ru/cspell-ext.json"
   ],
   "ignorePaths": ["docs/dev/**", "CHANGELOG.md"],
-  "words": ["cyrillic", "latin", "wirecat"]
+  "words": ["clidev", "cyrillic", "latin", "wirecat"]
 }

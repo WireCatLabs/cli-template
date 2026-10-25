@@ -3,7 +3,9 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { PassThrough } from "node:stream"
+import { DEFAULT_PLACEHOLDERS } from "../src/manifest.js"
 import type { Io } from "../src/new.js"
+import { renamer } from "../src/rename.js"
 
 export type Files = Record<string, string>
 
@@ -95,6 +97,22 @@ export const V1: Files = {
   "vitest.config.ts":
     'export default { include: ["src/**/*.test.ts", "kit/test/**/*.test.ts"], exclude: ["!kit/dist"] }\n',
   "kit/src/main.ts": "// the copy tool, never copied\n",
+}
+
+export const CLIDEV_PLACEHOLDERS = {
+  command: "clidev",
+  name: "clidev-cli",
+  package: "@wirecat/clidev-cli",
+  repository: "WireCatLabs/clidev-cli",
+}
+
+// The same template moved from 0.1.x's `app` placeholders to `clidev`, the way this repository moved.
+export const onClidev = (files: Files): Files => {
+  const { command, name, package: pkg } = CLIDEV_PLACEHOLDERS
+  const rename = renamer(DEFAULT_PLACEHOLDERS, { command, name, package: pkg, owner: "WireCatLabs" })
+  const renamed = Object.fromEntries(Object.entries(files).map(([path, text]) => [rename(path), rename(text)]))
+  const manifest = JSON.parse(files["template.json"] ?? "{}")
+  return { ...renamed, "template.json": JSON.stringify({ ...manifest, placeholders: CLIDEV_PLACEHOLDERS }) }
 }
 
 export const fixture = (version: string, files: Files): string => {
