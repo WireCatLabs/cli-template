@@ -45,7 +45,7 @@ describe("new", () => {
     )
     expect(read(dir, "skills/cal-cli/SKILL.md")).toBe("---\nname: cal-cli\n---\n")
     expect(read(dir, "vitest.config.ts")).toBe('export default { include: ["src/**/*.test.ts"], exclude: [] }\n')
-    expect(read(dir, "README.md")).toContain("node dist/bin/cal.js personal doctor")
+    expect(read(dir, "README.md")).toContain("node dist/bin/cal.js doctor")
     expect(read(dir, "AGENTS.md")).toContain(reference)
     expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${category.replace("other:", "other: ")}`)

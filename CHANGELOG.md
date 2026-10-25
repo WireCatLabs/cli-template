@@ -3,6 +3,18 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.426.0.** A `--dry-run` preview says `effects.service_contacted: false` and no
+  longer has `effects.messenger_contacted`. MCP no longer offers a command group that only prints its help, such as
+  `config`; `config show`, `set` and `unset` stay. The example in the MCP read and write tools is `runs list`, a
+  command that runs as written. The first screen says zm and drive are searchable with your other WireCat data.
+- **`doctor` takes no profile.** Its usage line and examples are `clidev doctor` and `clidev doctor --json`; a profile
+  typed before it still works. A CLI started from an older template copies `src/commands/doctor.ts` and
+  `src/mcp.ts`.
+
 ## 0.1.5 — 25.10.2026
 
 ### Changed — may break callers

@@ -10,7 +10,7 @@ clidev --version
 Check the installation, then pick a profile name for your account, such as `personal`:
 
 ```sh
-clidev personal doctor
+clidev doctor
 ```
 
 `doctor` needs no network and opens no keyring. It shows the version, where settings live and the profiles that

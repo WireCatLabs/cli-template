@@ -19,17 +19,17 @@ npx @wirecat/cli-template new cal-cli --command cal --package @wirecat/cal-cli -
 ```sh
 pnpm install
 pnpm build
-node dist/bin/clidev.js personal doctor
+node dist/bin/clidev.js doctor
 ```
 
-`personal` is the profile: a name you choose for one account. Every command that uses an account starts with it, and
-none is ever assumed. `CLIDEV_PROFILE=personal` does the same for a whole shell session.
+`doctor` needs no profile. Every command that uses an account starts with one, a name you choose for that account,
+such as `personal` in `clidev personal config show`; none is ever assumed. `CLIDEV_PROFILE=personal` does the same for a whole shell session.
 
 ## What you can do
 
 | Command | What it does |
 | --- | --- |
-| `clidev personal doctor` | Checks this installation: version, paths, settings and profiles, without the network |
+| `clidev doctor` | Checks this installation: version, paths, settings and profiles, without the network |
 | `clidev commands --json` | Prints every command as JSON, for agents and scripts |
 | `clidev personal config show` | Shows each setting and where it came from |
 | `clidev skill install` | Installs the agent skill for Claude Code, Codex and Gemini CLI |
@@ -65,7 +65,7 @@ The skeleton connects to no service, keeps no messages and has no commands of it
 
 ## When it does not work
 
-Run `clidev personal doctor` first: it checks the installation without the network.
+Run `clidev doctor` first: it checks the installation without the network.
 [When something goes wrong](docs/troubleshooting.md) lists the usual symptoms.
 
 ## Documentation

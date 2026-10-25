@@ -1,7 +1,15 @@
 import { existsSync } from "node:fs"
 import { CliError, configFilePath, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { environmentOf, itemOf, LOCAL_READ, outputFor, readOnlyLockOf, renderAnswer } from "@wirecat/cli-core/cli"
+import {
+  environmentOf,
+  itemOf,
+  LOCAL_READ,
+  outputFor,
+  profileFree,
+  readOnlyLockOf,
+  renderAnswer,
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { configuration } from "../config.js"
 import { IDENTITY } from "../identity.js"
@@ -41,10 +49,12 @@ export const doctorReport = (env: NodeJS.ProcessEnv) => {
 }
 
 export const doctorCommand = (): Command =>
-  annotate(new Command("doctor"), {
-    effects: LOCAL_READ,
-    examples: [`${IDENTITY.command} doctor`, `${IDENTITY.command} personal doctor --json`],
-  })
+  profileFree(
+    annotate(new Command("doctor"), {
+      effects: LOCAL_READ,
+      examples: [`${IDENTITY.command} doctor`, `${IDENTITY.command} doctor --json`],
+    }),
+  )
     .description("check this installation: version, paths, config, profiles; no keyring or network")
     .action(function (this: Command) {
       const env = environmentOf(this).env ?? process.env

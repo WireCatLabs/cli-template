@@ -61,7 +61,7 @@ export const createMcpServer = (options: McpOptions): McpServer => {
       },
     ]),
   )
-  registerCommands(server, IDENTITY.command, commands)
+  registerCommands(server, IDENTITY.command, commands, undefined, undefined, IDENTITY.messenger)
   return server
 }
 
