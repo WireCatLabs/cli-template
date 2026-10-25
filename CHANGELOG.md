@@ -21,6 +21,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   required on every platform, and a store opened by this version refuses older builds of the same CLI. The
   Anthropic adapter (SDK 1.x) refuses `temperature`, `top_p` and `top_k`, and sends the key as
   `Authorization: Bearer`.
+- **`bin/release --local` stops when the keyring has no token for `NPM_KEYRING_ACCOUNT`.** It used to print a line
+  and go on with your npm login, which may be another account. Now it prints the same one line, naming the account,
+  and exits 1; this includes a computer without `secret-tool`. Unset, the keyring is still skipped. As in cli-base
+  0.58.0. A CLI made from the template gets this with `upgrade`.
 
 ### Fixed
 
