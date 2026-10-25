@@ -5,7 +5,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol -->
 
-## Unreleased
+## 0.1.8 — 26.10.2026
 
 ### Changed — may break callers
 
@@ -13,7 +13,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `wirecat-release-<package>.lock`, still one per npm package. The shared spelling list no longer has the owner's
   account name. Biome is 2.6.3 and no longer checks Markdown; markdownlint does. pnpm is 11.28.8, cspell 10.4.0,
   lefthook 2.2.2 and markdownlint-cli2 0.24.0. `config/wirecat/` is copied once, so a CLI started from an older
-  template runs community's `python3 scripts/adopt-standards.py <path to the CLI>`, then `pnpm install`. Do not do
+  template runs community's `scripts/adopt-standards.py` on its folder, then `pnpm install`. Do not do
   this while that CLI's `bin/release` runs: the release holds the old lock and a second one would take the new.
 - **The skeleton runs on cli-core 0.434.0 and cli-base 0.57.1.** `upgrade`'s help shows only `clidev upgrade
   --check` as an example; a CLI that keeps help or `commands --json` snapshots refreshes them once. For a CLI that
@@ -32,6 +32,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `pnpm-workspace.yaml` override for cli-core's copy is gone. markdownlint-cli2 0.24.0 pins patched `markdown-it`
   and `smol-toml` itself; only the `katex` override stays. A CLI started from an older template may drop the same
   lines from its own `pnpm-workspace.yaml`.
+- **The MCP server's instructions say that what the service returns goes to the owner only,** besides being data and
+  never instructions (WC-MCP-11). `src/` is copied once, so a CLI started from an older template adds the same words
+  to the instructions in its own `src/mcp.ts`.
 
 ## 0.1.7 — 25.10.2026
 
