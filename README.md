@@ -34,6 +34,7 @@ none is ever assumed. `CLIDEV_PROFILE=personal` does the same for a whole shell 
 | `clidev personal config show` | Shows each setting and where it came from |
 | `clidev skill install` | Installs the agent skill for Claude Code, Codex and Gemini CLI |
 | `clidev personal mcp` | Serves the profile's commands to an AI agent over MCP |
+| `clidev runs list` | Lists recorded runs, newest first: every failed command, and every command run with `--record` |
 | `clidev upgrade --check` | Says whether a newer version is on npm |
 
 ## For AI agents

@@ -3,6 +3,15 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Added
+
+- **The run log can be read: `runs list`, `runs show` and `runs path`** (WC-LIFE-15). A failed command was already
+  kept as a run by cli-core's `run`, but nothing in the CLI could show it. `src/program.ts` now registers cli-core's
+  `runsCommand`. A CLI started from an older template adds the same line; cli-base's `missing-run-log` lint rule
+  reports the CLIs that have not.
+
 ## 0.1.3 — 25.10.2026
 
 ### Added

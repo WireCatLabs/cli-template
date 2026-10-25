@@ -9,6 +9,7 @@ import {
   type ProgramOptions,
   type RunOptions,
   run as runShared,
+  runsCommand,
   skillCommand,
   upgradeCommand,
 } from "@wirecat/cli-core/cli"
@@ -45,6 +46,7 @@ export const definition = (): ProgramDefinition => ({
       install: (argv) => update.runUpdate(argv, {}),
     })),
     configCommand(IDENTITY, configuration),
+    runsCommand(IDENTITY),
   ],
 })
 
