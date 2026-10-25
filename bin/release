@@ -77,6 +77,12 @@ land() {
     { echo "main is not origin/main after $pr" >&2; exit 1; }
 }
 
+# A pull request checked before the last release and merged after it put its entry in that release's section;
+# restore moves it to Unreleased, so the fold below brings it into this version.
+restored=$(npx -y -p @wirecat/cli-base@0.55.1 cli-dev changelog restore --land)
+[ -z "$restored" ] || echo "$restored"
+rerun_if_changed "$@"
+
 # A merge after the version was dated, but before it was published, adds Unreleased above it; --land folds it on a
 # fresh main through its own pull request.
 folded=""
