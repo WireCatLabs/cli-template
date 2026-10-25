@@ -40,7 +40,7 @@ const packageJson = (version: string) =>
       description: "A WireCat CLI",
       type: "module",
       repository: { type: "git", url: "git+https://github.com/WireCatLabs/cli-template.git" },
-      bin: { "cli-template": "kit/dist/main.js", app: "dist/bin/app.js" },
+      bin: { "cli-template": "kit/dist/main.js" },
       files: [
         "dist",
         "kit/dist",

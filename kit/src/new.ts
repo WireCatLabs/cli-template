@@ -164,8 +164,10 @@ export const cliPackageJson = (text: string, names: Names): string => {
   const isKit = (value: unknown) => typeof value === "string" && /^(\.\/)?kit(\/|$)/.test(value)
   const repoUrl = `git+https://github.com/${names.owner}/${names.name}.git`
   const next: Record<string, unknown> = { ...pkg, name: names.package, version: "0.0.0" }
-  if (typeof pkg.bin === "object" && pkg.bin) {
-    next.bin = Object.fromEntries(Object.entries(pkg.bin).filter(([, value]) => !isKit(value)))
+  const bin = typeof pkg.bin === "object" && pkg.bin ? pkg.bin : {}
+  next.bin = {
+    ...Object.fromEntries(Object.entries(bin).filter(([, value]) => !isKit(value))),
+    [names.command]: `dist/bin/${names.command}.js`,
   }
   if (Array.isArray(pkg.files))
     next.files = pkg.files.filter((entry) => !isKit(entry) && !Object.values(PACKED_AS).includes(entry))

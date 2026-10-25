@@ -12,6 +12,11 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   your CLI's names as before. `clidev` is not cli-base's `cli-dev` tool, which `new` leaves alone. A CLI made from
   0.1.0 or 0.1.1 upgrades cleanly: `upgrade` renames each template version with its own placeholders.
 
+### Fixed
+
+- **A CLI made by `new` has its command.** Its `package.json` had `"bin": {}`, so `npm install -g` installed nothing to
+  run. `new` now writes `"bin": { "<command>": "dist/bin/<command>.js" }`.
+
 ## 0.1.1 — 25.10.2026
 
 ### Fixed
