@@ -62,7 +62,7 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
 
 ```json
 {
-  "files": [".github/", "bin/release", "AGENTS.md", "docs/meta.json"],
+  "files": [".github/", "bin/release", "AGENTS.md", "docs/dev/skills/"],
   "seeds": ["src/", "README.md", "docs/", "config/wirecat/"],
   "placeholders": {
     "command": "clidev", "name": "clidev-cli", "package": "@wirecat/clidev-cli", "repository": "WireCatLabs/clidev-cli"

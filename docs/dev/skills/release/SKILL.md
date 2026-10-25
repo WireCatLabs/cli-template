@@ -9,7 +9,7 @@ The rules are the handbook's [Releases page](../../../../node_modules/@wirecat/c
 (`WC-REL-<n>`), which wins over this skill. An agent prepares the release; the owner merges the release pull request
 and runs `bin/release`.
 
-1. **What changed.** In a worktree off `origin/main`: `git log --oneline v<last version>..origin/main`. The
+1. **What changed.** In a worktree off `origin/main`: `git log --oneline "$(git describe --tags --abbrev=0 origin/main)..origin/main"`. The
    `docs/commands.md` diff shows what a cli-core or cli-base release changed in the commands.
 2. **The checks.** `pnpm release:check`. Before the version is raised, only the changelog's `## Unreleased` may be
    left; report anything else and fix it in the release pull request.
