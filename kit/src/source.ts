@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import {
   classify,
+  isRecord,
   type Kind,
   MANIFEST,
   type Names,
@@ -29,8 +30,8 @@ export type FetchVersion = (name: string, version: string) => Promise<Fetched>
 export const ownRoot = (): string => fileURLToPath(new URL("../../", import.meta.url))
 
 export const loadSource = async (root: string): Promise<TemplateSource> => {
-  const pkg = (await readJson(join(root, "package.json"))) as { name?: unknown; version?: unknown }
-  if (typeof pkg.name !== "string" || typeof pkg.version !== "string") {
+  const pkg = await readJson(join(root, "package.json"))
+  if (!isRecord(pkg) || typeof pkg.name !== "string" || typeof pkg.version !== "string") {
     throw new Error(`${join(root, "package.json")}: needs a name and a version`)
   }
   const manifestPath = join(root, MANIFEST)
@@ -119,8 +120,11 @@ export const npmCommand = (args: string[]): [string, string[]] => {
 export const fetchPacked = async (spec: string): Promise<Fetched> => {
   const dir = await mkdtemp(join(tmpdir(), "cli-template-"))
   const { stdout } = await run(...npmCommand(["pack", spec, "--silent", "--pack-destination", dir])).catch(
-    (error: Error) => {
-      throw new Error(`could not download ${spec} from npm, which upgrade needs as the merge base: ${error.message}`)
+    (error: unknown) => {
+      const why = error instanceof Error ? error.message : String(error)
+      throw new Error(`could not download ${spec} from npm, which upgrade needs as the merge base: ${why}`, {
+        cause: error,
+      })
     },
   )
   const tarball = stdout.trim().split("\n").pop() ?? ""

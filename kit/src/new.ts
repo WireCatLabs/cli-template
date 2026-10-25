@@ -5,7 +5,7 @@ import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
 import { ask, choiceList, INTERVIEW, labelOf, NAME_QUESTIONS, parseAnswer, type Question } from "./interview.js"
-import { type CliManifest, MANIFEST, type Names, sha256 } from "./manifest.js"
+import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
 import { PACKED_AS, renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -160,7 +160,8 @@ const removeKit = (command: string): string =>
     .join(" && ")
 
 export const cliPackageJson = (text: string, names: Names): string => {
-  const pkg = JSON.parse(text) as Record<string, unknown>
+  const pkg: unknown = JSON.parse(text)
+  if (!isRecord(pkg)) throw new Error("package.json must be a JSON object")
   const isKit = (value: unknown) => typeof value === "string" && /^(\.\/)?kit(\/|$)/.test(value)
   const repoUrl = `git+https://github.com/${names.owner}/${names.name}.git`
   const next: Record<string, unknown> = { ...pkg, name: names.package, version: "0.0.0" }
@@ -171,10 +172,10 @@ export const cliPackageJson = (text: string, names: Names): string => {
   }
   if (Array.isArray(pkg.files))
     next.files = pkg.files.filter((entry) => !isKit(entry) && !Object.values(PACKED_AS).includes(entry))
-  if (typeof pkg.scripts === "object" && pkg.scripts) {
+  if (isRecord(pkg.scripts)) {
     next.scripts = Object.fromEntries(
-      Object.entries(pkg.scripts as Record<string, string>)
-        .filter(([key]) => !key.startsWith("kit:"))
+      Object.entries(pkg.scripts)
+        .filter((entry): entry is [string, string] => typeof entry[1] === "string" && !entry[0].startsWith("kit:"))
         .map(([key, value]) => [key, removeKit(value)] as const)
         .filter(([, value]) => value.length > 0),
     )

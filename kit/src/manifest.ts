@@ -47,8 +47,19 @@ const fail = (file: string, problem: string): never => {
 const isStringList = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === "string" && item.length > 0)
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
+
+const isPlaceholder = (key: string): key is keyof Placeholders => key in DEFAULT_PLACEHOLDERS
+
+const isNames = (value: unknown): value is Names =>
+  isRecord(value) && ["name", "command", "package", "owner"].every((key) => typeof value[key] === "string")
+
+const isHashes = (value: unknown): value is Record<string, string> =>
+  isRecord(value) && Object.values(value).every((hash) => typeof hash === "string")
+
+const isPending = (value: unknown): value is NonNullable<CliManifest["pending"]> =>
+  isRecord(value) && typeof value.version === "string" && isHashes(value.files) && isStringList(value.conflicts)
 
 const checkEntries = (file: string, key: string, entries: string[]): void => {
   for (const entry of entries) {
@@ -63,17 +74,15 @@ export const parseTemplateManifest = (file: string, raw: unknown): TemplateManif
   if (!isStringList(raw.seeds)) return fail(file, `"seeds" must be a list of paths`)
   checkEntries(file, "files", raw.files)
   checkEntries(file, "seeds", raw.seeds)
-  const placeholders = raw.placeholders ?? {}
-  if (!isRecord(placeholders)) return fail(file, `"placeholders" must be an object`)
-  for (const [key, value] of Object.entries(placeholders)) {
-    if (!(key in DEFAULT_PLACEHOLDERS)) fail(file, `unknown placeholder "${key}"`)
-    if (typeof value !== "string" || value.length === 0) fail(file, `placeholder "${key}" must be a string`)
+  const given = raw.placeholders ?? {}
+  if (!isRecord(given)) return fail(file, `"placeholders" must be an object`)
+  const placeholders = { ...DEFAULT_PLACEHOLDERS }
+  for (const [key, value] of Object.entries(given)) {
+    if (!isPlaceholder(key)) return fail(file, `unknown placeholder "${key}"`)
+    if (typeof value !== "string" || value.length === 0) return fail(file, `placeholder "${key}" must be a string`)
+    placeholders[key] = value
   }
-  return {
-    files: raw.files,
-    seeds: raw.seeds,
-    placeholders: { ...DEFAULT_PLACEHOLDERS, ...(placeholders as Partial<Placeholders>) },
-  }
+  return { files: raw.files, seeds: raw.seeds, placeholders }
 }
 
 export const parseCliManifest = (file: string, raw: unknown): CliManifest => {
@@ -81,30 +90,12 @@ export const parseCliManifest = (file: string, raw: unknown): CliManifest => {
   const { template, version, names, files, seeds, pending } = raw
   if (typeof template !== "string") return fail(file, `"template" must be the template's package name`)
   if (typeof version !== "string") return fail(file, `"version" must be the template version this CLI is on`)
-  if (!isRecord(names) || !["name", "command", "package", "owner"].every((key) => typeof names[key] === "string")) {
-    return fail(file, `"names" must hold name, command, package and owner`)
-  }
-  if (!isRecord(files) || !Object.values(files).every((hash) => typeof hash === "string")) {
-    return fail(file, `"files" must map each template-owned path to its sha256`)
-  }
+  if (!isNames(names)) return fail(file, `"names" must hold name, command, package and owner`)
+  if (!isHashes(files)) return fail(file, `"files" must map each template-owned path to its sha256`)
   if (!isStringList(seeds)) return fail(file, `"seeds" must be a list of paths`)
-  if (
-    pending !== undefined &&
-    (!isRecord(pending) ||
-      typeof pending.version !== "string" ||
-      !isRecord(pending.files) ||
-      !isStringList(pending.conflicts))
-  ) {
+  if (pending !== undefined && !isPending(pending))
     return fail(file, `"pending" must hold version, files and conflicts`)
-  }
-  return {
-    template,
-    version,
-    names: names as Names,
-    files: files as Record<string, string>,
-    seeds,
-    ...(pending ? { pending: pending as CliManifest["pending"] } : {}),
-  }
+  return { template, version, names, files, seeds, ...(pending ? { pending } : {}) }
 }
 
 export const readJson = async (path: string): Promise<unknown> => {

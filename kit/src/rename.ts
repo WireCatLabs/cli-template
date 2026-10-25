@@ -43,6 +43,7 @@ export const stripKit = (path: string, content: Buffer): Buffer => {
   if (!KIT_CONFIG.test(path)) return content
   const text = content.toString("utf8")
   const stripped = text
+    .replace(/^[ \t]*\/\/[^\n]*\n(?=[ \t]*"!?(\.\/)?kit\/)/gm, "")
     .replace(/\[\s*"!?(\.\/)?kit\/[^"]*"\s*\]/g, "[]")
     .replace(/,\s*"!?(\.\/)?kit\/[^"]*"/g, "")
     .replace(/"!?(\.\/)?kit\/[^"]*",\s*/g, "")

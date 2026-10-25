@@ -35,13 +35,28 @@ beforeAll(() => {
     join(template, "kit/dist"),
   ])
   const packed = tempDir("packed")
-  const name = execFileSync(...npmCommand(["pack", "--silent", "--ignore-scripts", "--pack-destination", packed]), {
-    cwd: template,
-    encoding: "utf8",
-  })
+  const name = execFileSync(
+    ...npmCommand(["pack", "--offline", "--silent", "--ignore-scripts", "--pack-destination", packed]),
+    {
+      cwd: template,
+      encoding: "utf8",
+    },
+  )
   tarball = join(packed, name.trim())
   const installed = tempDir("installed")
-  execFileSync(...npmCommand(["install", "--no-save", "--ignore-scripts", "--prefix", installed, tarball]))
+  execFileSync(
+    ...npmCommand([
+      "install",
+      "--offline",
+      "--no-audit",
+      "--no-fund",
+      "--no-save",
+      "--ignore-scripts",
+      "--prefix",
+      installed,
+      tarball,
+    ]),
+  )
   bin = join(installed, "node_modules/@wirecat/cli-template/kit/dist/main.js")
 }, 60_000)
 

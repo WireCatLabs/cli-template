@@ -10,13 +10,15 @@ export default defineConfig({
     globalSetup: ["src/testing/argv-log.ts"],
     coverage: {
       provider: "v8",
-      include: ["src/**/*.ts"],
+      include: ["src/**/*.ts", "kit/src/**/*.ts"],
       exclude: [
         "src/**/*.test.ts",
         // Test setup: the sandbox and the argv log run only under vitest.
         "src/testing/**",
         // The entry point: one line handing argv to run(), which the suite drives directly.
         "src/bin/**",
+        // The kit's entry point runs only as a separate process, in kit/test/package.test.ts.
+        "kit/src/main.ts",
       ],
       reporter: ["text-summary", "json-summary"],
       thresholds: { lines: 90, statements: 90, functions: 80, branches: 70, perFile: { lines: 50 } },
