@@ -3,6 +3,14 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Fixed
+
+- **The skeleton compiles against cli-core on `@modelcontextprotocol/server` 2.4.** It moves to server 2.4.0; until a
+  cli-core release ranges the server `^2.4.0`, an override in `pnpm-workspace.yaml` gives cli-core the same copy,
+  since two copies fail to compile `src/mcp.ts`.
+
 ## 0.1.6 — 25.10.2026
 
 ### Changed — may break callers

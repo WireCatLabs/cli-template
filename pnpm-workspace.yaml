@@ -9,3 +9,5 @@ overrides:
   markdown-it: ^15.0.3
   katex: ^0.18.2
   smol-toml: ^1.9.1
+  # One MCP server copy until a cli-core release ranges it ^2.4.0 (cli-core#1960); two fail src/mcp.ts.
+  "@wirecat/cli-core>@modelcontextprotocol/server": 2.4.0

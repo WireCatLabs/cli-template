@@ -82,7 +82,7 @@
     "kit:e2e": "bash kit/e2e.sh"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.3.0",
+    "@modelcontextprotocol/server": "2.4.0",
     "@wirecat/cli-base": "0.53.0",
     "@wirecat/cli-core": "0.426.0",
     "commander": "15.0.0"
