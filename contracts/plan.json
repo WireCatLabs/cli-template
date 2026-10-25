@@ -36,7 +36,7 @@
     },
     {
       "id": "missing-explicit-profile",
-      "args": ["mcp", "--json"],
+      "args": ["mcp"],
       "exit": 2,
       "stream": "stderr",
       "kind": "json",

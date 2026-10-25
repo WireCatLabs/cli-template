@@ -78,7 +78,6 @@ it("clidev <profile> mcp starts the server and ends on a signal", async () => {
     tty: false,
     streams: { data: () => {}, diagnostic: () => {} },
   })
-  await new Promise((resolve) => setTimeout(resolve, 200))
   stop.abort()
   expect(await serving).toBe(0)
 })

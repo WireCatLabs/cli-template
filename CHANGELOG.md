@@ -3,6 +3,18 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Fixed
+
+- **`<profile> mcp` stops when the stop comes before its server is up.** A stop that arrived while the server was
+  still loading was lost, and the command served until it was killed. A command result that is not an object, such
+  as a list, now reaches the agent as `{ "result": … }`, because MCP accepts only an object as a tool's structured
+  result. A CLI made from an older template takes both from `src/mcp.ts`.
+- **The missing-profile contract tests the missing profile.** It ran `mcp --json`, which is refused for `--json`
+  before the profile is read. It now runs `mcp`. A CLI made from an older template changes the case's `args` in
+  `contracts/plan.json` the same way.
+
 ## 0.1.4 — 25.10.2026
 
 ### Added
