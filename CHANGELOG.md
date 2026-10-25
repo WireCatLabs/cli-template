@@ -10,6 +10,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **`npx @wirecat/cli-template new` works.** It stopped with `template.json lists ".gitignore", but the package has
   no such file`, because npm renames `.gitignore` when it installs a package. The package now ships the file under
   another name, and `new` and `upgrade` write it as `.gitignore`.
+- **`new` and `upgrade` work on Windows.** `new` now marks `bin/release` and the other scripts as executable in
+  git, so a CLI made on Windows can still run them on Linux and macOS. `upgrade` no longer reads every file as
+  edited when git checked it out with Windows line endings, and it downloads the earlier template version without
+  needing a shell for `npm`.
 
 ## 0.1.0 — 25.10.2026
 

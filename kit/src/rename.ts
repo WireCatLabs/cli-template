@@ -29,6 +29,9 @@ export const renamer = (placeholders: Placeholders, names: Names): ((text: strin
 
 const isBinary = (content: Buffer): boolean => content.subarray(0, 8000).includes(0)
 
+export const withLf = (content: Buffer): Buffer =>
+  isBinary(content) || !content.includes(13) ? content : Buffer.from(content.toString("utf8").replaceAll("\r\n", "\n"))
+
 export const renameContent = (rename: (text: string) => string, content: Buffer): Buffer =>
   isBinary(content) ? content : Buffer.from(rename(content.toString("utf8")), "utf8")
 

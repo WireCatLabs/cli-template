@@ -77,6 +77,20 @@ describe("upgrade", () => {
     expect(status(dir)).toBe("")
   })
 
+  it("reads a file checked out with CRLF as the LF text it was made from", async () => {
+    const { dir, upgrade } = await setup()
+    for (const path of [".github/workflows/ci.yml", "AGENTS.md"]) {
+      writeFileSync(join(dir, path), read(dir, path).replaceAll("\n", "\r\n"))
+    }
+    commitAll(dir)
+
+    const out = await upgrade({ dryRun: false, mode: "apply" })
+
+    expect(out).toContain(".github/workflows/ci.yml (clean): applied")
+    expect(out).toContain("AGENTS.md (edited): applied")
+    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME and tokens out of logs.")
+  })
+
   it("without a terminal or a flag, stops and names the choices", async () => {
     const { upgrade } = await setup()
 
