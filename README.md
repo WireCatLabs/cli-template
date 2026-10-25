@@ -80,5 +80,6 @@ Run `clidev doctor` first: it checks the installation without the network.
 ## Development
 
 The working rules for people and agents are in [AGENTS.md](AGENTS.md). `pnpm release:check` runs the checks
-that need no install from npm; `pnpm package:check` installs the packed package and checks what it ships, and
+before a release; its command audit installs the published WireCat CLIs from npm to compare with them.
+`pnpm package:check` installs the packed package and checks what it ships, and
 `pnpm security:no-leak` checks that nothing private reaches the output. The changes are in [CHANGELOG.md](CHANGELOG.md).

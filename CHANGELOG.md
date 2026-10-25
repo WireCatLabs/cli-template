@@ -3,7 +3,7 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-## Unreleased
+## 0.1.6 — 25.10.2026
 
 ### Changed — may break callers
 
