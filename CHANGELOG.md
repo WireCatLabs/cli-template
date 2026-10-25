@@ -16,6 +16,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **The skeleton runs on cli-core 0.423.0.** `config set` and `unset` no longer list `default_profile`,
   `analysis_provider`, `analysis_model` or `analysis_base_url`; analysis is set with `models.analysis.*`. A file that
   still has one of them is refused with the `config unset` that removes it.
+- **`pnpm docs:check` checks the user pages for internal ids, correction marks and struck-out text.** It now loads
+  `scripts/docs-rules.ts`, which names `README.md`, `SECURITY.md` and `docs/*.md` as user pages. A page that carries
+  a journal id fails the check until the id is removed.
+- **The spell check covers `SECURITY.md` and imports only the shared word list.** `cspell.json` no longer imports the
+  British English and Russian dictionaries again, and skips the generated `docs/commands.md` as tg and max do.
+- **The coverage floor holds for each file too: every file in `src/` keeps at least half of its lines covered.**
+  Each excluded file now says why it is excluded.
+- **Only `src/mcp.ts` may import the MCP SDK.** `biome.json` refuses `@modelcontextprotocol/*` anywhere else in
+  `src/`, so commands and services do not learn the protocol.
 
 ### Fixed
 
@@ -26,6 +35,11 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **The missing-profile contract tests the missing profile.** It ran `mcp --json`, which is refused for `--json`
   before the profile is read. It now runs `mcp`. A CLI made from an older template changes the case's `args` in
   `contracts/plan.json` the same way.
+- **The package no longer ships `kit/README.md` and the kit's `tsconfig` files.** npm reads a name in `files` with no
+  leading slash as a match in every folder; the three root files are now anchored with `/`. `pnpm package:check`
+  fails when `npm pack` would ship a path that `files` does not name.
+- **The monthly run starts at 03:02 UTC, inside the window the handbook gives.** The last step `new` prints asks for
+  a free minute in that window; it spoke of a day and of a placeholder CI rejects, and no check rejects one.
 
 ## 0.1.4 — 25.10.2026
 

@@ -250,7 +250,7 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
 export const manualSteps = (names: Names): string[] => [
   `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
   `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), and add any secrets.`,
-  "3. Pick a monthly cron day no other repository uses: .github/workflows/monthly.yml holds a placeholder CI rejects.",
+  "3. Give .github/workflows/monthly.yml a cron minute between 02:17 and 03:20 UTC that no other repository uses.",
   "4. WireCat CLIs only: a pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
 ]
 
