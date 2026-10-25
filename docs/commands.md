@@ -18,18 +18,18 @@ lists the profiles on this computer.
 | `--json` | machine-readable output: one JSON value on stdout; --json=id,text keeps only those fields. |
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off; a failure is still said. |
-| `--trace` | the connection's own log lines on stderr — never message content. |
+| `--trace` | the connection's own log lines on stderr — never content. |
 | `--debug` | on a failure, its whole record — cause and stack — in place of the short line. |
 | `--timeout <duration>` | give up on the whole command after this — 30s, 2m, 500ms. |
 | `--offline` | answer from what was recorded and never connect; fails if nothing was. |
 | `--no-input` | never prompt or open interactive login; piped input remains available. |
 | `--max-input-bytes <bytes>` | maximum buffered input bytes (default: 16777216). |
 | `--max-output-bytes <bytes>` | maximum machine output bytes (default: 4194304; 0 disables). |
-| `--brief` | found messages as reference, title, time, sender and excerpt only. |
-| `--full` | found messages with their whole text and every provider field. |
+| `--brief` | found items as reference, title, time, author and excerpt only. |
+| `--full` | found items with their whole text and every provider field. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
-| `--record` | keep this run — ids and timings, never message content. |
+| `--record` | keep this run — ids and timings, never content. |
 | `--no-record` | do not keep it, whatever the configuration says. |
 
 ## `clidev commands`
@@ -50,7 +50,7 @@ clidev commands info [path]
 
 **Returns:** one command contract, or all schemas, error reasons and explicit overrides
 
-**Example:** `clidev commands info messages list`
+**Example:** `clidev commands info commands`
 
 ## `clidev doctor`
 
@@ -166,7 +166,7 @@ clidev config set <setting> <value> [options]
 
 | Argument | | What it is |
 |---|---|---|
-| `setting` | required | one of: limit, timeout_ms, color, sender_colors, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, transcribe_with, speech_model, search_catch_up, picture_search, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, read_other_bots, update_check, skill_hint, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat, account_groups.<name>. |
+| `setting` | required | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, transcribe_with, speech_model, search_catch_up, picture_search, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, read_other_bots, update_check, skill_hint, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat, account_groups.<name>. |
 | `value` | required | a number, true or false; for a group tg:work,max:Alice,email:me@x. |
 
 | Option | What it does |
@@ -191,7 +191,7 @@ clidev config unset <setting> [options]
 
 | Argument | | What it is |
 |---|---|---|
-| `setting` | required | one of: limit, timeout_ms, color, sender_colors, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, transcribe_with, speech_model, search_catch_up, picture_search, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, read_other_bots, update_check, skill_hint, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat, account_groups.<name>. |
+| `setting` | required | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, transcribe_with, speech_model, search_catch_up, picture_search, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, read_other_bots, update_check, skill_hint, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat, account_groups.<name>. |
 
 | Option | What it does |
 |---|---|

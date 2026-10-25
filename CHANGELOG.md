@@ -11,6 +11,16 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   kept as a run by cli-core's `run`, but nothing in the CLI could show it. `src/program.ts` now registers cli-core's
   `runsCommand`. A CLI started from an older template adds the same line; cli-base's `missing-run-log` lint rule
   reports the CLIs that have not.
+- **`new --category messenger` writes `messenger: true` into the CLI's identity.** Every other category keeps the
+  template's `messenger: false`. The Reference CLIs page says which to set.
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.422.0 and says `messenger: false` in `src/identity.ts`.** The shared help,
+  `commands`, `config` and the MCP tools no longer speak of chats and messages: `--help-all`'s profile example is
+  `clidev personal doctor`, `--brief` and `--full` describe found items and their author, and `config set` and
+  `unset` no longer list `sender_colors`. cli-base stays on 0.53, because cli-core 0.422.0 accepts only cli-base 0.53.
+  A CLI that upgrades sets the field in its own `src/identity.ts` and refreshes its contract snapshots once.
 
 ## 0.1.3 — 25.10.2026
 
