@@ -3,7 +3,7 @@ import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { languageWarnings, runNew, speechModels, withContentLanguages } from "../src/new.js"
-import { renamer } from "../src/rename.js"
+import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
 
@@ -213,4 +213,17 @@ describe("content languages", () => {
       "ja: no speech model in cli-core hears it",
     ])
   })
+})
+
+it("drops a kit entry from a config together with the comment that explains it", () => {
+  const config = [
+    "exclude: [",
+    '  "src/bin/**",',
+    "  // The kit's entry point runs only as a separate process.",
+    '  "kit/src/main.ts",',
+    "],",
+    "",
+  ].join("\n")
+
+  expect(stripKit("vitest.config.ts", Buffer.from(config)).toString()).toBe('exclude: [\n  "src/bin/**",\n],\n')
 })

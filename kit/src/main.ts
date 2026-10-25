@@ -75,8 +75,8 @@ main(process.argv.slice(2), io).then(
   (text) => {
     process.stdout.write(text.endsWith("\n") ? text : `${text}\n`)
   },
-  (error: Error) => {
-    process.stderr.write(`cli-template: ${error.message}\n`)
+  (error: unknown) => {
+    process.stderr.write(`cli-template: ${error instanceof Error ? error.message : String(error)}\n`)
     process.exitCode = 1
   },
 )
