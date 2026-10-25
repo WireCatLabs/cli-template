@@ -10,6 +10,7 @@ export const IDENTITY: AppIdentity = {
   description: "a new WireCat CLI, started from cli-template",
   version: VERSION,
   issues: "https://github.com/WireCatLabs/clidev-cli/issues/new",
+  messenger: false,
 }
 
 export const SKILL = new URL("../skills/clidev-cli/SKILL.md", import.meta.url)

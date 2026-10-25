@@ -196,6 +196,10 @@ export const withContentLanguages = (text: string, languages: readonly string[])
   return text.slice(0, end) + line + text.slice(end)
 }
 
+// cli-core treats an unset or true `messenger` as a messenger and speaks of chats; the template says false.
+export const withMessenger = (text: string, category: string): string =>
+  category === "messenger" ? text.replace(/^ {2}messenger: false,$/m, "  messenger: true,") : text
+
 export const cliReadme = (names: Names): string =>
   [
     `# ${names.command}`,
@@ -261,7 +265,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "README.md": () => cliReadme(names),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
-    [IDENTITY_FILE]: (text) => withContentLanguages(text, answers.contentLang ?? []),
+    [IDENTITY_FILE]: (text) => withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
     "AGENTS.md": (text) => withReference(text, category),
   }
   const hashes: Record<string, string> = {}

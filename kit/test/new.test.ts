@@ -158,10 +158,24 @@ describe("new from this repository", () => {
     await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
 
     const identity = read(join(cwd, "cal-cli"), "src/identity.ts")
-    expect(identity).toMatch(/issues: "[^"]+",\n {2}contentLanguages: \["en", "ru"\],\n\}/)
+    expect(identity).toMatch(/issues: "[^"]+",\n {2}messenger: false,\n {2}contentLanguages: \["en", "ru"\],\n\}/)
     const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
     expect(design).toContain("Languages: en, ru.")
     expect(design).toContain("set its `speechModels` to `parakeet-v3`")
+  })
+
+  it("keeps the neutral wording for a CLI that is not a messenger and turns a messenger's on", async () => {
+    const source = await loadSource(root)
+    const notes = tempDir("real")
+    const messenger = tempDir("real")
+
+    await runNew(notes, source, { name: "cal-cli", flags: NOTES_FLAGS }, io())
+    await runNew(messenger, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, category: "messenger" } }, io())
+
+    expect(read(join(notes, "cal-cli"), "src/identity.ts")).toContain("  messenger: false,\n")
+    const identity = read(join(messenger, "cal-cli"), "src/identity.ts")
+    expect(identity).toContain("  messenger: true,\n")
+    expect(identity).not.toContain("messenger: false")
   })
 
   it("leaves cli-base's cli-dev alone in every file", async () => {
