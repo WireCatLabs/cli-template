@@ -203,6 +203,67 @@ clidev config unset <setting> [options]
 
 **Example:** `clidev personal config unset limit`
 
+## `clidev runs`
+
+recorded runs — what this tool did, and when
+
+### `clidev runs list`
+
+recorded runs, newest first
+
+```sh
+clidev runs list [query] [options]
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `query` | optional | field:value terms that narrow the list — the fields are below. |
+
+| Option | What it does |
+|---|---|
+| `--limit <n>` | how many to show. Default: `20`. |
+| `--page <n>` | which page, starting at 1. Default: `1`. |
+
+**Returns:** run — run_id, command, profile, started_at, status, cli_version, completed_at, requests, and 15 more; every field: clidev commands info runs list
+
+**Example:** `clidev personal runs list --limit 10`
+
+### `clidev runs show`
+
+one run: what it was, how it ended, and every event it logged
+
+```sh
+clidev runs show <run-id> [options]
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `run-id` | required | an id from `clidev runs list`. |
+
+| Option | What it does |
+|---|---|
+| `--problems` | only failed responses, warnings and crashes. |
+
+**Returns:** run details — run_id, command, profile, started_at, status, cli_version, directory, event_count, and 14 more; every field: clidev commands info runs show
+
+**Example:** `clidev personal runs show run-101`
+
+### `clidev runs path`
+
+the directory holding one run
+
+```sh
+clidev runs path <run-id>
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `run-id` | required | an id from `clidev runs list`. |
+
+**Returns:** run location — path; every field: clidev commands info runs path
+
+**Example:** `clidev personal runs path run-101`
+
 ## Exit codes
 
 Branch on the code, not on the text: the text can change, the code does not.
