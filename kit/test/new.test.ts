@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, statSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { languageWarnings, runNew, speechModels } from "../src/new.js"
@@ -34,7 +35,7 @@ describe("new", () => {
     expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL, command: "cal" })')
     expect(existsSync(join(dir, "kit"))).toBe(false)
     expect(existsSync(join(dir, ".git"))).toBe(true)
-    expect(statSync(join(dir, "bin/release")).mode & 0o111).not.toBe(0)
+    expect(execFileSync("git", ["ls-files", "-s", "bin/release"], { cwd: dir, encoding: "utf8" })).toMatch(/^100755 /)
     for (const file of walk(dir).filter((path) => !path.endsWith("template.json"))) {
       expect(read(file, ""), file).not.toMatch(/(?<![A-Za-z0-9_])(app(?!: )|APP)(?![A-Za-z0-9])|kit\//)
     }

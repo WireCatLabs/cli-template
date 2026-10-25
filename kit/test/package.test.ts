@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process"
 import { cpSync, existsSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { npmCommand } from "../src/source.js"
 import { fixture, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
 
 afterAll(removeTempDirs)
@@ -25,25 +26,28 @@ beforeAll(() => {
   for (const ignore of [".gitignore", ".npmignore"].filter((file) => existsSync(join(repoRoot, "kit", file)))) {
     cpSync(join(repoRoot, "kit", ignore), join(template, "kit", ignore))
   }
-  execFileSync(join(repoRoot, "node_modules/.bin/tsc"), [
+  execFileSync(process.execPath, [
+    join(repoRoot, "node_modules/typescript/bin/tsc"),
     "-p",
     join(repoRoot, "kit"),
     "--outDir",
     join(template, "kit/dist"),
   ])
   const packed = tempDir("packed")
-  const tarball = execFileSync("npm", ["pack", "--silent", "--ignore-scripts", "--pack-destination", packed], {
+  const tarball = execFileSync(...npmCommand(["pack", "--silent", "--ignore-scripts", "--pack-destination", packed]), {
     cwd: template,
     encoding: "utf8",
   })
   const installed = tempDir("installed")
-  execFileSync("npm", ["install", "--no-save", "--ignore-scripts", "--prefix", installed, join(packed, tarball.trim())])
+  execFileSync(
+    ...npmCommand(["install", "--no-save", "--ignore-scripts", "--prefix", installed, join(packed, tarball.trim())]),
+  )
   bin = join(installed, "node_modules/@wirecat/cli-template/kit/dist/main.js")
 }, 60_000)
 
 const flags = (values: Record<string, string>) => Object.entries(values).flatMap(([key, value]) => [`--${key}`, value])
 
-const cli = (cwd: string, args: string[]) => spawnSync("node", [bin, ...args], { cwd, encoding: "utf8" })
+const cli = (cwd: string, args: string[]) => spawnSync(process.execPath, [bin, ...args], { cwd, encoding: "utf8" })
 
 describe("the packed bin", () => {
   it("runs new without a terminal from flags alone", () => {

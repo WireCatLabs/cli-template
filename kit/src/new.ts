@@ -226,6 +226,12 @@ const writeOut = async (dir: string, path: string, content: Buffer | string, mod
   await chmod(full, mode)
 }
 
+// Git for Windows sets core.fileMode=false, so a later `git add -A` there records every file as 644; a mode set
+// in the index survives that add.
+export const markExecutable = async (cwd: string, paths: string[]): Promise<void> => {
+  if (paths.length) await run("git", ["add", "--chmod=+x", "--", ...paths], { cwd })
+}
+
 export const manualSteps = (names: Names): string[] => [
   `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
   `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), and add any secrets.`,
@@ -264,6 +270,10 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   }
   await writeOut(target, MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`)
   await run("git", ["init", "-q", "-b", "main"], { cwd: target })
+  await markExecutable(
+    target,
+    [...rendered].filter(([, file]) => file.mode & 0o111).map(([path]) => path),
+  )
   const warnings = languageWarnings(answers.contentLang ?? [])
   return [
     `Created ${target} from ${source.name}@${source.version}.`,

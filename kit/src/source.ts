@@ -1,7 +1,8 @@
 import { execFile } from "node:child_process"
+import { existsSync } from "node:fs"
 import { mkdtemp, readdir, readFile, rm, stat } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join, relative, sep } from "node:path"
+import { dirname, join, relative, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import {
@@ -85,6 +86,11 @@ export const listTemplate = async (source: TemplateSource): Promise<Map<string, 
   )
 }
 
+// npm cannot set the executable bit when it installs on Windows, so a shebang stands in for it there. A .ts or .js
+// entry point carries one for node, not for the shell.
+const isExecutable = (path: string, content: Buffer, mode: number): boolean =>
+  (mode & 0o111) !== 0 || (content.subarray(0, 2).toString() === "#!" && !/\.[cm]?[jt]sx?$/.test(path))
+
 export const renderTemplate = async (source: TemplateSource, names: Names): Promise<Map<string, RenderedFile>> => {
   const rename = renamer(source.manifest.placeholders, names)
   const listed = await listTemplate(source)
@@ -93,25 +99,37 @@ export const renderTemplate = async (source: TemplateSource, names: Names): Prom
       const full = await onDisk(source.root, path)
       const [content, info] = await Promise.all([readFile(full), stat(full)])
       const renamed = renameContent(rename, stripKit(path, content))
-      return [rename(path), { kind, content: renamed, mode: info.mode & 0o777 }] as const
+      const mode = isExecutable(path, content, info.mode) ? 0o755 : 0o644
+      return [rename(path), { kind, content: renamed, mode }] as const
     }),
   )
   return new Map(rendered)
 }
 
+// On Windows npm is npm.cmd, which execFile cannot start without a shell; npm-cli.js beside node runs anywhere.
+export const npmCommand = (args: string[]): [string, string[]] => {
+  const home = dirname(process.execPath)
+  const cli = [
+    join(home, "node_modules/npm/bin/npm-cli.js"),
+    join(home, "../lib/node_modules/npm/bin/npm-cli.js"),
+  ].find((path) => existsSync(path))
+  return cli ? [process.execPath, [cli, ...args]] : ["npm", args]
+}
+
 export const fetchPublished: FetchVersion = async (name, version) => {
   const dir = await mkdtemp(join(tmpdir(), "cli-template-"))
-  const { stdout } = await run("npm", ["pack", `${name}@${version}`, "--silent", "--pack-destination", dir]).catch(
-    (error: Error) => {
-      throw new Error(
-        `could not download ${name}@${version} from npm, which upgrade needs as the merge base: ${error.message}`,
-      )
-    },
-  )
+  const { stdout } = await run(
+    ...npmCommand(["pack", `${name}@${version}`, "--silent", "--pack-destination", dir]),
+  ).catch((error: Error) => {
+    throw new Error(
+      `could not download ${name}@${version} from npm, which upgrade needs as the merge base: ${error.message}`,
+    )
+  })
   const tarball = stdout.trim().split("\n").pop() ?? ""
   const dispose = () => rm(dir, { recursive: true, force: true })
   try {
-    await run("tar", ["-xzf", join(dir, tarball), "-C", dir])
+    // GNU tar reads "C:" in a path as a remote host, so the archive is named relative to its folder.
+    await run("tar", ["-xzf", tarball], { cwd: dir })
     return { source: await loadSource(join(dir, "package")), dispose }
   } catch (error) {
     await dispose()

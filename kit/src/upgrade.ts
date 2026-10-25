@@ -5,7 +5,8 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import { promisify } from "node:util"
 import { type CliManifest, classify, MANIFEST, readCliManifest, sha256 } from "./manifest.js"
-import type { Io } from "./new.js"
+import { type Io, markExecutable } from "./new.js"
+import { withLf } from "./rename.js"
 import { type FetchVersion, type RenderedFile, renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -22,7 +23,8 @@ type Outcome = "applied" | "conflict" | "replaced" | "skipped" | "kept deleted"
 
 const MODES: Mode[] = ["apply", "replace", "skip"]
 
-const readMaybe = (path: string): Promise<Buffer | undefined> => readFile(path).catch(() => undefined)
+// Git for Windows checks text out with CRLF by default; the template's hashes and merges are of LF text.
+const readMaybe = (path: string): Promise<Buffer | undefined> => readFile(path).then(withLf, () => undefined)
 
 const requireCleanTree = async (cwd: string): Promise<void> => {
   const { stdout } = await run("git", ["status", "--porcelain"], { cwd }).catch(() => {
@@ -222,16 +224,19 @@ export const runUpgrade = async (
 
   const results: string[] = []
   const conflicts: string[] = []
+  const executable: string[] = []
   try {
     for (const change of changes) {
       const { outcome, content } = await planned(change, await choose(change))
       if (content) await writeAs(join(cwd, change.path), content, change.ours ? undefined : change.theirs.mode)
+      if (content && !change.ours && change.theirs.mode & 0o111) executable.push(change.path)
       if (outcome === "conflict") conflicts.push(change.path)
       results.push(`  ${change.path} (${change.state}): ${outcome}`)
     }
   } finally {
     rl?.close()
   }
+  await markExecutable(cwd, executable)
 
   const footer = ["Then re-run community's adopt-standards.py for config/wirecat/, which upgrade never touches."]
   const files = Object.fromEntries([...owned].map(([path, file]) => [path, sha256(file.content)]))
