@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { expect, it } from "vitest"
+import { doctorReport } from "./commands/doctor.js"
 import { IDENTITY } from "./identity.js"
 import { run } from "./program.js"
 
@@ -54,6 +55,11 @@ it("doctor reports an unknown setting with the command that removes it", async (
       issues: [{ kind: "unknown_setting", key: "limt", fix: "clidev config unset --defaults limt" }],
     }),
   )
+})
+
+it("doctor reports settings an environment variable breaks, and still answers", () => {
+  const report = doctorReport({ ...process.env, CLIDEV_EMBEDDING_DIMS: "many" })
+  expect(report).toMatchObject({ config: { issues: [] }, settings: { error: expect.any(String) }, profiles: null })
 })
 
 it("config show names the profile it was given", async () => {
