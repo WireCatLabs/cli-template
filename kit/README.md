@@ -35,9 +35,10 @@ choices. Nothing is guessed.
 
 Every question except the names and `--content-lang` also takes `other:<your answer>`.
 
-The content languages go only into `DESIGN.md`. The file also holds the speech-model order a messenger definition
-should use, and the warnings for languages that have no stemmer or speech model in cli-core. `new` writes no search
-or model setting.
+`new` writes the content languages into `contentLanguages` in `src/identity.ts`; on the first run, cli-core ticks them
+in advance in the search-language question, and the person confirms. `DESIGN.md` records them too, with the
+speech-model order a messenger definition should use and the warnings for languages that have no stemmer or speech
+model in cli-core. `new` writes no search or model setting.
 
 ## `upgrade`
 

@@ -186,6 +186,15 @@ export const cliPackageJson = (text: string, names: Names): string => {
 }
 
 const VERSION_FILE = "src/version.ts"
+const IDENTITY_FILE = "src/identity.ts"
+
+export const withContentLanguages = (text: string, languages: readonly string[]): string => {
+  const match = /export const IDENTITY: AppIdentity = \{\n[\s\S]*?\n\}/.exec(text)
+  if (!match) throw new Error(`${IDENTITY_FILE}: no IDENTITY object to add contentLanguages to`)
+  const end = match.index + match[0].length - 1
+  const line = `  contentLanguages: [${languages.map((code) => JSON.stringify(code)).join(", ")}],\n`
+  return text.slice(0, end) + line + text.slice(end)
+}
 
 export const cliReadme = (names: Names): string =>
   [
@@ -252,6 +261,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "README.md": () => cliReadme(names),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
+    [IDENTITY_FILE]: (text) => withContentLanguages(text, answers.contentLang ?? []),
     "AGENTS.md": (text) => withReference(text, category),
   }
   const hashes: Record<string, string> = {}

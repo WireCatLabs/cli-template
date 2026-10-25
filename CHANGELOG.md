@@ -5,6 +5,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **`new` writes the content languages into the CLI's identity.** The `--content-lang` codes go into
+  `contentLanguages` in `src/identity.ts`, so the CLI's first run ticks them in advance in the search-language question.
+  `docs/dev/DESIGN.md` still records them with the speech-model order.
+
 ### Changed — may break callers
 
 - **The skeleton runs on cli-core 0.421.0 and cli-base 0.53.0.** A new CLI gets cli-core's changes since 0.412.0,

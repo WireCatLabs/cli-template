@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process"
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
-import { languageWarnings, runNew, speechModels } from "../src/new.js"
+import { languageWarnings, runNew, speechModels, withContentLanguages } from "../src/new.js"
 import { renamer } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
@@ -144,6 +144,18 @@ describe("new from this repository", () => {
     for (const file of made) expect(read(file, ""), file).not.toMatch(/clidev/i)
   })
 
+  it("writes the content languages into the identity and keeps them in DESIGN.md", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const identity = read(join(cwd, "cal-cli"), "src/identity.ts")
+    expect(identity).toMatch(/issues: "[^"]+",\n {2}contentLanguages: \["en", "ru"\],\n\}/)
+    const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
+    expect(design).toContain("Languages: en, ru.")
+    expect(design).toContain("set its `speechModels` to `parakeet-v3`")
+  })
+
   it("leaves cli-base's cli-dev alone in every file", async () => {
     const source = await loadSource(root)
     const rendered = await renderTemplate(source, names)
@@ -163,6 +175,10 @@ describe("content languages", () => {
     expect(speechModels(["ru"])).toEqual(["gigaam-v3", "gigaam-v3-ctc", "parakeet-v3"])
     expect(speechModels(["en", "pt-BR"])).toEqual(["parakeet-v3"])
     expect(speechModels(["en", "ja"])).toBeUndefined()
+  })
+
+  it("refuses an identity file it cannot find IDENTITY in", () => {
+    expect(() => withContentLanguages("export const OTHER = {}\n", ["en"])).toThrow(/no IDENTITY object/)
   })
 
   it("warns about a language with no stemmer or speech model", () => {
