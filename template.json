@@ -1,6 +1,7 @@
 {
   "files": [
     ".github/",
+    ".gitattributes",
     ".gitignore",
     ".gitleaks.toml",
     ".vale.ini",

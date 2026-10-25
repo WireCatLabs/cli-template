@@ -2,13 +2,14 @@ import { execFileSync, spawnSync } from "node:child_process"
 import { cpSync, existsSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import { npmCommand } from "../src/source.js"
+import { fetchPacked, npmCommand } from "../src/source.js"
 import { fixture, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
 
 afterAll(removeTempDirs)
 
 const repoRoot = join(import.meta.dirname, "../..")
 let bin = ""
+let tarball = ""
 
 // Runs the bin from a tarball installed by npm: npm drops some files when it packs (a nested .gitignore, .npmrc)
 // and renames .gitignore to .npmignore when it installs, so a run from the source tree or a tar unpack still finds them.
@@ -34,14 +35,13 @@ beforeAll(() => {
     join(template, "kit/dist"),
   ])
   const packed = tempDir("packed")
-  const tarball = execFileSync(...npmCommand(["pack", "--silent", "--ignore-scripts", "--pack-destination", packed]), {
+  const name = execFileSync(...npmCommand(["pack", "--silent", "--ignore-scripts", "--pack-destination", packed]), {
     cwd: template,
     encoding: "utf8",
   })
+  tarball = join(packed, name.trim())
   const installed = tempDir("installed")
-  execFileSync(
-    ...npmCommand(["install", "--no-save", "--ignore-scripts", "--prefix", installed, join(packed, tarball.trim())]),
-  )
+  execFileSync(...npmCommand(["install", "--no-save", "--ignore-scripts", "--prefix", installed, tarball]))
   bin = join(installed, "node_modules/@wirecat/cli-template/kit/dist/main.js")
 }, 60_000)
 
@@ -86,4 +86,17 @@ describe("the packed bin", () => {
       "--category: messenger, mail, notes, files, calendar, meetings, or other:<your answer>",
     )
   })
+})
+
+describe("upgrade's download of an earlier version", () => {
+  it("unpacks what npm pack fetched and reads .gitignore back", async () => {
+    const { source, dispose } = await fetchPacked(tarball)
+    try {
+      expect(source.version).toBe("0.1.0")
+      expect(source.manifest.files).toContain(".gitignore")
+      expect(read(source.root, "AGENTS.md")).toContain("APP_HOME")
+    } finally {
+      await dispose()
+    }
+  }, 30_000)
 })

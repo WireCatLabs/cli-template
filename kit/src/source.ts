@@ -116,15 +116,13 @@ export const npmCommand = (args: string[]): [string, string[]] => {
   return cli ? [process.execPath, [cli, ...args]] : ["npm", args]
 }
 
-export const fetchPublished: FetchVersion = async (name, version) => {
+export const fetchPacked = async (spec: string): Promise<Fetched> => {
   const dir = await mkdtemp(join(tmpdir(), "cli-template-"))
-  const { stdout } = await run(
-    ...npmCommand(["pack", `${name}@${version}`, "--silent", "--pack-destination", dir]),
-  ).catch((error: Error) => {
-    throw new Error(
-      `could not download ${name}@${version} from npm, which upgrade needs as the merge base: ${error.message}`,
-    )
-  })
+  const { stdout } = await run(...npmCommand(["pack", spec, "--silent", "--pack-destination", dir])).catch(
+    (error: Error) => {
+      throw new Error(`could not download ${spec} from npm, which upgrade needs as the merge base: ${error.message}`)
+    },
+  )
   const tarball = stdout.trim().split("\n").pop() ?? ""
   const dispose = () => rm(dir, { recursive: true, force: true })
   try {
@@ -136,3 +134,5 @@ export const fetchPublished: FetchVersion = async (name, version) => {
     throw error
   }
 }
+
+export const fetchPublished: FetchVersion = (name, version) => fetchPacked(`${name}@${version}`)

@@ -53,6 +53,13 @@ describe("new", () => {
     expect(out).toContain("Create the repository example/cal-cli")
   })
 
+  it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {
+    const { out } = await makeNew(NOTES_FLAGS)
+
+    expect(out).toContain("\n  cd cal-cli\n  pnpm install\n  pnpm ci:quick\n  git add -A\n")
+    expect(out).not.toContain("&&")
+  })
+
   it("rewrites package.json for the new CLI and drops the copy tool", async () => {
     const { dir } = await makeNew(NOTES_FLAGS)
     const pkg = JSON.parse(read(dir, "package.json"))
