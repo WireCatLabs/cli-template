@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process"
 import { existsSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -79,6 +80,8 @@ describe("upgrade", () => {
 
   it("reads a file checked out with CRLF as the LF text it was made from", async () => {
     const { dir, upgrade } = await setup()
+    // With autocrlf on, as on the Windows runner, git would store LF and leave nothing to commit.
+    execFileSync("git", ["config", "core.autocrlf", "false"], { cwd: dir })
     for (const path of [".github/workflows/ci.yml", "AGENTS.md"]) {
       writeFileSync(join(dir, path), read(dir, path).replaceAll("\n", "\r\n"))
     }
