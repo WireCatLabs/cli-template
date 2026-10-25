@@ -5,6 +5,17 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol -->
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The shared standards in `config/wirecat/` come from community at `c846abf`.** The release lock is now
+  `wirecat-release-<package>.lock`, still one per npm package. The shared spelling list no longer has the owner's
+  account name. Biome is 2.6.3 and no longer checks Markdown; markdownlint does. pnpm is 11.28.8, cspell 10.4.0,
+  lefthook 2.2.2 and markdownlint-cli2 0.24.0. `config/wirecat/` is copied once, so a CLI started from an older
+  template runs community's `python3 scripts/adopt-standards.py <path to the CLI>`, then `pnpm install`. Do not do
+  this while that CLI's `bin/release` runs: the release holds the old lock and a second one would take the new.
+
 ## 0.1.7 — 25.10.2026
 
 ### Changed — may break callers
