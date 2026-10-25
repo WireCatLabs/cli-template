@@ -17,8 +17,11 @@ and runs `bin/release`.
    `Changed — may break callers`, `Fixed`, `Security`, `Removed` (`WC-DOC-14` to `WC-DOC-18`). No internal ids.
 4. **The docs.** `README.md`, `docs/*.md` and `skills/clidev-cli/SKILL.md` state what the code does now (`WC-DOC-3`).
    `pnpm generate` and `pnpm test:matrix` rewrite the generated pages (`WC-DOC-4`).
-5. **The version.** `npm view @wirecat/clidev-cli version` is what is published. Set the next version in
+5. **The fresh audit.** Start a new subagent that has none of your context, and give it the prompt in
+   [fresh-audit.md](fresh-audit.md) as written. Put its report in the release pull request. Fix each gap in this
+   repository there, or list it as a follow-up; take a gap in the handbook to cli-base.
+6. **The version.** `npm view @wirecat/clidev-cli version` is what is published. Set the next version in
    `package.json`, run `pnpm version:sync`, date the section as `## <version> — DD.MM.YYYY`, run
    `pnpm release:check` again, and open the pull request `chore(release): <version>`.
-6. **The owner** merges it and runs `bin/release` on a clean `main`. `bin/release --local` publishes from this
+7. **The owner** merges it and runs `bin/release` on a clean `main`. `bin/release --local` publishes from this
    computer when GitHub Actions cannot, with the owner's own npm login or `NPM_TOKEN`.
