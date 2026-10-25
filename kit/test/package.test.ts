@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { existsSync } from "node:fs"
+import { cpSync, existsSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { fixture, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
@@ -20,6 +20,10 @@ beforeAll(() => {
       seeds: ["src/", "README.md", "docs/", "skills/", "vitest.config.ts", "config/wirecat/"],
     }),
   })
+  // npm applies an ignore file inside a listed folder, so one in kit/ would drop kit/dist from the package.
+  for (const ignore of [".gitignore", ".npmignore"].filter((file) => existsSync(join(repoRoot, "kit", file)))) {
+    cpSync(join(repoRoot, "kit", ignore), join(template, "kit", ignore))
+  }
   execFileSync(join(repoRoot, "node_modules/.bin/tsc"), [
     "-p",
     join(repoRoot, "kit"),

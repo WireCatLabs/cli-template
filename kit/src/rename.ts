@@ -6,7 +6,8 @@ const word = (text: string): string => `(?<![A-Za-z0-9_])${escapeRegex(text)}(?!
 
 export const upperCommand = (command: string): string => command.toUpperCase().replaceAll("-", "_")
 
-// One pass, so a replacement that itself contains the command placeholder (a package named
+// The command word followed by ": " is a key, such as cli-core's `app: APP` in a program definition, and
+// stays. One pass, so a replacement that itself contains the command placeholder (a package named
 // "@x/app-tools") is never renamed a second time.
 export const renamer = (placeholders: Placeholders, names: Names): ((text: string) => string) => {
   const table = new Map<string, string>([
@@ -18,7 +19,7 @@ export const renamer = (placeholders: Placeholders, names: Names): ((text: strin
   ])
   const pattern = new RegExp(
     [escapeRegex(placeholders.package), escapeRegex(placeholders.repository), word(placeholders.name)]
-      .concat(word(placeholders.command))
+      .concat(`${word(placeholders.command)}(?!:\\s)`)
       .concat(word(upperCommand(placeholders.command)))
       .join("|"),
     "g",

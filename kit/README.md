@@ -63,7 +63,9 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
 {
   "files": [".github/", "bin/release", "AGENTS.md", "docs/meta.json"],
   "seeds": ["src/", "README.md", "docs/", "config/wirecat/"],
-  "placeholders": { "command": "app", "package": "@wirecat/app-cli", "repository": "WireCatLabs/app-cli" }
+  "placeholders": {
+    "command": "app", "name": "app-cli", "package": "@wirecat/app-cli", "repository": "WireCatLabs/app-cli"
+  }
 }
 ```
 
@@ -71,17 +73,20 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
   touched again; `config/wirecat/` goes there, because community's installer owns it. An entry ending in `/` is a
   folder. The most specific entry wins: an exact path beats a folder, a deeper folder beats a shallower one, and a
   seed wins a tie. Only listed files are copied. A listed file missing from the package stops `new`.
-- `template.json` and `kit/` are never copied, whatever the lists say. Nothing else is filtered: a listed folder
-  must hold only files a new CLI keeps. Put the template's own CI (the kit's tests, `new` for each category) in a
-  workflow file the lists leave out, and keep `kit/` out of shared configs, or every new CLI inherits a broken job.
+- `template.json` and `kit/` are never copied, whatever the lists say. The kit's tests run inside `pnpm test`, so
+  the configs name `kit/`: `new` and `upgrade` drop every `"kit/…"` entry from `vitest.config.ts`, `biome.json`,
+  `cspell.json`, `tsconfig*.json` and `.markdownlint-cli2.jsonc`. Do not add a kit-only workflow: `.github/` is
+  template-owned and would carry it into every new CLI.
+- `README.md` and `CHANGELOG.md` describe the template, so `new` writes short ones for the new CLI.
 - `docs/dev/DESIGN.md` is always a seed: it holds the CLI's interview answers.
 - `package.json` is always a seed. `new` rewrites it: `name` becomes `--package`, `version` becomes `0.0.0`, and
   `repository`, `homepage` and `bugs` point at `<owner>/<name>`. It also drops every `bin`, `files` entry and script
   that points into `kit/`, and the `&& pnpm kit:…` parts of other scripts. `src/version.ts` gets `VERSION = "0.0.0"`.
 - `placeholders` is optional; the defaults are shown above. The command word is replaced as a whole word, so `app`
-  and `app-cli` change but `application` does not. Its upper-case form changes too: `APP_HOME` becomes `CAL_HOME`.
-  The word `app` cannot appear in prose for any other meaning. Paths are renamed the same way: `src/bin/app.ts`
-  becomes `src/bin/cal.ts`.
+  changes but `application` does not. Its upper-case form changes too: `APP_HOME` becomes `CAL_HOME`. Followed by a
+  colon and a space it is a key and stays, so cli-core's `app: APP` becomes `app: CAL`. `name` (`app-cli`) is the repository
+  name: `skills/app-cli/` becomes `skills/cal-cli/`. The word `app` cannot appear in prose for any other meaning.
+  Paths are renamed the same way: `src/bin/app.ts` becomes `src/bin/cal.ts`.
 - The version is `package.json`'s, never a second copy.
 - `AGENTS.md` can hold the block that `new` fills with the reference CLI:
 
@@ -108,9 +113,11 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
 
 ## What the package needs from the repository
 
-- `"bin": { "cli-template": "kit/dist/main.js" }`, and `kit/dist` in `files`.
+- `"bin": { "cli-template": "kit/dist/main.js" }`, and `kit/dist` in `files`. No ignore file inside `kit/`: npm
+  applies it and drops `kit/dist` from the package. npm also never packs `pnpm-lock.yaml`, so it is not a seed; the
+  new CLI makes its own on `pnpm install`.
 - Every template-owned file and seed in `files`. npm drops a nested `.gitignore` and any `.npmrc`; the test in
   `kit/test/package.test.ts` runs the bin from a real tarball to catch that.
-- `kit:build` (`tsc -p kit`) run by `prepack`. Node does not strip types under `node_modules`, so the bin must be
-  JavaScript.
-- `kit/test/**/*.test.ts` in vitest's `include`, and `kit/dist` ignored by Biome and git.
+- `kit:build` (`tsc -p kit`) run by `build`, because `bin/release` publishes with `--ignore-scripts`. Node does not
+  strip types under `node_modules`, so the bin must be JavaScript.
+- `kit/test/**/*.test.ts` in vitest's `include`; `kit/dist` is ignored by the root `**/dist` rules of Biome and git.

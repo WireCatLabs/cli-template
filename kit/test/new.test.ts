@@ -31,12 +31,12 @@ describe("new", () => {
   ])("copies the template for the %s category", async (category, reference) => {
     const { dir, out } = await makeNew({ ...NOTES_FLAGS, category })
 
-    expect(existsSync(join(dir, "src/bin/cal.ts"))).toBe(true)
+    expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL, command: "cal" })')
     expect(existsSync(join(dir, "kit"))).toBe(false)
     expect(existsSync(join(dir, ".git"))).toBe(true)
     expect(statSync(join(dir, "bin/release")).mode & 0o111).not.toBe(0)
     for (const file of walk(dir).filter((path) => !path.endsWith("template.json"))) {
-      expect(read(file, ""), file).not.toMatch(/(?<![A-Za-z0-9_])(app|APP)(?![A-Za-z0-9])|kit\//)
+      expect(read(file, ""), file).not.toMatch(/(?<![A-Za-z0-9_])(app(?!: )|APP)(?![A-Za-z0-9])|kit\//)
     }
     expect(read(dir, "docs/index.md")).toBe(
       "# cal-cli\n\nInstall @example/cal-cli from example/cal-cli. An application for happy apps.\n",

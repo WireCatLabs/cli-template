@@ -40,7 +40,6 @@
     "biome.json",
     "cspell.json",
     "lefthook.yml",
-    "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "template.json",
     "tsconfig.json",

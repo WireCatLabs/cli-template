@@ -86,7 +86,7 @@ export const V1: Files = {
   ].join("\n"),
   "bin/release": "#!/bin/sh\necho releasing app\n",
   "docs/meta.json": '{ "title": "app" }\n',
-  "src/bin/app.ts": 'import { run } from "../program.js"\n\nrun("app")\n',
+  "src/bin/app.ts": 'import { run } from "../program.js"\n\nrun({ app: APP, command: "app" })\n',
   "src/version.ts": 'export const VERSION = "0.1.0"\n',
   "config/wirecat/biome.base.json": "{}\n",
   "README.md": "# app\n\nThe template's own README.\n",
