@@ -1,7 +1,7 @@
 # clidev
 
-`clidev` brings a service to the terminal, to scripts and to AI agents. This page is where a reader starts: say what
-the tool does, who it is for, and the first command to run. It will say that once the tool connects to its service.
+`clidev` is a WireCat command-line tool for the terminal, for scripts and for AI agents. It does not connect to a
+service yet.
 
-Today it has the commands every WireCat CLI shares: `doctor`, `commands`, `config`, `skill`, `mcp` and `upgrade`.
+It has the commands every WireCat CLI shares: `doctor`, `commands`, `config`, `skill`, `mcp`, `runs` and `upgrade`.
 Start with [installation](installation.md), then [usage](usage.md).

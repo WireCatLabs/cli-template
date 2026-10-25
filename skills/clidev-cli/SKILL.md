@@ -1,6 +1,6 @@
 ---
 name: clidev-cli
-description: Use clidev, a WireCat CLI started from cli-template, from an agent — find a command, run it with the owner's profile, read JSON answers. Use when a task needs clidev; replace this description with what the tool does once it connects to its service.
+description: Use clidev, a WireCat CLI started from cli-template, from an agent — find a command, run it with the owner's profile, read JSON answers. Use when a task needs clidev. It does not connect to a service yet.
 ---
 
 # clidev
