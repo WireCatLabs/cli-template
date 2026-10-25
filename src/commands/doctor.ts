@@ -3,8 +3,8 @@ import { CliError, configFilePath, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { environmentOf, itemOf, LOCAL_READ, outputFor, readOnlyLockOf, renderAnswer } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
-import { APP } from "../app.js"
 import { configuration } from "../config.js"
+import { IDENTITY } from "../identity.js"
 
 const failure = (error: unknown) => {
   if (error instanceof CliError) return error.message
@@ -13,7 +13,7 @@ const failure = (error: unknown) => {
 
 /** It is run when everything else is broken, so an unreadable config is a field in the answer, never a throw. */
 export const doctorReport = (env: NodeJS.ProcessEnv) => {
-  const paths = resolvePaths({ appName: APP.appName, prefix: APP.envPrefix, env })
+  const paths = resolvePaths({ appName: IDENTITY.appName, prefix: IDENTITY.envPrefix, env })
   const file = configFilePath(paths.config)
   let config: { path: string; exists: boolean; error?: string }
   let profiles: string[] | null = null
@@ -24,19 +24,19 @@ export const doctorReport = (env: NodeJS.ProcessEnv) => {
     config = { path: file, exists: existsSync(file), error: failure(error) }
   }
   return {
-    version: APP.version,
+    version: IDENTITY.version,
     runtime: { node: process.versions.node, platform: process.platform },
     paths: { config: paths.config, state: paths.state, cache: paths.cache },
     config,
     profiles,
-    read_only: readOnlyLockOf(APP, env) ?? null,
+    read_only: readOnlyLockOf(IDENTITY, env) ?? null,
   }
 }
 
 export const doctorCommand = (): Command =>
   annotate(new Command("doctor"), {
     effects: LOCAL_READ,
-    examples: [`${APP.command} doctor`, `${APP.command} personal doctor --json`],
+    examples: [`${IDENTITY.command} doctor`, `${IDENTITY.command} personal doctor --json`],
   })
     .description("check this installation: version, paths, config, profiles; no keyring or network")
     .action(function (this: Command) {

@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { expect, it } from "vitest"
-import { APP } from "./app.js"
+import { IDENTITY } from "./identity.js"
 import { run } from "./program.js"
 
 const ran = async (argv: string[]) => {
@@ -62,5 +62,5 @@ it("mcp without a profile stops and says so", async () => {
 it("upgrade --check installs nothing when npm cannot be reached", async () => {
   const { code, out } = await ran(["upgrade", "--check", "--json"])
   expect(code).toBe(0)
-  expect(json(out).item).toMatchObject({ current: APP.version, latest: null, updated: false })
+  expect(json(out).item).toMatchObject({ current: IDENTITY.version, latest: null, updated: false })
 })

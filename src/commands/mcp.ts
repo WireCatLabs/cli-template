@@ -2,19 +2,19 @@ import { CliError } from "@wirecat/cli-base"
 import { annotate, describeProgram } from "@wirecat/cli-base/commands"
 import { changesAuthorityAt, environmentOf, type GlobalFlags, REMOTE_WRITE, rootOf } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
-import { APP } from "../app.js"
 import { configuration } from "../config.js"
+import { IDENTITY } from "../identity.js"
 
 export const mcpCommand = (): Command =>
   annotate(new Command("mcp"), {
     effects: REMOTE_WRITE,
     lifetime: "persistent",
     mcp: false,
-    examples: [`${APP.command} personal mcp`],
+    examples: [`${IDENTITY.command} personal mcp`],
   })
     .summary("serve this profile's commands to an AI agent")
     .description(
-      `serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — \`claude mcp add ${APP.command} -- ${APP.command} personal mcp\``,
+      `serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — \`claude mcp add ${IDENTITY.command} -- ${IDENTITY.command} personal mcp\``,
     )
     .action(async function (this: Command) {
       const flags = this.optsWithGlobals<GlobalFlags>()

@@ -4,7 +4,7 @@
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-command=$(node --input-type=module -e "import('$root/dist/app.js').then((m) => console.log(m.APP.command))")
+command=$(node --input-type=module -e "import('$root/dist/identity.js').then((m) => console.log(m.IDENTITY.command))")
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 # A CLI that starts may move the store under HOME; every CLI run here gets a throwaway one.
