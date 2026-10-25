@@ -30,7 +30,7 @@ const V2: Files = {
   "README.md": "# app\n\nA new seed text.\n",
   "template.json": JSON.stringify({
     files: [".github/", "AGENTS.md", "bin/release", "docs/meta.json", "docs/new-page.md"],
-    seeds: ["src/", "README.md", "config/wirecat/"],
+    seeds: ["src/", "README.md", "docs/", "skills/", "vitest.config.ts", "config/wirecat/"],
   }),
 }
 

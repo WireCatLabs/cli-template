@@ -12,5 +12,8 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   command, writes included, and the profile's permissions decide what runs.
 - **The checks of the WireCat standards, from the first commit.** CI runs lint, the type check, tests with coverage,
   the command lint and audit, the contracts, the test matrix, the docs checks and the changelog guard.
+- **`npx @wirecat/cli-template new` and `upgrade`.** `new` copies the template into a new folder, renames it, asks
+  the seven design questions (or takes them as flags) and prints the four steps that need a person. `upgrade` brings
+  later template changes into a CLI made from it, file by file: apply, replace, skip or diff.
 - **A design interview for the agent that builds the new CLI**, and a page that names the CLI to learn from for each
   kind of tool.

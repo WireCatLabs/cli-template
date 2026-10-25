@@ -38,9 +38,12 @@ describe("new", () => {
     for (const file of walk(dir).filter((path) => !path.endsWith("template.json"))) {
       expect(read(file, ""), file).not.toMatch(/(?<![A-Za-z0-9_])(app|APP)(?![A-Za-z0-9])|kit\//)
     }
-    expect(read(dir, "README.md")).toBe(
-      "# cal\n\nInstall @example/cal-cli from example/cal-cli. An application for happy apps.\n",
+    expect(read(dir, "docs/index.md")).toBe(
+      "# cal-cli\n\nInstall @example/cal-cli from example/cal-cli. An application for happy apps.\n",
     )
+    expect(read(dir, "skills/cal-cli/SKILL.md")).toBe("---\nname: cal-cli\n---\n")
+    expect(read(dir, "vitest.config.ts")).toBe('export default { include: ["src/**/*.test.ts"], exclude: [] }\n')
+    expect(read(dir, "README.md")).toContain("node dist/bin/cal.js personal doctor")
     expect(read(dir, "AGENTS.md")).toContain(reference)
     expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${category.replace("other:", "other: ")}`)
@@ -68,7 +71,7 @@ describe("new", () => {
       template: "@wirecat/cli-template",
       version: "0.1.0",
       names: { name: "cal-cli", command: "cal", package: "@example/cal-cli", owner: "example" },
-      seeds: ["src/", "README.md", "config/wirecat/"],
+      seeds: ["src/", "README.md", "docs/", "skills/", "vitest.config.ts", "config/wirecat/"],
     })
     expect(Object.keys(manifest.files).sort()).toEqual([
       ".github/workflows/ci.yml",

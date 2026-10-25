@@ -12,11 +12,13 @@ export const renamer = (placeholders: Placeholders, names: Names): ((text: strin
   const table = new Map<string, string>([
     [placeholders.package, names.package],
     [placeholders.repository, `${names.owner}/${names.name}`],
+    [placeholders.name, names.name],
     [placeholders.command, names.command],
     [upperCommand(placeholders.command), upperCommand(names.command)],
   ])
   const pattern = new RegExp(
-    [escapeRegex(placeholders.package), escapeRegex(placeholders.repository), word(placeholders.command)]
+    [escapeRegex(placeholders.package), escapeRegex(placeholders.repository), word(placeholders.name)]
+      .concat(word(placeholders.command))
       .concat(word(upperCommand(placeholders.command)))
       .join("|"),
     "g",
@@ -28,3 +30,17 @@ const isBinary = (content: Buffer): boolean => content.subarray(0, 8000).include
 
 export const renameContent = (rename: (text: string) => string, content: Buffer): Buffer =>
   isBinary(content) ? content : Buffer.from(rename(content.toString("utf8")), "utf8")
+
+const KIT_CONFIG = /(^|\/)(vitest\.config\.ts|biome\.json|cspell\.json|tsconfig[^/]*\.json|\.markdownlint-cli2\.jsonc)$/
+
+// The template's configs name kit/ so its own checks cover the copy tool; a CLI has no kit/, and the
+// entries would point at nothing (or fail, for an include that must match).
+export const stripKit = (path: string, content: Buffer): Buffer => {
+  if (!KIT_CONFIG.test(path)) return content
+  const text = content.toString("utf8")
+  const stripped = text
+    .replace(/\[\s*"!?(\.\/)?kit\/[^"]*"\s*\]/g, "[]")
+    .replace(/,\s*"!?(\.\/)?kit\/[^"]*"/g, "")
+    .replace(/"!?(\.\/)?kit\/[^"]*",\s*/g, "")
+  return stripped === text ? content : Buffer.from(stripped, "utf8")
+}

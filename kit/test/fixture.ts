@@ -51,8 +51,10 @@ const packageJson = (version: string) =>
         "config",
         "README.md",
         "template.json",
+        "skills",
+        "vitest.config.ts",
       ],
-      scripts: { build: "tsc --build", "kit:build": "tsc -p kit", prepack: "pnpm build && pnpm kit:build" },
+      scripts: { build: "tsc --build && pnpm kit:build", "kit:build": "tsc -p kit", prepack: "pnpm build" },
     },
     null,
     2,
@@ -61,7 +63,7 @@ const packageJson = (version: string) =>
 export const V1: Files = {
   "template.json": JSON.stringify({
     files: [".github/", "AGENTS.md", "bin/release", "docs/meta.json"],
-    seeds: ["src/", "README.md", "config/wirecat/"],
+    seeds: ["src/", "README.md", "docs/", "skills/", "vitest.config.ts", "config/wirecat/"],
   }),
   ".github/workflows/ci.yml":
     "name: ci\njobs:\n  test:\n    steps:\n      - run: node dist/bin/app.js personal doctor\n",
@@ -87,7 +89,11 @@ export const V1: Files = {
   "src/bin/app.ts": 'import { run } from "../program.js"\n\nrun("app")\n',
   "src/version.ts": 'export const VERSION = "0.1.0"\n',
   "config/wirecat/biome.base.json": "{}\n",
-  "README.md": "# app\n\nInstall @wirecat/app-cli from WireCatLabs/app-cli. An application for happy apps.\n",
+  "README.md": "# app\n\nThe template's own README.\n",
+  "docs/index.md": "# app-cli\n\nInstall @wirecat/app-cli from WireCatLabs/app-cli. An application for happy apps.\n",
+  "skills/app-cli/SKILL.md": "---\nname: app-cli\n---\n",
+  "vitest.config.ts":
+    'export default { include: ["src/**/*.test.ts", "kit/test/**/*.test.ts"], exclude: ["!kit/dist"] }\n',
   "kit/src/main.ts": "// the copy tool, never copied\n",
 }
 

@@ -184,6 +184,40 @@ export const cliPackageJson = (text: string, names: Names): string => {
 
 const VERSION_FILE = "src/version.ts"
 
+export const cliReadme = (names: Names): string =>
+  [
+    `# ${names.command}`,
+    "",
+    `\`${names.command}\` is a WireCat command-line tool, started from`,
+    "[cli-template](https://github.com/WireCatLabs/cli-template). Its design is in",
+    "[docs/dev/DESIGN.md](docs/dev/DESIGN.md).",
+    "",
+    "## Quick start",
+    "",
+    "```sh",
+    "pnpm install",
+    "pnpm build",
+    `node dist/bin/${names.command}.js personal doctor`,
+    "```",
+    "",
+    "`personal` is the profile: a name you choose for one account. Every command that uses an account starts with it.",
+    "",
+  ].join("\n")
+
+export const cliChangelog = (names: Names, source: TemplateSource): string =>
+  [
+    "# Changelog",
+    "",
+    `Notable changes to \`${names.package}\`. One section per version, newest first.`,
+    "",
+    "## Unreleased",
+    "",
+    "### Added",
+    "",
+    `- Started from \`${source.name}\` ${source.version}.`,
+    "",
+  ].join("\n")
+
 const writeOut = async (dir: string, path: string, content: Buffer | string, mode = 0o644): Promise<void> => {
   const full = join(dir, path)
   await mkdir(dirname(full), { recursive: true })
@@ -203,21 +237,22 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   const target = join(cwd, names.name)
   if (!(await isEmptyOrMissing(target))) throw new Error(`${target} already exists and is not empty`)
   const rendered = await renderTemplate(source, names)
+  const category = answers.category?.[0] ?? ""
+  const rewrites: Record<string, (text: string) => string> = {
+    "package.json": (text) => cliPackageJson(text, names),
+    "README.md": () => cliReadme(names),
+    "CHANGELOG.md": () => cliChangelog(names, source),
+    [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
+    "AGENTS.md": (text) => withReference(text, category),
+  }
   const hashes: Record<string, string> = {}
   for (const [path, file] of rendered) {
     if (file.kind === "file") hashes[path] = sha256(file.content)
-    const text = () => file.content.toString("utf8")
-    const content =
-      path === "package.json"
-        ? cliPackageJson(text(), names)
-        : path === VERSION_FILE
-          ? text().replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"')
-          : path === "AGENTS.md"
-            ? withReference(text(), answers.category?.[0] ?? "")
-            : file.content
+    const rewrite = rewrites[path]
+    const content = rewrite ? rewrite(file.content.toString("utf8")) : file.content
     await writeOut(target, path, content, file.mode)
   }
-  if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", answers.category?.[0] ?? ""))
+  if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
   const manifest: CliManifest = {
     template: source.name,

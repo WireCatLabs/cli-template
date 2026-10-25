@@ -13,7 +13,7 @@ import {
   readJson,
   type TemplateManifest,
 } from "./manifest.js"
-import { renameContent, renamer } from "./rename.js"
+import { renameContent, renamer, stripKit } from "./rename.js"
 
 const run = promisify(execFile)
 
@@ -82,7 +82,8 @@ export const renderTemplate = async (source: TemplateSource, names: Names): Prom
     [...listed].map(async ([path, kind]) => {
       const full = join(source.root, path)
       const [content, info] = await Promise.all([readFile(full), stat(full)])
-      return [rename(path), { kind, content: renameContent(rename, content), mode: info.mode & 0o777 }] as const
+      const renamed = renameContent(rename, stripKit(path, content))
+      return [rename(path), { kind, content: renamed, mode: info.mode & 0o777 }] as const
     }),
   )
   return new Map(rendered)

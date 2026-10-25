@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 export const MANIFEST = "template.json"
 
-export type Placeholders = { command: string; package: string; repository: string }
+export type Placeholders = { command: string; name: string; package: string; repository: string }
 
 export type TemplateManifest = {
   files: string[]
@@ -25,6 +25,7 @@ export type CliManifest = {
 
 export const DEFAULT_PLACEHOLDERS: Placeholders = {
   command: "app",
+  name: "app-cli",
   package: "@wirecat/app-cli",
   repository: "WireCatLabs/app-cli",
 }

@@ -17,7 +17,7 @@ beforeAll(() => {
     ".gitignore": "node_modules\ndist\n",
     "template.json": JSON.stringify({
       files: [".github/", ".gitignore", "AGENTS.md", "bin/release", "docs/meta.json"],
-      seeds: ["src/", "README.md", "config/wirecat/"],
+      seeds: ["src/", "README.md", "docs/", "skills/", "vitest.config.ts", "config/wirecat/"],
     }),
   })
   execFileSync(join(repoRoot, "node_modules/.bin/tsc"), [
