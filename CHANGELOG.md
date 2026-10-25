@@ -3,6 +3,14 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
+## Unreleased
+
+### Fixed
+
+- **`npx @wirecat/cli-template new` works.** It stopped with `template.json lists ".gitignore", but the package has
+  no such file`, because npm renames `.gitignore` when it installs a package. The package now ships the file under
+  another name, and `new` and `upgrade` write it as `.gitignore`.
+
 ## 0.1.0 — 25.10.2026
 
 ### Added

@@ -116,8 +116,12 @@ A conflict leaves git markers, and `template.json` keeps the new state under `pe
 - `"bin": { "cli-template": "kit/dist/main.js" }`, and `kit/dist` in `files`. No ignore file inside `kit/`: npm
   applies it and drops `kit/dist` from the package. npm also never packs `pnpm-lock.yaml`, so it is not a seed; the
   new CLI makes its own on `pnpm install`.
-- Every template-owned file and seed in `files`. npm drops a nested `.gitignore` and any `.npmrc`; the test in
-  `kit/test/package.test.ts` runs the bin from a real tarball to catch that.
-- `kit:build` (`tsc -p kit`) run by `build`, because `bin/release` publishes with `--ignore-scripts`. Node does not
-  strip types under `node_modules`, so the bin must be JavaScript.
+- Every template-owned file and seed in `files`. npm drops a nested `.gitignore` and any `.npmrc` when it packs.
+  When it installs a package, it renames `.gitignore` to `.npmignore`. So the package ships the root `.gitignore` as
+  `gitignore`, and `new` and `upgrade` read it back as `.gitignore`. The test in `kit/test/package.test.ts` runs the
+  bin from a tarball installed with `npm install` to catch that.
+- `kit:build` (`tsc -p kit`, then the copy to `gitignore`) run by `build`, because `bin/release` and CI pack with
+  `--ignore-scripts`. Node does not strip types under `node_modules`, so the bin must be JavaScript.
+- `pnpm kit:e2e` packs this repository, installs the tarball with npm, runs `new` and then `pnpm install` and
+  `pnpm ci:quick` in the new CLI. It needs the network and takes a few minutes, so it is not part of `pnpm test`.
 - `kit/test/**/*.test.ts` in vitest's `include`; `kit/dist` is ignored by the root `**/dist` rules of Biome and git.

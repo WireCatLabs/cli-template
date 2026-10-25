@@ -39,6 +39,16 @@ export const loadSource = async (root: string): Promise<TemplateSource> => {
 
 const SKIP_DIRS = new Set([".git", "node_modules"])
 
+// npm renames .gitignore to .npmignore when it installs a package, so the package ships it as gitignore.
+export const PACKED_AS: Record<string, string> = { ".gitignore": "gitignore" }
+
+const onDisk = async (root: string, path: string): Promise<string> => {
+  const packed = PACKED_AS[path]
+  const full = join(root, path)
+  if (!packed) return full
+  return (await stat(full).catch(() => undefined)) ? full : join(root, packed)
+}
+
 const walk = async (dir: string): Promise<string[]> => {
   const entries = await readdir(dir, { withFileTypes: true })
   const nested = await Promise.all(
@@ -52,7 +62,7 @@ const walk = async (dir: string): Promise<string[]> => {
 }
 
 const listEntry = async (root: string, entry: string): Promise<string[]> => {
-  const path = join(root, entry)
+  const path = await onDisk(root, entry)
   const info = await stat(path).catch(() => undefined)
   if (!info)
     throw new Error(
@@ -80,7 +90,7 @@ export const renderTemplate = async (source: TemplateSource, names: Names): Prom
   const listed = await listTemplate(source)
   const rendered = await Promise.all(
     [...listed].map(async ([path, kind]) => {
-      const full = join(source.root, path)
+      const full = await onDisk(source.root, path)
       const [content, info] = await Promise.all([readFile(full), stat(full)])
       const renamed = renameContent(rename, stripKit(path, content))
       return [rename(path), { kind, content: renamed, mode: info.mode & 0o777 }] as const
