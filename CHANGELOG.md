@@ -12,6 +12,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `docs/dev/DESIGN.md` still records them with the speech-model order.
 - **`scripts/audit.sh` reads `config/parity-groups.json` when the repository has one.** That file replaces
   cli-base's parity groups for the audit. The template uses it to compare itself with the published CLIs.
+- **The release skill ends with a fresh-agent audit.** Before the version is raised, a new subagent audits the
+  repository against the handbook alone, with the prompt in `docs/dev/skills/release/fresh-audit.md`, and its report
+  goes into the release pull request.
 
 ### Changed — may break callers
 
