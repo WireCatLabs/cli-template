@@ -5,7 +5,7 @@ support request.
 
 | Symptom | What to do |
 | --- | --- |
-| Not sure what is set up | Run `clidev personal doctor`. It reads no keyring and uses no network. |
+| Not sure what is set up | Run `clidev doctor`. It reads no keyring and uses no network. |
 | `clidev` is not found | Open a new terminal, and check that npm's global folder is on `PATH`. |
 | "name a profile" | Put the profile first, as in `clidev personal config show`, or set `CLIDEV_PROFILE`. |
 | The settings file does not read | `doctor` lists every problem in the file under `config.issues`. Run the `config unset` each one gives, or fix the file by hand. |

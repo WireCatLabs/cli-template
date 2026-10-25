@@ -15,7 +15,7 @@ command without one stops with exit code 2 and lists the profiles on this comput
 
 ## Output for scripts
 
-Every command takes `--json`, and prints one JSON value on stdout. Errors are JSON on stderr, with a code to branch
+Every command except `mcp` takes `--json`, and prints one JSON value on stdout. Errors are JSON on stderr, with a code to branch
 on. The [command reference](commands.md) lists the codes.
 
 ## Agents

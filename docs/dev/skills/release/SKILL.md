@@ -24,4 +24,4 @@ and runs `bin/release`.
    `package.json`, run `pnpm version:sync`, date the section as `## <version> — DD.MM.YYYY`, run
    `pnpm release:check` again, and open the pull request `chore(release): <version>`.
 7. **The owner** merges it and runs `bin/release` on a clean `main`. `bin/release --local` publishes from this
-   computer when GitHub Actions cannot, with the owner's own npm login or `NPM_TOKEN`.
+   computer when GitHub Actions cannot, with `NPM_TOKEN`, the npm token in the keyring, or the owner's own npm login.
