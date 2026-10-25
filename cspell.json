@@ -1,5 +1,10 @@
 {
   "version": "0.2",
-  "files": ["README.md"],
-  "import": ["./config/wirecat/cspell.json"]
+  "import": [
+    "./config/wirecat/cspell.json",
+    "@cspell/dict-en-gb/cspell-ext.json",
+    "@cspell/dict-ru_ru/cspell-ext.json"
+  ],
+  "ignorePaths": ["docs/dev/**", "CHANGELOG.md"],
+  "words": ["cyrillic", "latin", "wirecat"]
 }

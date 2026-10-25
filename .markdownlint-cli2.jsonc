@@ -1,6 +1,6 @@
 {
-  "globs": ["README.md", "SECURITY.md", "CONTRIBUTING.md", "SUPPORT.md", "CODE_OF_CONDUCT.md", "docs/dev/**/*.md"],
-  "ignores": ["node_modules", "dist", ".worktrees", "config/wirecat"],
+  "globs": ["README.md", "SECURITY.md", "AGENTS.md", "CLAUDE.md", "docs/*.md", "docs/dev/**/*.md", "skills/**/*.md"],
+  "ignores": ["node_modules", "dist", ".worktrees", "config/wirecat", "docs/commands.md", "docs/dev/test-matrix.md"],
   "config": {
     "extends": "./config/wirecat/markdownlint.json"
   }

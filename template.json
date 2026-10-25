@@ -1,0 +1,41 @@
+{
+  "files": [
+    ".github/",
+    ".gitignore",
+    ".gitleaks.toml",
+    ".vale.ini",
+    "AGENTS.md",
+    "bin/release",
+    "docs/dev/design-questions.md",
+    "docs/dev/reference-clis.md",
+    "docs/dev/skills/",
+    "docs/dev/TESTING.md",
+    "lefthook.yml",
+    "scripts/audit.sh",
+    "tsconfig.json",
+    "tsconfig.scripts.json",
+    "tsconfig.test.json"
+  ],
+  "seeds": [
+    ".markdownlint-cli2.jsonc",
+    "CHANGELOG.md",
+    "CLAUDE.md",
+    "LICENSE",
+    "README.md",
+    "SECURITY.md",
+    "biome.json",
+    "config/wirecat/",
+    "contracts/",
+    "cspell.json",
+    "docs/",
+    "lint/",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "scripts/",
+    "skills/",
+    "src/",
+    "vitest.config.ts"
+  ],
+  "placeholders": { "command": "app", "package": "@wirecat/app-cli", "repository": "WireCatLabs/app-cli" }
+}
