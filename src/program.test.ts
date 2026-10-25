@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { expect, it } from "vitest"
+import { doctorReport } from "./commands/doctor.js"
 import { IDENTITY } from "./identity.js"
 import { run } from "./program.js"
 
@@ -25,20 +26,40 @@ it("lists the required root commands and config", async () => {
 it("doctor answers without a config file", async () => {
   const { code, out } = await ran(["doctor", "--json"])
   expect(code).toBe(0)
-  expect(json(out).item).toMatchObject({ config: { exists: false }, profiles: [], read_only: null })
+  expect(json(out).item).toMatchObject({ config: { found: false, issues: [] }, profiles: [], read_only: null })
 })
 
-it("doctor reports an unreadable config as a field", async () => {
+const withConfig = async (text: string, check: (config: unknown) => void) => {
   const dir = process.env.CLIDEV_CONFIG_DIR ?? ""
   mkdirSync(dir, { recursive: true })
-  writeFileSync(join(dir, "config.json"), "not json")
+  writeFileSync(join(dir, "config.json"), text)
   try {
     const { code, out } = await ran(["doctor", "--json"])
     expect(code).toBe(0)
-    expect(json(out).item.config).toMatchObject({ exists: true, error: expect.any(String) })
+    check(json(out).item.config)
   } finally {
     rmSync(join(dir, "config.json"))
   }
+}
+
+it("doctor reports invalid JSON as an issue", async () => {
+  await withConfig('{\n  "defaults": {\n', (config) =>
+    expect(config).toMatchObject({ found: true, issues: [{ kind: "invalid_json", line: 3 }] }),
+  )
+})
+
+it("doctor reports an unknown setting with the command that removes it", async () => {
+  await withConfig('{ "defaults": { "limt": 3 } }', (config) =>
+    expect(config).toMatchObject({
+      found: true,
+      issues: [{ kind: "unknown_setting", key: "limt", fix: "clidev config unset --defaults limt" }],
+    }),
+  )
+})
+
+it("doctor reports settings an environment variable breaks, and still answers", () => {
+  const report = doctorReport({ ...process.env, CLIDEV_EMBEDDING_DIMS: "many" })
+  expect(report).toMatchObject({ config: { issues: [] }, settings: { error: expect.any(String) }, profiles: null })
 })
 
 it("config show names the profile it was given", async () => {

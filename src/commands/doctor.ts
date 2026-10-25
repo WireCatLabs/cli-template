@@ -11,25 +11,32 @@ const failure = (error: unknown) => {
   throw error
 }
 
-/** It is run when everything else is broken, so an unreadable config is a field in the answer, never a throw. */
+/** It is run when everything else is broken, so a problem in the config file is a field in the answer, never a throw. */
 export const doctorReport = (env: NodeJS.ProcessEnv) => {
   const paths = resolvePaths({ appName: IDENTITY.appName, prefix: IDENTITY.envPrefix, env })
-  const file = configFilePath(paths.config)
-  let config: { path: string; exists: boolean; error?: string }
-  let profiles: string[] | null = null
-  try {
-    profiles = configuration.configuredProfiles({ env, readOnly: true })
-    config = { path: file, exists: existsSync(file) }
-  } catch (error) {
-    config = { path: file, exists: existsSync(file), error: failure(error) }
-  }
-  return {
+  const common = {
     version: IDENTITY.version,
     runtime: { node: process.versions.node, platform: process.platform },
     paths: { config: paths.config, state: paths.state, cache: paths.cache },
-    config,
-    profiles,
-    read_only: readOnlyLockOf(IDENTITY, env) ?? null,
+  }
+  const readOnly = readOnlyLockOf(IDENTITY, env) ?? null
+  try {
+    const settings = configuration.resolveSettings({}, { env, readOnly: true, needsProfile: false, withIssues: true })
+    return {
+      ...common,
+      config: { path: settings.configPath, found: settings.configFound, issues: settings.configIssues ?? [] },
+      profiles: settings.configuredProfiles,
+      read_only: readOnly,
+    }
+  } catch (error) {
+    const file = configFilePath(paths.config)
+    return {
+      ...common,
+      config: { path: file, found: existsSync(file), issues: [] },
+      settings: { error: failure(error) },
+      profiles: null,
+      read_only: readOnly,
+    }
   }
 }
 
