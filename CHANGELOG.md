@@ -17,6 +17,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   including the `contentLanguages` field on its identity. cli-base stays on 0.53, because cli-core 0.421.0 accepts
   only cli-base 0.53.
 
+### Fixed
+
+- **`new`'s next steps run in Windows PowerShell 5.1.** It printed `cd <name> && pnpm install && pnpm ci:quick`, and
+  PowerShell 5.1 has no `&&`. Each step is now on its own line.
+- **A CLI's files keep LF line endings on Windows.** A new template-owned `.gitattributes` (`* text=auto eol=lf`)
+  stops git from checking files out with CRLF, which Biome's format check rejects.
+
 ### Security
 
 - **markdownlint-cli2's markdown-it, katex and smol-toml move past their advisories.** `pnpm-workspace.yaml` raises

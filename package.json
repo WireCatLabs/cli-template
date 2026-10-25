@@ -34,6 +34,7 @@
     "LICENSE",
     "README.md",
     "SECURITY.md",
+    ".gitattributes",
     ".gitleaks.toml",
     ".markdownlint-cli2.jsonc",
     ".vale.ini",
