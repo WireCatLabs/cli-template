@@ -29,7 +29,8 @@ jobs:
       platform-run: |
         node dist/bin/clidev.js commands --json >/dev/null
         node dist/bin/clidev.js doctor --json >/dev/null
-      # No version is on npm before the first release, so there is no earlier package to upgrade from.
+      # The skeleton keeps no local state, so there is nothing for an upgrade to lose (WC-TEST-14's exception). A CLI
+      # that adds a store adds a contracts:upgrade script and removes this skip.
       skip: |
         contracts:upgrade
       checks: |

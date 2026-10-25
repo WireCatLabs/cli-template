@@ -15,6 +15,17 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   typed before it still works. A CLI started from an older template copies `src/commands/doctor.ts` and
   `src/mcp.ts`.
 
+### Added
+
+- **`bin/release --local` reads the npm token from the keyring** (`secret-tool`, service `npm`, account `leemour`), as
+  the other WireCat CLIs do, when `NPM_TOKEN` is not exported. Without either it uses your `npm login`. The token is
+  never printed. A CLI made from the template gets this with `upgrade`.
+
+### Fixed
+
+- **A merge to `main` no longer cancels the validation of the merge before it.** Each merged commit is now checked in
+  turn. A CLI made from the template gets this with `upgrade`.
+
 ## 0.1.5 — 25.10.2026
 
 ### Changed — may break callers
