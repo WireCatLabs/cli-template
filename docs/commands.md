@@ -3,9 +3,9 @@
 # Commands
 
 Every command, option and exit code, generated from the program itself. For the same list as JSON, run
-`app commands --json`.
+`clidev commands --json`.
 
-**The first word is the profile**, a name you choose: `app personal doctor`. `APP_PROFILE`
+**The first word is the profile**, a name you choose: `clidev personal doctor`. `CLIDEV_PROFILE`
 does the same for a whole shell session. No profile is assumed: a command that uses an account stops without one and
 lists the profiles on this computer.
 
@@ -32,16 +32,16 @@ lists the profiles on this computer.
 | `--record` | keep this run — ids and timings, never message content. |
 | `--no-record` | do not keep it, whatever the configuration says. |
 
-## `app commands`
+## `clidev commands`
 
 every command by section; --json prints its contract, one path per call
 
-### `app commands info`
+### `clidev commands info`
 
 one command contract, or all schemas, error reasons and explicit overrides
 
 ```sh
-app commands info [path]
+clidev commands info [path]
 ```
 
 | Argument | | What it is |
@@ -50,30 +50,30 @@ app commands info [path]
 
 **Returns:** one command contract, or all schemas, error reasons and explicit overrides
 
-**Example:** `app commands info messages list`
+**Example:** `clidev commands info messages list`
 
-## `app doctor`
+## `clidev doctor`
 
 check this installation: version, paths, config, profiles; no keyring or network
 
 ```sh
-app doctor
+clidev doctor
 ```
 
 **Returns:** check this installation: version, paths, config, profiles; no keyring or network
 
-**Example:** `app personal doctor`, `app personal doctor --json`
+**Example:** `clidev personal doctor`, `clidev personal doctor --json`
 
-## `app skill`
+## `clidev skill`
 
 the instructions an agent is given for this tool
 
-### `app skill show`
+### `clidev skill show`
 
-print SKILL.md — `app skill install` puts it where Claude Code, Codex and Gemini CLI look for it
+print SKILL.md — `clidev skill install` puts it where Claude Code, Codex and Gemini CLI look for it
 
 ```sh
-app skill show [name]
+clidev skill show [name]
 ```
 
 | Argument | | What it is |
@@ -82,16 +82,16 @@ app skill show [name]
 
 **Returns:** print the tool's instructions for AI agents
 
-**Example:** `app skill show`, `app skill show follow-ups`
+**Example:** `clidev skill show`, `clidev skill show follow-ups`
 
-### `app skill install`
+### `clidev skill install`
 
-write SKILL.md to \~/.claude/skills/app-cli/ (Claude Code) and \~/.agents/skills/app-cli/ (Codex, Gemini CLI)
+write SKILL.md to \~/.claude/skills/clidev-cli/ (Claude Code) and \~/.agents/skills/clidev-cli/ (Codex, Gemini CLI)
 
 **Changes something on this computer only.**
 
 ```sh
-app skill install [options]
+clidev skill install [options]
 ```
 
 | Option | What it does |
@@ -100,50 +100,50 @@ app skill install [options]
 
 **Returns:** install the tool's instructions for AI agents
 
-**Example:** `app skill install --for agents`
+**Example:** `clidev skill install --for agents`
 
-## `app mcp`
+## `clidev mcp`
 
-serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add app -- app personal mcp`
+serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add clidev -- clidev personal mcp`
 
 **Changes something in the service.**
 
 ```sh
-app mcp
+clidev mcp
 ```
 
 **Returns:** serve this profile's commands to an AI agent
 
-**Example:** `app personal mcp`
+**Example:** `clidev personal mcp`
 
-## `app upgrade`
+## `clidev upgrade`
 
-upgrade app with the package manager that installed it; --check only looks
+upgrade clidev with the package manager that installed it; --check only looks
 
 **Changes something on this computer only.**
 
 ```sh
-app upgrade [options]
+clidev upgrade [options]
 ```
 
 | Option | What it does |
 |---|---|
 | `--check` | say whether a newer version exists, and install nothing. |
 
-**Returns:** upgrade app with the package manager that installed it; --check only looks
+**Returns:** upgrade clidev with the package manager that installed it; --check only looks
 
-**Example:** `app upgrade --check`, `app upgrade`
+**Example:** `clidev upgrade --check`, `clidev upgrade`
 
-## `app config`
+## `clidev config`
 
 the settings in force, and where each one came from
 
-### `app config show`
+### `clidev config show`
 
 the profile, the profiles that exist, and each setting with where it came from
 
 ```sh
-app config show [options]
+clidev config show [options]
 ```
 
 | Option | What it does |
@@ -152,16 +152,16 @@ app config show [options]
 
 **Returns:** the profile, the profiles that exist, and each setting with where it came from
 
-**Example:** `app personal config show`
+**Example:** `clidev personal config show`
 
-### `app config set`
+### `clidev config set`
 
 save a setting to the configuration file
 
 **Changes something on this computer only.**
 
 ```sh
-app config set <setting> <value> [options]
+clidev config set <setting> <value> [options]
 ```
 
 | Argument | | What it is |
@@ -177,16 +177,16 @@ app config set <setting> <value> [options]
 
 **Returns:** save a setting to the configuration file
 
-**Example:** `app personal config set limit 20`
+**Example:** `clidev personal config set limit 20`
 
-### `app config unset`
+### `clidev config unset`
 
 remove a setting from the configuration file
 
 **Changes something on this computer only.**
 
 ```sh
-app config unset <setting> [options]
+clidev config unset <setting> [options]
 ```
 
 | Argument | | What it is |
@@ -201,7 +201,7 @@ app config unset <setting> [options]
 
 **Returns:** remove a setting from the configuration file
 
-**Example:** `app personal config unset limit`
+**Example:** `clidev personal config unset limit`
 
 ## Exit codes
 

@@ -1,6 +1,6 @@
-app — a new WireCat CLI, started from cli-template
+clidev — a new WireCat CLI, started from cli-template
 
-Usage: app <profile> <command> [options]
+Usage: clidev <profile> <command> [options]
 Account commands start with your profile, a name you choose; none is ever assumed.
 
 Works with:
@@ -11,6 +11,6 @@ Works with:
   drive                   Google Drive and Docs as local text, searchable with your messages
   memo context <person>   one person across messengers, mail, notes and meetings
 
-Next:         app commands      every command, by section
-              app help options  output, offline, timeouts, dry run
-For agents:   app skill show    rules and the discovery loop
+Next:         clidev commands      every command, by section
+              clidev help options  output, offline, timeouts, dry run
+For agents:   clidev skill show    rules and the discovery loop

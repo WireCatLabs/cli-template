@@ -24,11 +24,11 @@ jobs:
       pack: ${{ inputs.pack || false }}
       bun-run: pnpm build && pnpm smoke:bun
       cli: true
-      bin: app
+      bin: clidev
       platforms: ${{ inputs.pack || inputs.platforms || github.event_name == 'workflow_dispatch' }}
       platform-run: |
-        node dist/bin/app.js commands --json >/dev/null
-        node dist/bin/app.js doctor --json >/dev/null
+        node dist/bin/clidev.js commands --json >/dev/null
+        node dist/bin/clidev.js doctor --json >/dev/null
       # No version is on npm before the first release, so there is no earlier package to upgrade from.
       skip: |
         contracts:upgrade

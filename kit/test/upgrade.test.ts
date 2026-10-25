@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { runNew } from "../src/new.js"
-import { loadSource, type TemplateSource } from "../src/source.js"
+import { loadSource, renderTemplate, type TemplateSource } from "../src/source.js"
 import { runUpgrade, type UpgradeOptions } from "../src/upgrade.js"
 import {
   commitAll,
@@ -12,6 +12,7 @@ import {
   fixture,
   io,
   NOTES_FLAGS,
+  onClidev,
   read,
   removeTempDirs,
   status,
@@ -175,5 +176,57 @@ describe("upgrade", () => {
     writeFileSync(join(dir, "scratch.txt"), "x")
 
     await expect(upgrade({ dryRun: false, mode: "apply" })).rejects.toThrow(/working tree has changes/)
+  })
+})
+
+describe("upgrade across the placeholder rename", () => {
+  const OLD: Files = {
+    ...V1,
+    "AGENTS.md": `${V1["AGENTS.md"]}\nThe skill is skills/app-cli/SKILL.md, from WireCatLabs/app-cli.\n`,
+    "template.json": JSON.stringify({
+      ...JSON.parse(V1["template.json"] ?? "{}"),
+      placeholders: { command: "app", package: "@wirecat/app-cli", repository: "WireCatLabs/app-cli" },
+    }),
+  }
+  const renamed = onClidev(OLD)
+  const NEW: Files = {
+    ...renamed,
+    "AGENTS.md": renamed["AGENTS.md"]?.replace("Keep CLIDEV_HOME out", "Keep CLIDEV_HOME and tokens out") ?? "",
+  }
+
+  it("renders 0.1.1 on app and the next version on clidev, so only real changes are merged", async () => {
+    const sources = new Map<string, TemplateSource>()
+    for (const [version, files] of [["0.1.1", OLD] as const, ["0.1.2", NEW] as const]) {
+      sources.set(version, await loadSource(fixture(version, files)))
+    }
+    const cwd = tempDir("rename")
+    // A name that is not <command>-cli, so a wrong "name" placeholder cannot hide behind the command word.
+    const flags = { ...NOTES_FLAGS, package: "@example/calendar" }
+    await runNew(cwd, sources.get("0.1.1") as TemplateSource, { name: "calendar", flags }, io())
+    const dir = join(cwd, "calendar")
+    writeFileSync(join(dir, "AGENTS.md"), read(dir, "AGENTS.md").replace("## Commands", "## Commands\n\nOur own rule."))
+    commitAll(dir)
+    const fetchVersion = async (_name: string, version: string) => ({
+      source: sources.get(version) as TemplateSource,
+      dispose: async () => {},
+    })
+
+    const out = await runUpgrade(
+      dir,
+      sources.get("0.1.2") as TemplateSource,
+      fetchVersion,
+      { dryRun: false, mode: "apply" },
+      io(),
+    )
+
+    expect(out.split("\n").filter((line) => line.startsWith("  "))).toEqual(["  AGENTS.md (edited): applied"])
+    const agents = read(dir, "AGENTS.md")
+    expect(agents).toContain("Our own rule.")
+    expect(agents).toContain("Keep CAL_HOME and tokens out of logs.")
+    expect(agents).toContain("The skill is skills/calendar/SKILL.md, from example/calendar.")
+    expect(manifest(dir)).toMatchObject({ version: "0.1.2" })
+    expect(manifest(dir).pending).toBeUndefined()
+    const base = await renderTemplate(sources.get("0.1.1") as TemplateSource, manifest(dir).names)
+    expect(base.get("AGENTS.md")?.content.toString()).toContain("skills/calendar/SKILL.md")
   })
 })

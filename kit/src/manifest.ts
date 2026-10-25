@@ -23,6 +23,8 @@ export type CliManifest = {
   pending?: { version: string; files: Record<string, string>; conflicts: string[] }
 }
 
+// Not the current placeholders: 0.1.0 and 0.1.1 left keys out of template.json, and upgrade renders their files
+// as the merge base, so a missing key must keep meaning what it meant then.
 export const DEFAULT_PLACEHOLDERS: Placeholders = {
   command: "app",
   name: "app-cli",

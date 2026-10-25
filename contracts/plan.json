@@ -1,6 +1,6 @@
 {
   "command": "node",
-  "args": ["../dist/bin/app.js"],
+  "args": ["../dist/bin/clidev.js"],
   "cases": [
     {
       "id": "help",

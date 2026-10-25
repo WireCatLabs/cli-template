@@ -3,7 +3,8 @@ import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { languageWarnings, runNew, speechModels } from "../src/new.js"
-import { loadSource } from "../src/source.js"
+import { renamer } from "../src/rename.js"
+import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
 
 afterAll(removeTempDirs)
@@ -126,6 +127,34 @@ describe("new", () => {
     await expect(runNew(tempDir("gap"), source, { name: "x", flags: NOTES_FLAGS }, io())).rejects.toThrow(
       /lists "docs\/meta.json", but the package has no such file/,
     )
+  })
+})
+
+describe("new from this repository", () => {
+  const root = join(import.meta.dirname, "../..")
+  const names = { name: "cal-cli", command: "cal", package: "@example/cal-cli", owner: "example" }
+  const cliDevs = (text: string) => text.match(/cli-dev/g)?.length ?? 0
+
+  it("replaces every clidev placeholder", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const made = walk(join(cwd, "cal-cli")).filter((path) => !path.endsWith("template.json"))
+    for (const file of made) expect(read(file, ""), file).not.toMatch(/clidev/i)
+  })
+
+  it("leaves cli-base's cli-dev alone in every file", async () => {
+    const source = await loadSource(root)
+    const rendered = await renderTemplate(source, names)
+    const rename = renamer(source.manifest.placeholders, names)
+
+    const changed = [...(await listTemplate(source)).keys()].filter(
+      (path) => cliDevs(read(root, path)) !== cliDevs(rendered.get(rename(path))?.content.toString() ?? ""),
+    )
+
+    expect(changed).toEqual([])
+    expect(rendered.get("package.json")?.content.toString()).toContain("cli-dev lint --cli dist/bin/cal.js")
   })
 })
 

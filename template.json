@@ -36,5 +36,10 @@
     "src/",
     "vitest.config.ts"
   ],
-  "placeholders": { "command": "app", "package": "@wirecat/app-cli", "repository": "WireCatLabs/app-cli" }
+  "placeholders": {
+    "command": "clidev",
+    "name": "clidev-cli",
+    "package": "@wirecat/clidev-cli",
+    "repository": "WireCatLabs/clidev-cli"
+  }
 }

@@ -70,11 +70,11 @@ it("commands info exports the schemas and reasons", async () => {
 it("skill install writes the skill for Claude Code", async () => {
   const { code } = await ran(["skill", "install", "--for", "claude", "--json"])
   expect(code).toBe(0)
-  expect(existsSync(join(homedir(), ".claude", "skills", "app-cli", "SKILL.md"))).toBe(true)
+  expect(existsSync(join(homedir(), ".claude", "skills", "clidev-cli", "SKILL.md"))).toBe(true)
 })
 
 it("help prints the first screen", async () => {
   const { code, out } = await ran(["help"])
   expect(code).toBe(0)
-  expect(out).toContain("app")
+  expect(out).toContain("clidev")
 })
