@@ -20,6 +20,9 @@ export interface McpOptions {
 
 const EXCLUDED = [["mcp"]]
 
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+
 /** The shared three tools — search, read, write — over every command, writes included; the levels decide. */
 export const createMcpServer = (options: McpOptions): McpServer => {
   const server = new McpServer(
@@ -52,7 +55,7 @@ export const createMcpServer = (options: McpOptions): McpServer => {
         run: async (input) => {
           const answer = await runCommandForAgent(program, tool.path, input, context)
           if ("error" in answer) return mcpErrorResult(answer.error)
-          const value = (answer.result ?? {}) as Record<string, unknown>
+          const value = isObject(answer.result) ? answer.result : { result: answer.result }
           return { content: [{ type: "text" as const, text: JSON.stringify(value) }], structuredContent: value }
         },
       },
@@ -73,6 +76,8 @@ export const serveMcp = async (options: McpOptions): Promise<void> => {
         void server.close().then(resolve, reject)
       }
       options.signal?.addEventListener("abort", stop, { once: true })
+      // A stop that came while the server module was loading has already fired, and the listener never will.
+      if (options.signal?.aborted) stop()
       void server.connect(options.transport ?? new StdioServerTransport()).catch(reject)
     })
   } finally {

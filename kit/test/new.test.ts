@@ -149,6 +149,9 @@ describe("new from this repository", () => {
 
     const made = walk(join(cwd, "cal-cli")).filter((path) => !path.endsWith("template.json"))
     for (const file of made) expect(read(file, ""), file).not.toMatch(/clidev/i)
+    expect(read(join(cwd, "cal-cli"), "SECURITY.md")).toContain(
+      "https://github.com/example/cal-cli/security/advisories/new",
+    )
     expect(existsSync(join(cwd, "cal-cli", "config/parity-groups.json"))).toBe(false)
   })
 
