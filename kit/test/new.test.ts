@@ -152,7 +152,25 @@ describe("new from this repository", () => {
     expect(read(join(cwd, "cal-cli"), "SECURITY.md")).toContain(
       "https://github.com/example/cal-cli/security/advisories/new",
     )
+    expect(read(join(cwd, "cal-cli"), "docs/security.md")).toContain(
+      "https://github.com/example/cal-cli/blob/main/SECURITY.md",
+    )
+    expect(read(join(cwd, "cal-cli"), "README.md")).toContain("https://github.com/WireCatLabs/cli-template)")
+    expect(read(join(cwd, "cal-cli"), "AGENTS.md")).toContain("https://github.com/WireCatLabs/cli-template)")
     expect(existsSync(join(cwd, "cal-cli", "config/parity-groups.json"))).toBe(false)
+  })
+
+  it("keeps the docs checks, CHANGELOG.md included, and drops only the kit's", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const { scripts } = JSON.parse(read(join(cwd, "cal-cli"), "package.json"))
+    expect(scripts["docs:spell"]).toContain("CHANGELOG.md")
+    expect(scripts["docs:check"]).toMatch(/rumdl check .*CHANGELOG\.md/)
+    expect(scripts["docs:check"]).toContain("pnpm docs:lint")
+    expect(scripts["docs:check"]).not.toContain("kit")
+    expect(scripts["kit:docs"]).toBeUndefined()
   })
 
   it("writes the content languages into the identity and keeps them in DESIGN.md", async () => {

@@ -221,6 +221,12 @@ export const cliReadme = (names: Names): string =>
     "",
   ].join("\n")
 
+// The template's own security links point at cli-template, where a report about the template belongs; the placeholder
+// repository does not exist. A CLI's copy names its own repository.
+const TEMPLATE_REPOSITORY = "https://github.com/WireCatLabs/cli-template/"
+const ownRepository = (names: Names) => (text: string) =>
+  text.replaceAll(TEMPLATE_REPOSITORY, `https://github.com/${names.owner}/${names.name}/`)
+
 export const cliChangelog = (names: Names, source: TemplateSource): string =>
   [
     "# Changelog",
@@ -264,6 +270,8 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   const rewrites: Record<string, (text: string) => string> = {
     "package.json": (text) => cliPackageJson(text, names),
     "README.md": () => cliReadme(names),
+    "SECURITY.md": ownRepository(names),
+    "docs/security.md": ownRepository(names),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
     [IDENTITY_FILE]: (text) => withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),

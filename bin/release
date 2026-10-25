@@ -6,6 +6,9 @@
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml, npm trusted publishing)
 #   bin/release --local   # publishes from this computer: NPM_TOKEN if exported, else the keyring, else `npm login`
 #
+# The keyring is read only when NPM_KEYRING_ACCOUNT names the account the token is stored under
+# (`secret-tool store --label=npm service npm account <account>`); unset, the keyring is skipped.
+#
 # A package that is not on npm yet is published the same way; its first version needs --local until npm trusts
 # release.yml. The npm token is never printed and never written to a file (WC-REL-14).
 set -eu
@@ -153,10 +156,12 @@ if [ "$mode" = ci ]; then
   exit 0
 fi
 
-# The same keyring entry as the other WireCat CLIs. Without NPM_TOKEN or the entry, npm reads your own login from
-# ~/.npmrc as usual.
-if [ -z "$publish_token" ] && command -v secret-tool >/dev/null 2>&1; then
-  publish_token=$(secret-tool lookup service npm account leemour 2>/dev/null) || publish_token=""
+# No default account: this file is copied into every CLI, and one person's account name does not belong in it.
+# Without NPM_TOKEN or the entry, npm reads your own login from ~/.npmrc as usual.
+keyring_account=${NPM_KEYRING_ACCOUNT:-}
+if [ -z "$publish_token" ] && [ -n "$keyring_account" ] && command -v secret-tool >/dev/null 2>&1; then
+  publish_token=$(secret-tool lookup service npm account "$keyring_account" 2>/dev/null) || publish_token=""
+  [ -n "$publish_token" ] || echo "no npm token in the keyring for service npm, account $keyring_account" >&2
 fi
 
 # Our own npm config names the variable, not the value, so the token stays in the publish process's environment.
@@ -168,8 +173,9 @@ if [ -n "$publish_token" ]; then
   set -- --userconfig "$config"
 else
   npm whoami >/dev/null 2>&1 || {
-    echo "no npm token: export NPM_TOKEN, store one with: secret-tool store --label=npm service npm account leemour," >&2
-    echo "or run npm login" >&2
+    echo "no npm token: export NPM_TOKEN; or store one with" >&2
+    echo "  secret-tool store --label=npm service npm account <account>" >&2
+    echo "and export NPM_KEYRING_ACCOUNT=<account>; or run npm login" >&2
     exit 1
   }
   set --

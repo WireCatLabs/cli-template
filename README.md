@@ -42,6 +42,25 @@ such as `personal` in `clidev personal config show`; none is ever assumed. `CLID
 `clidev skill show` prints the rules an agent follows with this tool. `clidev personal mcp` serves every command to an
 agent, writes included: the profile's permissions decide what runs. See [MCP and permissions](docs/usage.md#agents).
 
+## Why this template
+
+A new WireCat CLI must meet the same standards as the others from its first commit: the shared commands, the
+settings, the agent skill, MCP, the checks and the release. Built by hand, that is days of copying and some of it
+is missed. `new` gives a CLI that already passes every check, so the work starts on the service itself. `upgrade`
+keeps the shared files in step later, so a CLI made today does not drift from one made next year.
+
+## Main features
+
+- **`new`** copies the skeleton, renames `clidev` to your command word, and writes the design answers into
+  `docs/dev/DESIGN.md`. It asks for each missing answer and never guesses one.
+- **`upgrade`** merges each template change into your CLI file by file, and asks before it touches a file you changed.
+- **The skeleton runs.** The shared root commands, settings with permissions, the agent skill and the MCP server
+  work before a line of your own code.
+- **Every check is wired in:** lint, types, tests with a coverage floor, command contracts, the docs checks and the
+  release script.
+
+The copy tool is described in [kit/README.md](kit/README.md).
+
 ## Profiles
 
 A profile is a name you choose for one account, such as `personal` or `work`. It is the first word of every command
