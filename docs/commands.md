@@ -148,7 +148,7 @@ clidev upgrade [options]
 
 **Returns:** upgrade clidev with the package manager that installed it; --check only looks
 
-**Example:** `clidev upgrade --check`, `clidev upgrade`
+**Example:** `clidev upgrade --check`
 
 ## `clidev config`
 
