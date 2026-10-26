@@ -5,6 +5,28 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## 0.4.0 — 26.10.2026
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.440.0; cli-base stays at 0.59.0**, the only line cli-core 0.440 accepts. The
+  `--record` help now says what a run keeps: "keep this run, with the command as typed and secrets hidden;
+  record_input false leaves the typed words out", no longer "ids and timings, never content". `docs/commands.md`
+  changes with it, and a CLI that keeps help snapshots refreshes them once. A command a CLI records itself with
+  `recorded` or `startRecording` can keep its command line by passing `context: runContextOf(…)`; the skeleton's
+  commands record through cli-core and need nothing.
+
+### Security
+
+- **A phone number no longer reaches a run record** (from cli-core 0.440.0). One written with its "+" and country
+  code, or 11 to 15 digits in a row, is `[redacted]` inside the word typed, so a long id of that length is hidden as
+  well. `docs/security.md` says so.
+
+### Fixed
+
+- **`pnpm docs:spell` also checks `AGENTS.md`, `CLAUDE.md` and `skills/`.** `package.json` is copied once, so a CLI
+  adds them to its own `docs:spell` by hand.
+
 ## 0.3.0 — 26.10.2026
 
 ### Changed — may break callers

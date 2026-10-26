@@ -29,7 +29,7 @@ lists the profiles on this computer.
 | `--full` | found items with their whole text and every provider field. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
-| `--record` | keep this run — ids and timings, never content. |
+| `--record` | keep this run, with the command as typed and secrets hidden; record_input false leaves the typed words out. |
 | `--no-record` | do not keep it, whatever the configuration says. |
 
 ## `clidev commands`
