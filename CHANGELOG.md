@@ -5,6 +5,21 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **`doctor` answers when the settings fail to load for an unexpected reason**, with the message under
+  `settings.error`; before, any error other than a CLI error stopped the command.
+- **The MCP server's instructions name text from other people**, with the names and titles around it, as data that is
+  never followed. `AGENTS.md` now says to rewrite them for the kinds of text the CLI carries.
+- **`CLAUDE.md` names its one local rule**: before `1.0.0`, `Added` raises the minor version, as `pnpm version:check`
+  already enforced.
+- **`docs/dev/TESTING.md` and the CI comment say when to add `pnpm contracts:upgrade`**: once the CLI keeps local state
+  of its own, not only with a store.
+- **The kit's page is split**: `kit/README.md` says how to run `new` and `upgrade`, and `kit/DEVELOPING.md` holds what
+  the template repository must provide. Its `template.json` examples say they are cut short and link the real file.
+
 ## 0.6.0 — 26.10.2026
 
 ### Changed — may break callers

@@ -12,7 +12,8 @@ How the tests run, and what they never touch. The rules are the handbook's
   `scripts/test-matrix-untested.ts`.
 - `pnpm contracts:check` runs the built CLI against `contracts/plan.json`: help, discovery, errors and the MCP tool
   list. `pnpm exec cli-contract contracts/plan.json --update` rewrites the snapshots; review the diff.
-- `pnpm contracts:upgrade` does not exist yet: the skeleton has no store of its own, and `.github/workflows/ci.yml`
-  skips the step. Add it with the first store, and remove the skip.
+- `pnpm contracts:upgrade` does not exist yet: the skeleton keeps no local state of its own (its config file and run
+  records are cli-core's), and `.github/workflows/ci.yml` skips the step. Add it, and remove the skip, as soon as the
+  CLI writes state of its own: a store, a sync cursor or any other file.
 - `pnpm smoke` installs the packed package into a temporary folder and runs it offline.
 - `pnpm audit:commands` audits the command tree beside the latest published WireCat CLIs.

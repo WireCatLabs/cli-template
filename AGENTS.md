@@ -17,7 +17,9 @@ This CLI was made from [cli-template](https://github.com/WireCatLabs/cli-templat
 3. Ask the further questions in the interview that the reference CLI does not answer. Build only after the owner
    has read `DESIGN.md`.
 4. When the first command reaches the service, rewrite `README.md`, `docs/index.md` and the description in
-   `skills/clidev-cli/SKILL.md` to say what the tool does and who it is for.
+   `skills/clidev-cli/SKILL.md` to say what the tool does and who it is for. Rewrite the MCP server's instructions
+   in `src/mcp.ts` too: name the kinds of outside text the CLI carries, from the untrusted-text answer in
+   `DESIGN.md` (WC-MCP-11).
 
 <!-- cli-template:reference-cli:start -->
 The reference CLI is not chosen yet; see [Reference CLIs](docs/dev/reference-clis.md).
