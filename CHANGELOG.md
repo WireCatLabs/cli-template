@@ -36,6 +36,8 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 - **`new` drops a `kit/` key from a config,** not only a `kit/` entry in a list, so the CLI's `vitest.config.ts` has
   no coverage floor for a folder it does not have.
+- **`docs/installation.md` gives the Node.js versions `engines` allows:** 22.16 or a later 22.x, or 24 or later. It
+  read as if Node 23 worked.
 
 ## 0.1.8 — 26.10.2026
 
