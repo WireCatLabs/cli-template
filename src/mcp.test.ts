@@ -29,7 +29,13 @@ const connect = async () => {
   return client
 }
 
-const structured = (result: unknown) => (result as { structuredContent: Record<string, unknown> }).structuredContent
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+const structured = (result: unknown) => {
+  if (!isRecord(result) || !isRecord(result.structuredContent))
+    throw new Error("the tool answered without structured content")
+  return result.structuredContent
+}
 
 it("offers search, read and write", async () => {
   const client = await connect()
@@ -40,9 +46,8 @@ it("offers search, read and write", async () => {
 it("finds writes as well as reads", async () => {
   const client = await connect()
   const found = structured(await client.callTool({ name: "clidev_tools_search", arguments: {} }))
-  const items = found.items as { command: string; writes: boolean }[]
-  expect(items.some((item) => item.writes)).toBe(true)
-  expect(items.map((item) => item.command)).not.toContain("mcp")
+  expect(found.items).toContainEqual(expect.objectContaining({ writes: true }))
+  expect(found.items).not.toContainEqual(expect.objectContaining({ command: "mcp" }))
 })
 
 it("runs a command through the CLI and answers with its result", async () => {

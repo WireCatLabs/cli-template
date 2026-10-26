@@ -21,6 +21,21 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `skill status --json` gains a `hermes` entry beside `targets`. A run started by OpenClaw has `agent: openclaw`,
   and one started from an OpenClaw chat adds `agent.from_chat: true`: a reader of `run.json` that refuses unknown
   keys must accept it.
+- **`bin/release` runs `changelog restore` from the installed cli-base**, through `pnpm exec cli-dev` like the fold,
+  not from `npx -p @wirecat/cli-base@0.55.1` outside the lockfile. A CLI that takes this file with `upgrade` needs
+  cli-base 0.55.1 or later, which has `changelog restore`.
+- **`pnpm version:check` refuses a release whose number is raised less than its changelog needs.** Before `1.0.0`, a
+  section with `Changed — may break callers`, `Removed` or `Added` raises the minor; only fixes, security and docs
+  raise the patch. The release skill says the same. `scripts/` and `package.json` are copied once, so a CLI started
+  from an older template copies `scripts/version-level.ts` and the `version:check` script to get the check.
+- **A new CLI starts with coverage floors just under what the skeleton's tests reach**: lines 95, statements 92,
+  functions 85, branches 75, and still 50% lines per file. The template's kit has its own floor, which `new` leaves
+  out of the CLI's `vitest.config.ts`.
+
+### Fixed
+
+- **`new` drops a `kit/` key from a config,** not only a `kit/` entry in a list, so the CLI's `vitest.config.ts` has
+  no coverage floor for a folder it does not have.
 
 ## 0.1.8 — 26.10.2026
 

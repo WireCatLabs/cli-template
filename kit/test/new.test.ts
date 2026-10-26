@@ -245,3 +245,18 @@ it("drops a kit entry from a config together with the comment that explains it",
 
   expect(stripKit("vitest.config.ts", Buffer.from(config)).toString()).toBe('exclude: [\n  "src/bin/**",\n],\n')
 })
+
+it("drops a kit key from a config, such as the kit's coverage floor", () => {
+  const config = [
+    "thresholds: {",
+    '  "src/**": { lines: 95 },',
+    "  // The kit keeps its own floor.",
+    '  "kit/src/**": { lines: 95 },',
+    "},",
+    "",
+  ].join("\n")
+
+  expect(stripKit("vitest.config.ts", Buffer.from(config)).toString()).toBe(
+    'thresholds: {\n  "src/**": { lines: 95 },\n},\n',
+  )
+})
