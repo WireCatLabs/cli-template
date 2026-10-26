@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { dirname } from "node:path"
-import { CliError, configFilePath, resolvePaths } from "@wirecat/cli-base"
+import { configFilePath, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import {
   environmentOf,
@@ -16,10 +16,7 @@ import { Command } from "commander"
 import { configuration } from "../config.js"
 import { IDENTITY } from "../identity.js"
 
-const failure = (error: unknown) => {
-  if (error instanceof CliError) return error.message
-  throw error
-}
+const failure = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 const configFiles = (path: string) => {
   const files = privateFiles({ files: [path], dirs: [dirname(path)] })

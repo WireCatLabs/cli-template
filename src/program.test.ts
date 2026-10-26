@@ -1,7 +1,8 @@
 import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { expect, it } from "vitest"
+import { expect, it, vi } from "vitest"
 import { doctorReport } from "./commands/doctor.js"
+import { configuration } from "./config.js"
 import { IDENTITY } from "./identity.js"
 import { run } from "./program.js"
 
@@ -68,6 +69,17 @@ it("doctor reports an unknown setting with the command that removes it", async (
 it("doctor reports settings an environment variable breaks, and still answers", () => {
   const { report } = doctorReport({ ...process.env, CLIDEV_EMBEDDING_DIMS: "many" })
   expect(report).toMatchObject({ config: { issues: [] }, settings: { error: expect.any(String) }, profiles: null })
+})
+
+it("doctor answers when reading the settings fails with an unexpected error", () => {
+  const spy = vi.spyOn(configuration, "resolveSettings").mockImplementation(() => {
+    throw new TypeError("boom")
+  })
+  try {
+    expect(doctorReport(process.env).report).toMatchObject({ settings: { error: "boom" }, profiles: null })
+  } finally {
+    spy.mockRestore()
+  }
 })
 
 it.skipIf(process.platform === "win32")(
@@ -151,8 +163,11 @@ it("a failed run keeps the words typed, and record_input false masks them", asyn
   }
   expect(await keptArgv("weekly report")).toContainEqual(["personal", "skill", "show", "weekly report"])
   expect((await ran(["personal", "config", "set", "record_input", "false"])).code).toBe(0)
-  const masked = await keptArgv("monthly report")
-  expect(JSON.stringify(masked)).not.toContain("monthly report")
-  expect(masked).toContainEqual(["personal", "skill", "show", "[redacted]"])
-  expect((await ran(["personal", "config", "unset", "record_input"])).code).toBe(0)
+  try {
+    const masked = await keptArgv("monthly report")
+    expect(JSON.stringify(masked)).not.toContain("monthly report")
+    expect(masked).toContainEqual(["personal", "skill", "show", "[redacted]"])
+  } finally {
+    expect((await ran(["personal", "config", "unset", "record_input"])).code).toBe(0)
+  }
 })

@@ -29,8 +29,9 @@ jobs:
       platform-run: |
         node dist/bin/clidev.js commands --json >/dev/null
         node dist/bin/clidev.js doctor --json >/dev/null
-      # The skeleton has no store of its own; its config file and run records are cli-core's. A CLI that adds a store
-      # adds a contracts:upgrade script and removes this skip (WC-TEST-14).
+      # The skeleton keeps no local state of its own; its config file and run records are cli-core's. A CLI that keeps
+      # its own (a store, a sync cursor, any file it writes) adds a contracts:upgrade script and removes this skip
+      # (WC-TEST-14).
       skip: |
         contracts:upgrade
       checks: |
