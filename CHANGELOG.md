@@ -5,6 +5,26 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## 0.5.0 — 26.10.2026
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.442.0; cli-base stays at 0.59.0**, the only line cli-core 0.442 accepts. A CLI
+  with its own program that calls `recordRuns` now keeps the command line in its run records without passing the
+  typed words through `run()`, secrets hidden; the skeleton's commands record through cli-core and need nothing.
+
+### Security
+
+- **A run record and a kept error message find a secret by what it looks like** (from cli-core 0.442.0): a token in
+  a known format, a `Bearer` or `Basic` credential, the value after a secret name such as `password=`, and a
+  random-looking string of 20 or more characters. `docs/security.md` says what is found and what is not.
+- **A config that will not load no longer lets a run record keep the typed words** (from cli-core 0.442.0). The words
+  are masked, as `record_input false` would.
+
+### Added
+
+- **`pnpm kit:e2e` checks that a token typed as a word is `[redacted]`** in the failed run's record.
+
 ## 0.4.0 — 26.10.2026
 
 ### Changed — may break callers
