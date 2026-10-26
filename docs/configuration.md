@@ -16,3 +16,9 @@ clidev personal config unset limit
 `permissions` decides what a command may do for this profile: `allow`, `ask`, `readonly` or `deny`, per permission
 key. Over MCP there is no one to ask, so `ask` lets the command run. `CLIDEV_READ_ONLY=1` refuses every write, whatever
 the permissions say.
+
+## Run records
+
+A command that fails is kept as a run, for `clidev runs list` and `runs show`. `record_input` decides whether a run
+keeps the words you typed; it is `true` unless you set it to `false`. Secrets are masked either way; see
+[Security](security.md).

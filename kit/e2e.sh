@@ -23,5 +23,11 @@ cd demo-cli
 pnpm install
 pnpm ci:quick
 pnpm test:coverage
-node "$(node -p 'require("./package.json").bin.demo')" --version
+bin=$(node -p 'require("./package.json").bin.demo')
+node "$bin" --version
+# A run record must not land in the real home folder.
+demo() { env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" node "$bin" "$@"; }
+demo personal skill show "weekly report" >/dev/null 2>&1 || true
+kept=$(demo personal runs list --json | grep -o '"argv":\[[^]]*"weekly report"[^]]*\]')
 echo "kit e2e: $tarball installed with npm, new demo-cli built, passed ci:quick and test:coverage, and runs as demo"
+echo "kit e2e: a failed run keeps what was typed: $kept"
