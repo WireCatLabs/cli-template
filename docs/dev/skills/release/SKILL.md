@@ -20,9 +20,13 @@ and runs `bin/release`.
 5. **The fresh audit.** Start a new subagent that has none of your context, and give it the prompt in
    [fresh-audit.md](fresh-audit.md) as written. Put its report in the release pull request. Fix each gap in this
    repository there, or list it as a follow-up; take a gap in the handbook to cli-base.
-6. **The version.** `npm view @wirecat/clidev-cli version` is what is published. Set the next version in
-   `package.json`, run `pnpm version:sync`, date the section as `## <version> — DD.MM.YYYY`, run
-   `pnpm release:check` again, and open the pull request `chore(release): <version>`.
+6. **The version.** `npm view @wirecat/clidev-cli version` is what is published. The changelog picks the level, and
+   before `1.0.0` this narrows `WC-REL-7`: a section with `Changed — may break callers` or `Removed` raises the minor
+   (`0.1.8` to `0.2.0`), and so does one with `Added`; only a section of `Fixed`, `Security` or docs raises the patch.
+   From `1.0.0`, a breaking change raises the major. `pnpm version:check` refuses a dated section whose number is
+   raised less than its headings need. Set the next version in `package.json`, run `pnpm version:sync`, date the
+   section as `## <version> — DD.MM.YYYY`, run `pnpm release:check` again, and open the pull request
+   `chore(release): <version>`.
 7. **The owner** merges it and runs `bin/release` on a clean `main`. `bin/release --local` publishes from this
    computer when GitHub Actions cannot, with `NPM_TOKEN`, the npm token in the keyring, or the owner's own npm login.
    The keyring is read only when `NPM_KEYRING_ACCOUNT` names the account the token is stored under (service `npm`);

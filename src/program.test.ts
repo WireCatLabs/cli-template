@@ -14,13 +14,21 @@ const ran = async (argv: string[]) => {
   })
   return { code, out: out.join("\n"), err: err.join("\n") }
 }
-const json = (text: string) => JSON.parse(text) as { item: Record<string, unknown> }
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+const json = (text: string) => {
+  const parsed: unknown = JSON.parse(text)
+  if (!isRecord(parsed) || !isRecord(parsed.item)) throw new Error(`not an answer with one item: ${text}`)
+  return { item: parsed.item }
+}
 
 it("lists the required root commands and config", async () => {
   const { code, out } = await ran(["commands", "--json"])
   expect(code).toBe(0)
-  const names = (JSON.parse(out) as { commands: { name: string }[] }).commands.map((command) => command.name)
-  expect(names).toEqual(expect.arrayContaining(["commands", "doctor", "skill", "mcp", "upgrade", "config", "runs"]))
+  const required = ["commands", "doctor", "skill", "mcp", "upgrade", "config", "runs"]
+  expect(JSON.parse(out).commands).toEqual(
+    expect.arrayContaining(required.map((name) => expect.objectContaining({ name }))),
+  )
 })
 
 it("doctor answers without a config file", async () => {
@@ -123,11 +131,9 @@ it("keeps a failed command as a run, and runs list, show and path read it back",
   expect((await ran(["--no-such-flag"])).code).toBe(2)
   const listed = await ran(["runs", "list", "--limit", "5", "--page", "1", "--json"])
   expect(listed.code).toBe(0)
-  const failed = (JSON.parse(listed.out) as { items: { run_id: string; status: string }[] }).items.find(
-    (run) => run.status === "failed",
-  )
-  expect(failed).toBeDefined()
-  const id = failed?.run_id ?? ""
+  const failed: unknown = JSON.parse(listed.out).items.find((run: { status: string }) => run.status === "failed")
+  if (!isRecord(failed) || typeof failed.run_id !== "string") throw new Error(`no failed run in ${listed.out}`)
+  const id = failed.run_id
   const shown = await ran(["runs", "show", id, "--json"])
   expect(shown.code).toBe(0)
   expect(shown.out).toContain(id)

@@ -21,7 +21,11 @@ export default defineConfig({
         "kit/src/main.ts",
       ],
       reporter: ["text-summary", "json-summary"],
-      thresholds: { lines: 90, statements: 90, functions: 80, branches: 70, perFile: { lines: 50 } },
+      thresholds: {
+        "src/**": { lines: 95, statements: 92, functions: 85, branches: 75, perFile: { lines: 50 } },
+        // The kit is a separate program, copied by npx, so it keeps its own floor.
+        "kit/src/**": { lines: 95, statements: 91, functions: 90, branches: 78, perFile: { lines: 50 } },
+      },
     },
   },
 })

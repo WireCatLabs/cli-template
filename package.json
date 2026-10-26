@@ -67,7 +67,7 @@
     "docs:lint": "markdownlint-cli2",
     "contracts:check": "cli-contract contracts/plan.json",
     "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json",
-    "version:check": "cli-dev version",
+    "version:check": "cli-dev version && node --experimental-strip-types scripts/version-level.ts",
     "version:sync": "cli-dev version --sync",
     "standards:check": "node config/wirecat/check.mjs",
     "lint:commands": "pnpm build && cli-dev lint --cli dist/bin/clidev.js",

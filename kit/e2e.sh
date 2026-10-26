@@ -22,5 +22,6 @@ cmp "$root/.gitignore" demo-cli/.gitignore
 cd demo-cli
 pnpm install
 pnpm ci:quick
+pnpm test:coverage
 node "$(node -p 'require("./package.json").bin.demo')" --version
-echo "kit e2e: $tarball installed with npm, new demo-cli built, passed ci:quick and runs as demo"
+echo "kit e2e: $tarball installed with npm, new demo-cli built, passed ci:quick and test:coverage, and runs as demo"

@@ -36,13 +36,19 @@ const V2: Files = {
   }),
 }
 
+const sourceAt = (sources: Map<string, TemplateSource>, version: string): TemplateSource => {
+  const source = sources.get(version)
+  if (!source) throw new Error(`no fixture for template ${version}`)
+  return source
+}
+
 const setup = async () => {
   const sources = new Map<string, TemplateSource>()
   for (const [version, files] of [["0.1.0", V1] as const, ["0.2.0", V2] as const]) {
     sources.set(version, await loadSource(fixture(version, files)))
   }
   const cwd = tempDir("upgrade")
-  await runNew(cwd, sources.get("0.1.0") as TemplateSource, { name: "cal-cli", flags: NOTES_FLAGS }, io())
+  await runNew(cwd, sourceAt(sources, "0.1.0"), { name: "cal-cli", flags: NOTES_FLAGS }, io())
   const dir = join(cwd, "cal-cli")
   writeFileSync(join(dir, "docs/meta.json"), '{ "title": "Calendar" }\n')
   writeFileSync(join(dir, "README.md"), "# cal\n\nOur own words.\n")
@@ -52,14 +58,14 @@ const setup = async () => {
   const fetchVersion = async (_name: string, version: string) => {
     fetched.push(version)
     return {
-      source: sources.get(version) as TemplateSource,
+      source: sourceAt(sources, version),
       dispose: async () => {
         disposed.push(version)
       },
     }
   }
   const upgrade = (options: UpgradeOptions, terminal = io()) =>
-    runUpgrade(dir, sources.get("0.2.0") as TemplateSource, fetchVersion, options, terminal)
+    runUpgrade(dir, sourceAt(sources, "0.2.0"), fetchVersion, options, terminal)
   return { dir, upgrade, fetched, disposed }
 }
 
@@ -202,22 +208,16 @@ describe("upgrade across the placeholder rename", () => {
     const cwd = tempDir("rename")
     // A name that is not <command>-cli, so a wrong "name" placeholder cannot hide behind the command word.
     const flags = { ...NOTES_FLAGS, package: "@example/calendar" }
-    await runNew(cwd, sources.get("0.1.1") as TemplateSource, { name: "calendar", flags }, io())
+    await runNew(cwd, sourceAt(sources, "0.1.1"), { name: "calendar", flags }, io())
     const dir = join(cwd, "calendar")
     writeFileSync(join(dir, "AGENTS.md"), read(dir, "AGENTS.md").replace("## Commands", "## Commands\n\nOur own rule."))
     commitAll(dir)
     const fetchVersion = async (_name: string, version: string) => ({
-      source: sources.get(version) as TemplateSource,
+      source: sourceAt(sources, version),
       dispose: async () => {},
     })
 
-    const out = await runUpgrade(
-      dir,
-      sources.get("0.1.2") as TemplateSource,
-      fetchVersion,
-      { dryRun: false, mode: "apply" },
-      io(),
-    )
+    const out = await runUpgrade(dir, sourceAt(sources, "0.1.2"), fetchVersion, { dryRun: false, mode: "apply" }, io())
 
     expect(out.split("\n").filter((line) => line.startsWith("  "))).toEqual(["  AGENTS.md (edited): applied"])
     const agents = read(dir, "AGENTS.md")
@@ -226,7 +226,7 @@ describe("upgrade across the placeholder rename", () => {
     expect(agents).toContain("The skill is skills/calendar/SKILL.md, from example/calendar.")
     expect(manifest(dir)).toMatchObject({ version: "0.1.2" })
     expect(manifest(dir).pending).toBeUndefined()
-    const base = await renderTemplate(sources.get("0.1.1") as TemplateSource, manifest(dir).names)
+    const base = await renderTemplate(sourceAt(sources, "0.1.1"), manifest(dir).names)
     expect(base.get("AGENTS.md")?.content.toString()).toContain("skills/calendar/SKILL.md")
   })
 })
