@@ -5,6 +5,22 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol -->
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.439.0; cli-base stays at 0.59.0.** A run record now keeps the command line as
+  typed, so `runs show` tells what was run; a secret is still `[redacted]`. The new setting `record_input`
+  (`config set record_input false`) brings back the masking of every typed word. `config set` and `config unset` list
+  `record_input`, so a CLI's help snapshot changes once. A test or page of a CLI that says a run never holds what was
+  typed needs updating. An argument or option that carries a secret is marked with `secretInput()` from
+  `@wirecat/cli-core/cli`; the skeleton has none to mark.
+
+### Security
+
+- **A first word refused as a profile no longer reaches the run record** as the run's `profile`, and an error that
+  quotes `--token=…` or `password=…` no longer keeps the value (from cli-core 0.438.0 and 0.439.0).
+
 ## 0.2.0 — 26.10.2026
 
 ### Added

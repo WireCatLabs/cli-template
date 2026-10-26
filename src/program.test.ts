@@ -142,3 +142,17 @@ it("keeps a failed command as a run, and runs list, show and path read it back",
   expect(path.code).toBe(0)
   expect(path.out).toContain(id)
 })
+
+it("a failed run keeps the words typed, and record_input false masks them", async () => {
+  const keptArgv = async (words: string) => {
+    expect((await ran(["personal", "skill", "show", words])).code).toBe(2)
+    const { out } = await ran(["runs", "list", "--limit", "50", "--json"])
+    return JSON.parse(out).items.map((run: { argv: string[] }) => run.argv)
+  }
+  expect(await keptArgv("weekly report")).toContainEqual(["personal", "skill", "show", "weekly report"])
+  expect((await ran(["personal", "config", "set", "record_input", "false"])).code).toBe(0)
+  const masked = await keptArgv("monthly report")
+  expect(JSON.stringify(masked)).not.toContain("monthly report")
+  expect(masked).toContainEqual(["personal", "skill", "show", "[redacted]"])
+  expect((await ran(["personal", "config", "unset", "record_input"])).code).toBe(0)
+})
