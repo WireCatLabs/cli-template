@@ -1,6 +1,6 @@
 # Install
 
-Install `clidev` once on each computer where you or an agent use it. You need Node.js 22.16 or later, or 24.
+Install `clidev` once on each computer where you or an agent use it. You need Node.js 22.16 or a later 22.x, or 24 or later; Node 23 is not supported.
 
 ```sh
 npm install -g @wirecat/clidev-cli
