@@ -5,6 +5,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **Every command spends less time getting ready (cli-base 0.62.0, cli-core 0.449.0).** The check of shared commands now
+  describes each command once, not again for every group above it. It was about 60% of each command's setup; in tg a
+  warm `run(["--version"])` went from 49 to 29 ms. It catches the same changes as before.
+
 ## 0.6.1 — 26.10.2026
 
 ### Fixed
