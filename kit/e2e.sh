@@ -34,7 +34,10 @@ phone=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","s
 # Built at run time so the source holds no token; under 40 characters, so only detection by content hides it.
 demo personal skill show "token sk-$(printf 'x%.0s' {1..24})" >/dev/null 2>&1 || true
 token=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","token \[redacted\]"\]')
+demo personal skill show "password tulip42" >/dev/null 2>&1 || true
+named=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","password \[redacted\]"\]')
 echo "kit e2e: $tarball installed with npm, new demo-cli built, passed ci:quick and test:coverage, and runs as demo"
 echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"
+echo "kit e2e: a password typed after its name is hidden: $named"

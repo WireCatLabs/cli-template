@@ -13,10 +13,13 @@ country code, or 11 to 15 digits in a row, so a long id of that length is hidden
 you type, run `clidev personal config set record_input false`.
 
 A secret is also found by what it looks like, in a run record and in a kept error message: a token in a known
-format (GitHub, OpenAI, Slack, AWS, Stripe, npm and the like), a `Bearer` credential, the value after a secret name
-such as `password=` or `API_TOKEN=`, and a random-looking string of 20 or more characters. Some secrets look like
-ordinary words and stay: a hex key in one case shorter than 40 characters, a short password typed without a secret
-name before it, and a secret inside a link or a file path unless it is in a known format or after a secret name.
+format (GitHub, OpenAI, Slack, AWS, Stripe, npm and the like), a `Bearer` credential, a random-looking string of 20 or
+more characters, and a random-looking run of 20 or more lower-case hex characters, such as a hex key or a full commit
+hash. The value after a secret name is hidden too, whether it follows `=`, `:` or a space: `password=`, `API_TOKEN=`,
+`password hunter2`, `pin 1234`. Some secrets look like ordinary words and stay: a value of letters only after a
+secret name and a space (`pin this message` stays), a hex key in upper case, a short commit hash or a UUID, a short
+password typed without a secret name before it, and a secret inside a link or a file path unless it is in a known
+format or after a secret name.
 
 `config.json` is saved readable by you only (`0600`), and its folder is created for you only (`0700`). A file or
 folder made by an older version may be open to other users of the computer: `clidev doctor` lists each under

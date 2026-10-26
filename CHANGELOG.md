@@ -5,6 +5,27 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## 0.6.0 — 26.10.2026
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.444.0; cli-base stays at 0.59.0**, the only line cli-core 0.444 accepts. A run
+  record now hides more of what was typed: a full 40-character commit hash, and the value of a flag or argument named
+  like a secret (`--pin <chat>`). A test of a CLI that expects such a word back in `runs show` needs updating. The
+  commands and their help do not change.
+
+### Security
+
+- **A run record and a kept error message hide hex keys and a password written after its name with a space** (from
+  cli-core 0.444.0). A random-looking run of 20 or more lower-case hex characters is `[redacted]`; a short commit
+  hash, a UUID and upper-case hex stay. More secret names are known (`passwd`, `pwd`, `private_key`, `pass`, `pin`,
+  `otp`, `2fa`, `clave`, `пароль`, `код` and others), and the value after one is hidden after a space as well as after
+  `=` or `:` (`password hunter2`), unless it is letters only. `docs/security.md` says what is found and what is not.
+
+### Added
+
+- **`pnpm kit:e2e` checks that a password typed after its name is `[redacted]`** in the failed run's record.
+
 ## 0.5.0 — 26.10.2026
 
 ### Changed — may break callers
