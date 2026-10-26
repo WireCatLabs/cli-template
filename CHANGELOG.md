@@ -3,9 +3,9 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-<!-- cspell:words katex smol -->
+<!-- cspell:words katex smol whatsapp -->
 
-## Unreleased
+## 0.3.0 — 26.10.2026
 
 ### Changed — may break callers
 
@@ -20,6 +20,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 - **A first word refused as a profile no longer reaches the run record** as the run's `profile`, and an error that
   quotes `--token=…` or `password=…` no longer keeps the value (from cli-core 0.438.0 and 0.439.0).
+
+### Fixed
+
+- **`docs/dev/reference-clis.md` links the evidence for what it says about other repositories**, no longer calls
+  whatsapp-cli the handbook's worked example, points a mail CLI at cli-memo's mail import, and no longer says `config`
+  hides messenger settings when `messenger` is `false`.
+- **`pnpm release:check` also runs `security:no-leak` and `package:check`**, which only `bin/release --local` ran.
+  `package.json` is copied once, so a CLI adds both to its own `release:check` by hand.
+- **`SECURITY.md` asks never to send a session** beside a token, a password and private content.
 
 ## 0.2.0 — 26.10.2026
 
