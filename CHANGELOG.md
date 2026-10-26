@@ -5,6 +5,23 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol -->
 
+## Unreleased
+
+### Added
+
+- **`skill install --for hermes` gives Hermes Agent the skill, and `skill status` reports the copy Hermes reads.**
+  A bare `skill install` still writes only Claude Code's folder and `~/.agents/skills`, which OpenClaw reads too.
+- **`search_reranker` is a new setting in `config set`.** Only a CLI that adds cli-core's message search uses it.
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.437.0 and cli-base 0.59.0.** cli-core 0.437 accepts only cli-base 0.59.x, so a
+  CLI that pins cli-base moves both. `--help-all` now gives `clidev personal mcp` as the profile example, not
+  `clidev personal doctor`, since `doctor` takes no profile; a CLI that keeps help snapshots refreshes them once.
+  `skill status --json` gains a `hermes` entry beside `targets`. A run started by OpenClaw has `agent: openclaw`,
+  and one started from an OpenClaw chat adds `agent.from_chat: true`: a reader of `run.json` that refuses unknown
+  keys must accept it.
+
 ## 0.1.8 — 26.10.2026
 
 ### Changed — may break callers

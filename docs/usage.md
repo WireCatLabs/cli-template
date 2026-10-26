@@ -20,8 +20,9 @@ on. The [command reference](commands.md) lists the codes.
 
 ## Agents
 
-`clidev skill install` puts the tool's skill where Claude Code, Codex and Gemini CLI look for it. `clidev personal mcp`
-serves the profile's commands over MCP, on stdin and stdout:
+`clidev skill install` puts the tool's skill where Claude Code, Codex, Gemini CLI and OpenClaw look for it.
+`clidev skill install --for hermes` also adds that folder to Hermes Agent's own settings, so a bare `skill install`
+leaves Hermes out. `clidev personal mcp` serves the profile's commands over MCP, on stdin and stdout:
 
 ```sh
 claude mcp add clidev -- clidev personal mcp
