@@ -31,6 +31,10 @@ demo personal skill show "weekly report" >/dev/null 2>&1 || true
 kept=$(demo personal runs list --json | grep -o '"argv":\[[^]]*"weekly report"[^]]*\]')
 demo personal skill show "+1 202 555 0123" >/dev/null 2>&1 || true
 phone=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","\[redacted\]"\]')
+# Built at run time so the source holds no token; under 40 characters, so only detection by content hides it.
+demo personal skill show "token sk-$(printf 'x%.0s' {1..24})" >/dev/null 2>&1 || true
+token=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","token \[redacted\]"\]')
 echo "kit e2e: $tarball installed with npm, new demo-cli built, passed ci:quick and test:coverage, and runs as demo"
 echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
+echo "kit e2e: a typed token is hidden: $token"

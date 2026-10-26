@@ -12,6 +12,12 @@ phone number is replaced by `[redacted]` inside the word you typed, message text
 country code, or 11 to 15 digits in a row, so a long id of that length is hidden as well. To keep none of the words
 you type, run `clidev personal config set record_input false`.
 
+A secret is also found by what it looks like, in a run record and in a kept error message: a token in a known
+format (GitHub, OpenAI, Slack, AWS, Stripe, npm and the like), a `Bearer` credential, the value after a secret name
+such as `password=` or `API_TOKEN=`, and a random-looking string of 20 or more characters. Some secrets look like
+ordinary words and stay: a hex key in one case shorter than 40 characters, a short password typed without a secret
+name before it, and a secret inside a link or a file path unless it is in a known format or after a secret name.
+
 `config.json` is saved readable by you only (`0600`), and its folder is created for you only (`0700`). A file or
 folder made by an older version may be open to other users of the computer: `clidev doctor` lists each under
 `files.problems` and prints the `chmod` that fixes it. Windows is not checked. Report a vulnerability as [SECURITY.md](https://github.com/WireCatLabs/cli-template/blob/main/SECURITY.md)
