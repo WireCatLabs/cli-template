@@ -1,6 +1,6 @@
 {
   "name": "@wirecat/cli-template",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Start a new WireCat CLI: a working skeleton on cli-base and cli-core, copied by new and kept current by upgrade",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
@@ -73,7 +73,7 @@
     "lint:commands": "pnpm build && cli-dev lint --cli dist/bin/clidev.js",
     "audit:commands": "pnpm build && bash scripts/audit.sh",
     "ci:quick": "pnpm typecheck && pnpm build && pnpm lint:commands",
-    "release:check": "pnpm standards:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check",
+    "release:check": "pnpm standards:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check && pnpm security:no-leak && pnpm package:check",
     "prepare": "lefthook install || true",
     "prepack": "pnpm build",
     "docs:spell": "cspell lint --config cspell.json --no-progress --no-summary README.md SECURITY.md CHANGELOG.md 'docs/*.md'",
