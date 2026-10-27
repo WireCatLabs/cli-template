@@ -9,6 +9,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Changed — may break callers
 
+- **The skeleton runs on cli-core 0.469.0**, the first cli-core that accepts cli-base 0.65, which the skeleton pins
+  since 0.65's own update. A non-messenger CLI no longer offers messenger settings or the `follow-ups` and
+  `link-conversations` skills (cli-core 0.468); every run is recorded by default, successes too (cli-core 0.467).
 - **The skeleton runs on cli-core 0.464.0 and cli-base 0.65.0**; a CLI that pins cli-base moves both pins together.
   cli-base 0.64 adds `cli-dev bundle`, the shared build that ships the bin as an esbuild bundle, and calendar words in
   the command vocabulary. cli-base 0.65 adds the verbs `serve` and `revoke`, and `cli-dev lint` fails on a baseline
