@@ -7,6 +7,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Changed — may break callers
+
+- **A new CLI starts on cli-core 0.463 and cli-base 0.63** (from 0.449 and 0.62). `skill show`, `skill status` and
+  `skill install` answer `--json` as `{ item, meta }` (cli-core 0.462). `mcp server start` and its siblings describe
+  the server as `mcp serve --http` (cli-core 0.463); the skeleton keeps its own `mcp --http`, which `server start`
+  still runs. `<cli> upgrade` restarts the HTTP MCP server that `mcp server start` started, on the new version, and
+  names the MCP sessions over stdio that still run the old one (cli-core #2117).
+
 ### Security
 
 - **`.gitleaks.toml` catches Google OAuth tokens.** gitleaks' own rules know Google API keys only, so an access token

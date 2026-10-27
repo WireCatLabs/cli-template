@@ -137,11 +137,11 @@ clidev mcp [options]
 
 ### `clidev mcp server`
 
-start, stop and check `mcp --http` in the background; status shows the login code for a browser app
+start, stop and check `mcp serve --http` in the background; status shows the login code for a browser app
 
 #### `clidev mcp server start`
 
-start `mcp --http` apart from this shell and answer once it listens, with its login code
+start `mcp serve --http` apart from this shell and answer once it listens, with its login code
 
 **Changes something on this computer only.**
 
@@ -152,8 +152,7 @@ clidev mcp server start [options]
 | Option | What it does |
 |---|---|
 | `--port <port>` | the local port (default 8765). |
-| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
-| `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
+| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 
 **Returns:** start the HTTP MCP server in the background
 
@@ -161,7 +160,7 @@ clidev mcp server start [options]
 
 #### `clidev mcp server stop`
 
-stop `mcp --http` — only one that `mcp server start` started
+stop `mcp serve --http` — only one that `mcp server start` started
 
 **Changes something on this computer only.**
 
@@ -175,7 +174,7 @@ clidev mcp server stop
 
 #### `clidev mcp server status`
 
-whether `mcp --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
+whether `mcp serve --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
 
 ```sh
 clidev mcp server status
