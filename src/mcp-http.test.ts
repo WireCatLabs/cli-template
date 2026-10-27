@@ -95,7 +95,10 @@ it("serves the three tools behind the browser login, and shows the server in mcp
   const port = await freePort()
   const base = new URL(`http://127.0.0.1:${port}`)
   const stop = new AbortController()
-  const serving = started(["personal", "mcp", "--http", "--public-url", base.href, "--port", String(port)], stop.signal)
+  const serving = started(
+    ["personal", "mcp", "serve", "--http", "--public-url", base.href, "--port", String(port)],
+    stop.signal,
+  )
   await vi.waitFor(() => expect(serving.err.join("\n")).toContain("serving on"))
   const codes = () => [...serving.err.join("\n").matchAll(/login code for a new browser app: (\S+)/g)].map((m) => m[1])
   const client = await loggedInClient(base, () => codes()[0] ?? "")
@@ -121,30 +124,34 @@ it("serves the three tools behind the browser login, and shows the server in mcp
   expect(await answer(["personal", "mcp", "server", "status", "--json"])).toMatchObject({ running: false })
 })
 
-it("refuses mcp --http without the tunnel's address", async () => {
-  const one = started(["personal", "mcp", "--http", "--json"])
+it("refuses mcp serve --http without the tunnel's address", async () => {
+  const one = started(["personal", "mcp", "serve", "--http", "--json"])
   expect(await one.code).not.toBe(0)
   expect(one.err.join("\n")).toContain("--public-url")
 })
 
-it("forgets every browser login on --revoke", async () => {
-  expect(await answer(["personal", "mcp", "--revoke", "--json"])).toEqual({ revoked: true, profile: "personal" })
+it("forgets every browser login on mcp revoke", async () => {
+  expect(await answer(["personal", "mcp", "revoke", "--json"])).toEqual({ revoked: true, profile: "personal" })
 })
 
 it("keeps the login code out of a background server's log, and refuses a port in use", async () => {
   const port = await freePort()
   const url = `http://127.0.0.1:${port}`
   const stop = new AbortController()
-  const background = started(["personal", "mcp", "--http", "--public-url", url, "--port", String(port)], stop.signal, {
-    ...process.env,
-    CLIDEV_MCP_HTTP: "personal",
-  })
+  const background = started(
+    ["personal", "mcp", "serve", "--http", "--public-url", url, "--port", String(port)],
+    stop.signal,
+    {
+      ...process.env,
+      CLIDEV_MCP_HTTP: "personal",
+    },
+  )
   try {
     await vi.waitFor(() => expect(background.err.join("\n")).toContain("serving on"))
     expect(background.err.join("\n")).toContain(
       "a new login code for a browser app: `clidev personal mcp server status`",
     )
-    const second = started(["work", "mcp", "--http", "--public-url", url, "--port", String(port), "--json"])
+    const second = started(["work", "mcp", "serve", "--http", "--public-url", url, "--port", String(port), "--json"])
     expect(await second.code).not.toBe(0)
     expect(second.err.join("\n")).toContain(`port ${port} is in use`)
   } finally {
@@ -154,12 +161,12 @@ it("keeps the login code out of a background server's log, and refuses a port in
 })
 
 it("refuses --json for MCP over stdio", async () => {
-  const one = started(["personal", "mcp", "--json"])
+  const one = started(["personal", "mcp", "serve", "--json"])
   expect(await one.code).toBe(2)
   expect(one.err.join("\n")).toContain("MCP over stdio controls its own output")
 })
 
-it("refuses --revoke under the read-only lock", async () => {
-  const one = started(["personal", "mcp", "--revoke", "--json"], undefined, { ...process.env, CLIDEV_READ_ONLY: "1" })
+it("refuses mcp revoke under the read-only lock", async () => {
+  const one = started(["personal", "mcp", "revoke", "--json"], undefined, { ...process.env, CLIDEV_READ_ONLY: "1" })
   expect(await one.code).toBe(5)
 })

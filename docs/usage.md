@@ -15,24 +15,25 @@ command without one stops with exit code 2 and lists the profiles on this comput
 
 ## Output for scripts
 
-Every command except `mcp` on stdin and stdout takes `--json`, and prints one JSON value on stdout. Errors are JSON on stderr, with a code to branch
+Every command except `mcp serve` on stdin and stdout takes `--json`, and prints one JSON value on stdout. Errors are JSON on stderr, with a code to branch
 on. The [command reference](commands.md) lists the codes.
 
 ## Agents
 
 `clidev skill install` puts the tool's skill where Claude Code, Codex, Gemini CLI and OpenClaw look for it.
 `clidev skill install --for hermes` also adds that folder to Hermes Agent's own settings, so a bare `skill install`
-leaves Hermes out. `clidev personal mcp` serves the profile's commands over MCP, on stdin and stdout:
+leaves Hermes out. `clidev personal mcp serve` serves the profile's commands over MCP, on stdin and stdout:
 
 ```sh
-claude mcp add clidev -- clidev personal mcp
+claude mcp add clidev -- clidev personal mcp serve
 ```
 
 The server offers every command, the ones that write included. The profile's permissions decide what runs; see
 [settings](configuration.md#permissions).
 
-For ChatGPT and Claude in the browser, `clidev personal mcp --http --public-url https://laptop.example.ts.net` serves on
-`127.0.0.1` (port 8765, or `--port`) behind your own tunnel. A browser app logs in with a one-time code that the
-command prints; `clidev personal mcp --revoke` ends every login. `clidev personal mcp server start` runs the same
+For ChatGPT and Claude in the browser,
+`clidev personal mcp serve --http --public-url https://laptop.example.ts.net` serves on `127.0.0.1` (port 8765, or
+`--port`) behind your own tunnel. A browser app logs in with a one-time code that the command prints;
+`clidev personal mcp revoke` ends every login. `clidev personal mcp server start` runs the same
 server in the background, `mcp server status` shows its port, the login code and the apps logged in, and
 `mcp server stop` ends it.

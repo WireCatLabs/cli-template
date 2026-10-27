@@ -47,7 +47,7 @@ it("finds writes as well as reads", async () => {
   const client = await connect()
   const found = structured(await client.callTool({ name: "clidev_tools_search", arguments: {} }))
   expect(found.items).toContainEqual(expect.objectContaining({ writes: true }))
-  expect(found.items).not.toContainEqual(expect.objectContaining({ command: "mcp" }))
+  expect(found.items).not.toContainEqual(expect.objectContaining({ command: expect.stringMatching(/^mcp\b/) }))
 })
 
 it("runs a command through the CLI and answers with its result", async () => {
@@ -76,9 +76,9 @@ it("serves until the command is stopped", async () => {
   await expect(serving).resolves.toBeUndefined()
 })
 
-it("clidev <profile> mcp starts the server and ends on a signal", async () => {
+it("clidev <profile> mcp serve starts the server and ends on a signal", async () => {
   const stop = new AbortController()
-  const serving = run(["personal", "mcp"], {
+  const serving = run(["personal", "mcp", "serve"], {
     signal: stop.signal,
     tty: false,
     streams: { data: () => {}, diagnostic: () => {} },
