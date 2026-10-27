@@ -7,6 +7,32 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.464.0 and cli-base 0.64.0**, the cli-base line cli-core 0.464 accepts; a CLI that
+  pins cli-base moves both pins together. cli-base 0.64 adds `cli-dev bundle`, the shared build that ships the bin as
+  an esbuild bundle, and calendar words in the command vocabulary. `<cli> upgrade` now restarts the HTTP MCP server
+  that `mcp server start` started, on the new version, and names the MCP sessions over stdio that still run the old
+  one (cli-core #2117).
+
+## 0.9.0 — 27.10.2026
+
+### Changed — may break callers
+
+- **The MCP server is `clidev <profile> mcp serve`; `mcp` alone only shows its commands** (WC-CMD-3). `--http`,
+  `--port` and `--public-url` move to `mcp serve`, and `mcp --revoke` is its own command, `mcp revoke`, still refused
+  under `CLIDEV_READ_ONLY`. There is no alias: a client set up with `claude mcp add clidev -- clidev personal mcp`
+  gets the help and exits 2; set it up again with `… mcp serve`. `mcp server start` runs `mcp serve --http`.
+- **The skeleton runs on cli-core 0.463.0 and cli-base 0.63.0**, the cli-base line cli-core 0.463 accepts; a CLI that
+  pins cli-base moves both pins together. `skill show`, `skill status` and `skill install --json` answer in the
+  one-thing envelope, `{ item, meta }`, so a script reads their fields under `item`.
+- **`mcp server start` no longer offers `--permission`.** cli-core added it to every CLI and passed it to a server
+  that refused it; now it is refused before anything starts. The profile's `permissions` still make the server
+  stricter.
+
+A CLI made from an older template keeps its own `src/commands/mcp.ts`, since `src/` is a seed: copy the template's
+file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
+
 ### Security
 
 - **`.gitleaks.toml` catches Google OAuth tokens.** gitleaks' own rules know Google API keys only, so an access token
@@ -15,6 +41,11 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Fixed
 
+- **A command other than `mcp serve` no longer loads the MCP library.** `src/commands/mcp.ts` imported `portOf` and
+  `publicUrlOf` from `@wirecat/cli-core/mcp` at the top, so `--version` and `doctor` loaded the MCP server SDK too
+  (WC-LIFE-6). `mcp serve --http` now imports them when it runs.
+- `docs/security.md` says what `mcp serve --http` listens on, what it keeps of each browser login, and that
+  `mcp revoke` ends them.
 - **`pnpm audit:commands` prints the CLI's own scorecard lines**, not the last CLI's total, which was zoom-cli's. It
   fails when the scorecard has no line for the CLI. Whether a new finding fails the run did not change.
 - **`AGENTS.md` keeps only what holds for the CLI's whole life.** The one-time first task (interview, reference CLI,

@@ -127,10 +127,16 @@ it("skill show prints the packaged skill", async () => {
   expect(out).toContain(readFileSync(new URL("../skills/clidev-cli/SKILL.md", import.meta.url), "utf8").split("\n")[0])
 })
 
-it("mcp without a profile stops and says so", async () => {
-  const { code, err } = await ran(["mcp", "--json"])
+it("mcp serve without a profile stops and says so", async () => {
+  const { code, err } = await ran(["mcp", "serve", "--json"])
   expect(code).toBe(2)
   expect(err).toContain("validation_error")
+})
+
+it("mcp alone only names its commands", async () => {
+  const { code, err } = await ran(["personal", "mcp", "--json"])
+  expect(code).toBe(2)
+  expect(err).toContain("--help")
 })
 
 it("upgrade --check installs nothing when npm cannot be reached", async () => {

@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**50 ✅ · 7 ⛔ · 0 ❌** — 18 commands, 39 options.
+**50 ✅ · 6 ⛔ · 0 ❌** — 19 commands, 37 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -19,16 +19,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `skill install` |  | ✅ |  |
 | `skill install` | `--for` | ✅ |  |
 | `skill status` |  | ✅ |  |
-| `mcp` |  | ✅ |  |
-| `mcp` | `--http` | ✅ |  |
-| `mcp` | `--port` | ✅ |  |
-| `mcp` | `--public-url` | ✅ |  |
-| `mcp` | `--revoke` | ✅ |  |
-| `mcp server start` |  | ⛔ | starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
-| `mcp server start` | `--port` | ⛔ | starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
-| `mcp server start` | `--public-url` | ⛔ | starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
-| `mcp server start` | `--permission` | ⛔ | cli-core adds it and passes it to `mcp --http`, which no longer takes it, so the started server refuses it; checked by hand against dist/ |
-| `mcp server stop` |  | ⛔ | starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp serve` |  | ✅ |  |
+| `mcp serve` | `--http` | ✅ |  |
+| `mcp serve` | `--port` | ✅ |  |
+| `mcp serve` | `--public-url` | ✅ |  |
+| `mcp revoke` |  | ✅ |  |
+| `mcp server start` |  | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp server start` | `--port` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp server start` | `--public-url` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp server stop` |  | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
 | `mcp server status` |  | ✅ |  |
 | `upgrade` |  | ✅ |  |
 | `upgrade` | `--check` | ✅ |  |

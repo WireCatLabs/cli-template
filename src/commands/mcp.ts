@@ -6,6 +6,8 @@ import {
   type GlobalFlags,
   httpTokenFile,
   itemOf,
+  LOCAL_READ,
+  LOCAL_WRITE,
   MCP_HTTP_DEFAULT_PORT,
   mcpServerCommand,
   outputFor,
@@ -14,7 +16,6 @@ import {
   renderAnswer,
   rootOf,
 } from "@wirecat/cli-core/cli"
-import { portOf, publicUrlOf } from "@wirecat/cli-core/mcp"
 import { Command } from "commander"
 import { configuration } from "../config.js"
 import { IDENTITY } from "../identity.js"
@@ -23,8 +24,9 @@ interface McpFlags extends GlobalFlags {
   http?: boolean
   port?: string
   publicUrl?: string
-  revoke?: boolean
 }
+
+const SETUP = `claude mcp add ${IDENTITY.command} -- ${IDENTITY.command} personal mcp serve`
 
 const settingsOf = (command: Command) => {
   const flags = command.optsWithGlobals<McpFlags>()
@@ -33,16 +35,19 @@ const settingsOf = (command: Command) => {
   return { flags, env, profile, tokenFile: httpTokenFile(IDENTITY, profile, env) }
 }
 
-export const mcpCommand = (): Command =>
-  annotate(new Command("mcp"), {
+const serveCommand = (): Command =>
+  annotate(new Command("serve"), {
     effects: REMOTE_WRITE,
     lifetime: "persistent",
     mcp: false,
-    examples: [`${IDENTITY.command} personal mcp`],
+    examples: [
+      `${IDENTITY.command} personal mcp serve`,
+      `${IDENTITY.command} personal mcp serve --http --public-url https://laptop.example.ts.net`,
+    ],
   })
     .summary("serve this profile's commands to an AI agent")
     .description(
-      `serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — \`claude mcp add ${IDENTITY.command} -- ${IDENTITY.command} personal mcp\``,
+      `serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — \`${SETUP}\``,
     )
     .option(
       "--http",
@@ -50,39 +55,13 @@ export const mcpCommand = (): Command =>
     )
     .option("--port <port>", `the local port for --http (default ${MCP_HTTP_DEFAULT_PORT})`)
     .option("--public-url <url>", "the tunnel's https address the browser apps use, e.g. https://<name>.ts.net")
-    .option("--revoke", "forget every login given to a browser app; each must log in again")
-    .addCommand(
-      mcpServerCommand({
-        example: `${IDENTITY.command} personal`,
-        target: (self) => {
-          const { env, profile, tokenFile } = settingsOf(self)
-          return {
-            invocation: `${IDENTITY.command} ${profile}`,
-            profile,
-            envPrefix: IDENTITY.envPrefix,
-            env,
-            tokenFile,
-            argv: [profile, "mcp", "--http"],
-            version: IDENTITY.version,
-          }
-        },
-        answer: (self, item, lines) => renderAnswer(self, outputFor(self), itemOf(item), () => lines.join("\n")),
-      }),
-    )
     .action(async function (this: Command) {
       const { flags, env, profile, tokenFile } = settingsOf(this)
-      if (flags.revoke) {
-        refuseUnderReadOnly(this, "mcp --revoke")
-        const { revokeAll } = await import("@wirecat/cli-core/mcp")
-        revokeAll(tokenFile)
-        renderAnswer(this, outputFor(this), itemOf({ revoked: true, profile }))
-        return
-      }
       if (!flags.http && (flags.json || flags.jsonl))
         throw new CliError("validation_error", "MCP over stdio controls its own output; leave out --json and --jsonl")
       const environment = environmentOf(this)
       const run = environment.runCommand
-      if (!run) throw new Error("mcp runs inside the program's run(), which provides runCommand")
+      if (!run) throw new Error("mcp serve runs inside the program's run(), which provides runCommand")
       const program = rootOf(this)
       const options = {
         profile,
@@ -95,6 +74,7 @@ export const mcpCommand = (): Command =>
       // Loaded here, not at the top: every other command would otherwise pay for the MCP SDK.
       const { serveMcp, serveMcpOverHttp } = await import("../mcp.js")
       if (!flags.http) return serveMcp(options)
+      const { portOf, publicUrlOf } = await import("@wirecat/cli-core/mcp")
       const { renderer } = outputFor(this)
       await serveMcpOverHttp(options, {
         publicUrl: publicUrlOf(flags.publicUrl, {
@@ -107,3 +87,44 @@ export const mcpCommand = (): Command =>
         note: (line) => renderer.note(line),
       })
     })
+
+const revokeCommand = (): Command =>
+  annotate(new Command("revoke"), {
+    effects: LOCAL_WRITE,
+    mcp: false,
+    examples: [`${IDENTITY.command} personal mcp revoke`],
+  })
+    .summary("forget every login given to a browser app")
+    .description("forget every login `mcp serve --http` gave a browser app; each must log in again")
+    .action(async function (this: Command) {
+      refuseUnderReadOnly(this, "mcp revoke")
+      const { profile, tokenFile } = settingsOf(this)
+      const { revokeAll } = await import("@wirecat/cli-core/mcp")
+      revokeAll(tokenFile)
+      renderAnswer(this, outputFor(this), itemOf({ revoked: true, profile }))
+    })
+
+export const mcpCommand = (): Command =>
+  annotate(new Command("mcp"), { effects: LOCAL_READ, mcp: false })
+    .summary("serve this profile's commands to an AI agent")
+    .description(`serve this profile's commands to an agent over MCP — \`${SETUP}\``)
+    .addCommand(serveCommand())
+    .addCommand(revokeCommand())
+    .addCommand(
+      mcpServerCommand({
+        example: `${IDENTITY.command} personal`,
+        target: (self) => {
+          const { env, profile, tokenFile } = settingsOf(self)
+          return {
+            invocation: `${IDENTITY.command} ${profile}`,
+            profile,
+            envPrefix: IDENTITY.envPrefix,
+            env,
+            tokenFile,
+            argv: [profile, "mcp", "serve", "--http"],
+            version: IDENTITY.version,
+          }
+        },
+        answer: (self, item, lines) => renderAnswer(self, outputFor(self), itemOf(item), () => lines.join("\n")),
+      }),
+    )

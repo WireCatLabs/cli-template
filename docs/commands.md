@@ -70,7 +70,7 @@ the instructions an agent is given for this tool
 
 ### `clidev skill show`
 
-print SKILL.md — `clidev skill install` puts it where Claude Code, Codex and Gemini CLI look for it; --for prints the copy already there
+print SKILL.md — `clidev skill install` puts it where Claude Code, Codex, Gemini CLI and OpenClaw look for it, and where Hermes does on request; --for prints the copy already there
 
 ```sh
 clidev skill show [name] [options]
@@ -120,12 +120,16 @@ clidev skill status
 
 ## `clidev mcp`
 
-serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add clidev -- clidev personal mcp`
+serve this profile's commands to an agent over MCP — `claude mcp add clidev -- clidev personal mcp serve`
+
+### `clidev mcp serve`
+
+serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add clidev -- clidev personal mcp serve`
 
 **Changes something in the service.**
 
 ```sh
-clidev mcp [options]
+clidev mcp serve [options]
 ```
 
 | Option | What it does |
@@ -133,15 +137,32 @@ clidev mcp [options]
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
-| `--revoke` | forget every login given to a browser app; each must log in again. |
+
+**Returns:** serve this profile's commands to an AI agent
+
+**Example:** `clidev personal mcp serve`, `clidev personal mcp serve --http --public-url https://laptop.example.ts.net`
+
+### `clidev mcp revoke`
+
+forget every login `mcp serve --http` gave a browser app; each must log in again
+
+**Changes something on this computer only.**
+
+```sh
+clidev mcp revoke
+```
+
+**Returns:** forget every login given to a browser app
+
+**Example:** `clidev personal mcp revoke`
 
 ### `clidev mcp server`
 
-start, stop and check `mcp --http` in the background; status shows the login code for a browser app
+start, stop and check `mcp serve --http` in the background; status shows the login code for a browser app
 
 #### `clidev mcp server start`
 
-start `mcp --http` apart from this shell and answer once it listens, with its login code
+start `mcp serve --http` apart from this shell and answer once it listens, with its login code
 
 **Changes something on this computer only.**
 
@@ -152,8 +173,7 @@ clidev mcp server start [options]
 | Option | What it does |
 |---|---|
 | `--port <port>` | the local port (default 8765). |
-| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
-| `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
+| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 
 **Returns:** start the HTTP MCP server in the background
 
@@ -161,7 +181,7 @@ clidev mcp server start [options]
 
 #### `clidev mcp server stop`
 
-stop `mcp --http` — only one that `mcp server start` started
+stop `mcp serve --http` — only one that `mcp server start` started
 
 **Changes something on this computer only.**
 
@@ -175,7 +195,7 @@ clidev mcp server stop
 
 #### `clidev mcp server status`
 
-whether `mcp --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
+whether `mcp serve --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
 
 ```sh
 clidev mcp server status
