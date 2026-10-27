@@ -16,7 +16,6 @@ import {
   renderAnswer,
   rootOf,
 } from "@wirecat/cli-core/cli"
-import { portOf, publicUrlOf } from "@wirecat/cli-core/mcp"
 import { Command } from "commander"
 import { configuration } from "../config.js"
 import { IDENTITY } from "../identity.js"
@@ -75,6 +74,7 @@ const serveCommand = (): Command =>
       // Loaded here, not at the top: every other command would otherwise pay for the MCP SDK.
       const { serveMcp, serveMcpOverHttp } = await import("../mcp.js")
       if (!flags.http) return serveMcp(options)
+      const { portOf, publicUrlOf } = await import("@wirecat/cli-core/mcp")
       const { renderer } = outputFor(this)
       await serveMcpOverHttp(options, {
         publicUrl: publicUrlOf(flags.publicUrl, {
