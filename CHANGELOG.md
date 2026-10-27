@@ -20,6 +20,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **`AGENTS.md` keeps only what holds for the CLI's whole life.** The one-time first task (interview, reference CLI,
   rewrite the README and the MCP instructions) moved into the `DESIGN.md` that `new` writes, which the CLI owns and
   deletes the section from when it is done. `upgrade` drops the old text from `AGENTS.md`.
+- **`new` writes a `files` list that ships only what the CLI runs from**: `dist`, `skills`, `README.md`,
+  `CHANGELOG.md` and `LICENSE`. It copied the template's own list, so a new CLI published its `src/` with tests and
+  fakes, `scripts/`, `.github/`, `bin/release`, `config/`, `lint/` and `template.json` (WC-REL-16). `package.json` is
+  a seed, so a CLI made before this trims its list by hand; `pnpm smoke` then checks the package still runs.
 - `docs/dev/TESTING.md` and `ci.yml` give both reasons `contracts:upgrade` is skipped: it needs local state of the
   CLI's own and a published version to upgrade from (WC-TEST-14).
 - `docs/dev/reference-clis.md` shows the provider call cli-core has, `store.accounts.registerProvider(entry)`.

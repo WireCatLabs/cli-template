@@ -6,7 +6,7 @@ import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
 import { ask, choiceList, INTERVIEW, labelOf, NAME_QUESTIONS, parseAnswer, type Question } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { PACKED_AS, renderTemplate, type TemplateSource } from "./source.js"
+import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
 
@@ -177,6 +177,8 @@ const removeKit = (command: string): string =>
     .filter((part) => !/\bkit[:/]/.test(part))
     .join(" && ")
 
+const CLI_FILES = ["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"]
+
 export const cliPackageJson = (text: string, names: Names): string => {
   const pkg: unknown = JSON.parse(text)
   if (!isRecord(pkg)) throw new Error("package.json must be a JSON object")
@@ -188,8 +190,8 @@ export const cliPackageJson = (text: string, names: Names): string => {
     ...Object.fromEntries(Object.entries(bin).filter(([, value]) => !isKit(value))),
     [names.command]: `dist/bin/${names.command}.js`,
   }
-  if (Array.isArray(pkg.files))
-    next.files = pkg.files.filter((entry) => !isKit(entry) && !Object.values(PACKED_AS).includes(entry))
+  // The template's own list ships the skeleton's sources for `new` to copy; a CLI ships what runs (WC-REL-16).
+  if (Array.isArray(pkg.files)) next.files = CLI_FILES
   if (isRecord(pkg.scripts)) {
     next.scripts = Object.fromEntries(
       Object.entries(pkg.scripts)

@@ -73,7 +73,7 @@ describe("new", () => {
     expect(pkg.name).toBe("@example/cal-cli")
     expect(pkg.version).toBe("0.0.0")
     expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js" })
-    expect(pkg.files).not.toContain("kit/dist")
+    expect(pkg.files).toEqual(["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"])
     expect(pkg.scripts).toEqual({ build: "tsc --build", prepack: "pnpm build" })
     expect(pkg.repository.url).toBe("git+https://github.com/example/cal-cli.git")
   })
