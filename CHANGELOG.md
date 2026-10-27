@@ -12,6 +12,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - The fresh-audit prompt lets the auditor read the cli-base workflow files the CLI's workflows pin (WC-CI-8), as
   the handbook's New CLI page now says.
 
+### Removed
+
+- **`mcp --permission` is gone.** cli-core 0.449.0 checks a `--permission` key against the messenger's names
+  (`messages`, `drafts`, `chats` and the like), so in a CLI made from this template it refused every value, its own
+  command paths included. It returns when cli-core can check a CLI's own permission names. Until then the profile's
+  `permissions` are the way to make the MCP server stricter. `mcp server start` still shows a `--permission` option,
+  which cli-core adds; the server it starts refuses it.
+
 ## 0.7.0 — 27.10.2026
 
 ### Changed — may break callers
