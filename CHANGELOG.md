@@ -22,6 +22,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **Every command spends less time getting ready (cli-base 0.62.0, cli-core 0.449.0).** The check of shared commands now
   describes each command once, not again for every group above it. It was about 60% of each command's setup; in tg a
   warm `run(["--version"])` went from 49 to 29 ms. It catches the same changes as before.
+- **`bin/release` no longer reports a release that passed as failed.** `gh run watch` also stops with an error when
+  one of its own requests to GitHub fails, while the run goes on; 0.6.1 was published, tagged and green, and the
+  script said it failed. It now waits for the run to finish, reads its result, and checks npm before it says anything.
+  It names `bin/release --local` only when npm refused the publish because it does not trust the workflow yet.
 
 ## 0.6.1 — 26.10.2026
 
