@@ -5,6 +5,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- The fresh-audit prompt lets the auditor read the cli-base workflow files the CLI's workflows pin (WC-CI-8), as
+  the handbook's New CLI page now says.
+
 ## 0.7.0 — 27.10.2026
 
 ### Changed — may break callers
