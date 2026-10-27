@@ -125,12 +125,66 @@ serve this profile's commands to an agent over MCP, on stdin and stdout, writes 
 **Changes something in the service.**
 
 ```sh
-clidev mcp
+clidev mcp [options]
 ```
 
-**Returns:** serve this profile's commands to an AI agent
+| Option | What it does |
+|---|---|
+| `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
+| `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
+| `--port <port>` | the local port for --http (default 8765). |
+| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
+| `--revoke` | forget every login given to a browser app; each must log in again. |
 
-**Example:** `clidev personal mcp`
+### `clidev mcp server`
+
+start, stop and check `mcp --http` in the background; status shows the login code for a browser app
+
+#### `clidev mcp server start`
+
+start `mcp --http` apart from this shell and answer once it listens, with its login code
+
+**Changes something on this computer only.**
+
+```sh
+clidev mcp server start [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--port <port>` | the local port (default 8765). |
+| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
+| `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
+
+**Returns:** start the HTTP MCP server in the background
+
+**Example:** `clidev personal mcp server start --public-url https://laptop.example.ts.net`
+
+#### `clidev mcp server stop`
+
+stop `mcp --http` — only one that `mcp server start` started
+
+**Changes something on this computer only.**
+
+```sh
+clidev mcp server stop
+```
+
+**Returns:** stop the background HTTP MCP server
+
+**Example:** `clidev personal mcp server stop`
+
+#### `clidev mcp server status`
+
+whether `mcp --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
+
+```sh
+clidev mcp server status
+```
+
+**Returns:** whether the HTTP MCP server runs, its login code and the apps logged in
+
+**Example:** `clidev personal mcp server status --json`
 
 ## `clidev upgrade`
 
