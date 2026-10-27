@@ -5,7 +5,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
-## Unreleased
+## 0.7.0 — 27.10.2026
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.449.0 and cli-base 0.62.0**, the only cli-base line cli-core 0.449 accepts; a CLI
+  that pins cli-base moves both pins together. The commands and their help do not change, apart from the `mcp`
+  additions below.
 
 ### Added
 
