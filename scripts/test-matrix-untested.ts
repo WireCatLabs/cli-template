@@ -30,7 +30,7 @@ export const UNTESTED: { command: string; option?: string; reason: string }[] = 
     command: "mcp server start",
     option: "--permission",
     reason:
-      "starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
+      "cli-core adds it and passes it to `mcp --http`, which no longer takes it, so the started server refuses it; checked by hand against dist/",
   },
   {
     command: "mcp server stop",
