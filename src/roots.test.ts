@@ -77,7 +77,7 @@ it("skill status and skill show --for read what skill install wrote", async () =
   expect((await ran(["skill", "install", "--for", "claude", "--json"])).code).toBe(0)
   const status = await ran(["skill", "status", "--json"])
   expect(status.code).toBe(0)
-  // cli-core wraps skill answers in `{ item, meta }` after 0.444.0; accept both until this CLI pins that release.
+  // cli-core #2059 wraps skill answers in `{ item, meta }`; accept both until this CLI pins the release that ships it.
   const answer = (out: string) => {
     const body = JSON.parse(out)
     return body.item ?? body
