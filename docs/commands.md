@@ -120,12 +120,16 @@ clidev skill status
 
 ## `clidev mcp`
 
-serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add clidev -- clidev personal mcp`
+serve this profile's commands to an agent over MCP — `claude mcp add clidev -- clidev personal mcp serve`
+
+### `clidev mcp serve`
+
+serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add clidev -- clidev personal mcp serve`
 
 **Changes something in the service.**
 
 ```sh
-clidev mcp [options]
+clidev mcp serve [options]
 ```
 
 | Option | What it does |
@@ -133,7 +137,24 @@ clidev mcp [options]
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
-| `--revoke` | forget every login given to a browser app; each must log in again. |
+
+**Returns:** serve this profile's commands to an AI agent
+
+**Example:** `clidev personal mcp serve`, `clidev personal mcp serve --http --public-url https://laptop.example.ts.net`
+
+### `clidev mcp revoke`
+
+forget every login `mcp serve --http` gave a browser app; each must log in again
+
+**Changes something on this computer only.**
+
+```sh
+clidev mcp revoke
+```
+
+**Returns:** forget every login given to a browser app
+
+**Example:** `clidev personal mcp revoke`
 
 ### `clidev mcp server`
 
