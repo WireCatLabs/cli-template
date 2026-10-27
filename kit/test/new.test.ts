@@ -27,7 +27,7 @@ describe("new", () => {
     ["mail", "No reference CLI"],
     ["notes", "cli-memo"],
     ["files", "drive-cli"],
-    ["calendar", "No reference CLI"],
+    ["calendar", "gcal-cli"],
     ["meetings", "zoom-cli"],
     ["other:issue tracker", "No reference CLI"],
   ])("copies the template for the %s category", async (category, reference) => {

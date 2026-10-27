@@ -3,7 +3,15 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-<!-- cspell:words katex smol whatsapp -->
+<!-- cspell:words gcal katex smol whatsapp -->
+
+## Unreleased
+
+### Added
+
+- **`new --category calendar` names gcal-cli as the reference CLI** in `AGENTS.md` and `DESIGN.md`, and the
+  Reference CLIs page lists it, instead of "No reference CLI for this category yet". gcal-cli is the WireCat Google
+  Calendar CLI. A CLI made before this keeps what it wrote; edit its `AGENTS.md` by hand if you want the link.
 
 ## Unreleased
 

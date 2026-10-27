@@ -19,6 +19,7 @@ export type Answers = Record<string, string[]>
 const REFERENCES: Record<string, string[]> = {
   messenger: ["whatsapp-cli", "tg-cli", "max-cli"],
   files: ["drive-cli"],
+  calendar: ["gcal-cli"],
   meetings: ["zoom-cli"],
   notes: ["cli-memo"],
 }
