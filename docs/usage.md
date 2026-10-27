@@ -29,4 +29,11 @@ claude mcp add clidev -- clidev personal mcp
 ```
 
 The server offers every command, the ones that write included. The profile's permissions decide what runs; see
-[settings](configuration.md#permissions).
+[settings](configuration.md#permissions). `--permission messages.send=deny` makes one key stricter for this server
+only; it never loosens the profile.
+
+For ChatGPT and Claude in the browser, `clidev personal mcp --http --public-url https://<name>.ts.net` serves on
+`127.0.0.1` (port 8765, or `--port`) behind your own tunnel. A browser app logs in with a one-time code that the
+command prints; `clidev personal mcp --revoke` ends every login. `clidev personal mcp server start` runs the same
+server in the background, `mcp server status` shows its port, the login code and the apps logged in, and
+`mcp server stop` ends it.

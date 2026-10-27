@@ -1,9 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/server"
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio"
-import { mcpErrorResult } from "@wirecat/cli-base"
+import { CliError, mcpErrorResult } from "@wirecat/cli-base"
 import type { CommandInfo } from "@wirecat/cli-base/commands"
 import type { RunOptions } from "@wirecat/cli-core/cli"
-import { type McpCommand, registerCommands, runCommandForAgent, toolsFromCommands } from "@wirecat/cli-core/mcp"
+import {
+  httpLockFile,
+  MCP_PATH,
+  type McpCommand,
+  registerCommands,
+  runCommandForAgent,
+  serveOverHttp,
+  toolsFromCommands,
+} from "@wirecat/cli-core/mcp"
 import type { Level } from "@wirecat/cli-core/sends"
 import { IDENTITY } from "./identity.js"
 
@@ -84,5 +92,49 @@ export const serveMcp = async (options: McpOptions): Promise<void> => {
   } finally {
     options.signal?.removeEventListener("abort", stop)
     await server.close()
+  }
+}
+
+export interface HttpServing {
+  publicUrl: URL
+  port: number
+  tokenFile: string
+  /** Started by `mcp server start`: its stderr is a log file. */
+  background: boolean
+  note: (line: string) => void
+}
+
+/** Serves on 127.0.0.1 behind the owner's tunnel until the command is stopped (WC-MCP-12). */
+export const serveMcpOverHttp = async (options: McpOptions, http: HttpServing): Promise<void> => {
+  const listening = await serveOverHttp(() => createMcpServer(options), {
+    publicUrl: http.publicUrl,
+    port: http.port,
+    tokenFile: http.tokenFile,
+    lockFile: httpLockFile(http.tokenFile),
+    version: IDENTITY.version,
+    appName: IDENTITY.command,
+    // A code in a log file outlives its use; in the background it goes only to the lock that status reads.
+    onCode: (code, expires) =>
+      http.note(
+        http.background
+          ? `a new login code for a browser app: \`${IDENTITY.command} ${options.profile} mcp server status\``
+          : `login code for a new browser app: ${code} (until ${expires.toTimeString().slice(0, 5)}; a new one after each login)`,
+      ),
+    onError: (error) => http.note(`mcp: ${error.message}`),
+  }).catch((error: unknown) => {
+    if (error instanceof Error && "code" in error && error.code === "EADDRINUSE")
+      throw new CliError("configuration_error", `port ${http.port} is in use — pass another with --port`)
+    throw error
+  })
+  http.note(
+    `serving on ${listening.url.href} — point your tunnel at it; connectors use ${new URL(MCP_PATH, http.publicUrl).href}`,
+  )
+  try {
+    await new Promise<void>((resolve) => {
+      options.signal?.addEventListener("abort", () => resolve(), { once: true })
+      if (options.signal?.aborted) resolve()
+    })
+  } finally {
+    await listening.close()
   }
 }
