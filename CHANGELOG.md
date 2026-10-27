@@ -5,6 +5,16 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.464.0 and cli-base 0.64.0**, the cli-base line cli-core 0.464 accepts; a CLI that
+  pins cli-base moves both pins together. cli-base 0.64 adds `cli-dev bundle`, the shared build that ships the bin as
+  an esbuild bundle, and calendar words in the command vocabulary. `<cli> upgrade` now restarts the HTTP MCP server
+  that `mcp server start` started, on the new version, and names the MCP sessions over stdio that still run the old
+  one (cli-core #2117).
+
 ## 0.9.0 — 27.10.2026
 
 ### Changed — may break callers
