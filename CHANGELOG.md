@@ -7,6 +7,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Changed
+
+- **A CLI made from the template starts from an esbuild bundle.** `pnpm build` runs `tsc`, then cli-base's
+  `cli-dev bundle` ([WC-LAY-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/layout.md)), and the
+  bin becomes a loader for `dist/bundle/`: the skeleton's `config show --help` starts in 236 ms instead of 531.
+  `scripts/smoke-bundle.ts` runs the bundle under Node (`pnpm smoke:node`, in CI) and Bun (`pnpm smoke:bun`).
+
 ### Changed — may break callers
 
 - **The skeleton runs on cli-core 0.464.0 and cli-base 0.64.0**, the cli-base line cli-core 0.464 accepts; a CLI that
