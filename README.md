@@ -11,7 +11,7 @@ with the tool's own introduction once it does.
 To start a new CLI from the template:
 
 ```sh
-npx @wirecat/cli-template new cal-cli --command cal --package @wirecat/cal-cli --owner WireCatLabs
+npx @wirecat/cli-template new gcal-cli --command gcal --package @wirecat/gcal-cli --owner WireCatLabs
 ```
 
 ## Quick start

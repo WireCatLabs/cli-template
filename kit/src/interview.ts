@@ -23,14 +23,14 @@ export const NAME_QUESTIONS: Question[] = [
   {
     key: "command",
     flag: "command",
-    text: "The command word people type (lowercase, e.g. cal)",
+    text: "The command word people type (lowercase, e.g. gcal)",
     check: (value) =>
       commandWord.test(value) ? undefined : "lowercase letters, digits and dashes, starting with a letter",
   },
   {
     key: "package",
     flag: "package",
-    text: "The npm package name (e.g. @wirecat/cal-cli)",
+    text: "The npm package name (e.g. @wirecat/gcal-cli)",
     check: (value) => (npmName.test(value) ? undefined : "a valid npm package name, scoped or not"),
   },
   {

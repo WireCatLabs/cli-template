@@ -19,6 +19,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Fixed
 
+- **`new` writes the speech model advice into `docs/dev/DESIGN.md` only for `--category messenger`.** A calendar or
+  notes CLI got "If this CLI defines a messenger, set its speechModels…" and a warning that no speech model hears a
+  language, though only a messenger transcribes voice messages.
+- **The cron step `new` prints points to the list of taken monthly minutes** in cli-base's CI page (WC-CI-9), so
+  nobody has to read `monthly.yml` in every repository to find a free one. The examples now use `gcal-cli` and
+  `gcal`: `cal` is the system calendar program on macOS and many Linux systems.
 - **Every command spends less time getting ready (cli-base 0.62.0, cli-core 0.449.0).** The check of shared commands now
   describes each command once, not again for every group above it. It was about 60% of each command's setup; in tg a
   warm `run(["--version"])` went from 49 to 29 ms. It catches the same changes as before.
