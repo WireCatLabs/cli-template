@@ -10,6 +10,7 @@ import {
   mcpServerCommand,
   outputFor,
   REMOTE_WRITE,
+  refuseUnderReadOnly,
   renderAnswer,
   rootOf,
 } from "@wirecat/cli-core/cli"
@@ -80,6 +81,7 @@ export const mcpCommand = (): Command =>
     .action(async function (this: Command) {
       const { flags, env, profile, tokenFile } = settingsOf(this)
       if (flags.revoke) {
+        refuseUnderReadOnly(this, "mcp --revoke")
         const { revokeAll } = await import("@wirecat/cli-core/mcp")
         revokeAll(tokenFile)
         renderAnswer(this, outputFor(this), itemOf({ revoked: true, profile }))
