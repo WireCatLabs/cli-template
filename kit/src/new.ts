@@ -6,7 +6,7 @@ import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
 import { ask, choiceList, INTERVIEW, labelOf, NAME_QUESTIONS, parseAnswer, type Question } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { PACKED_AS, renderTemplate, type TemplateSource } from "./source.js"
+import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
 
@@ -132,6 +132,18 @@ export const designDoc = (names: Names, answers: Answers): string => {
     `Written by \`npx @wirecat/cli-template new\`. The agent reads it first, asks the further questions the reference CLI`,
     "does not answer, and starts building only after the owner has read it.",
     "",
+    "## First task",
+    "",
+    "Delete this section once every step is done (WC-DOC-3).",
+    "",
+    "1. If an answer below is missing, ask the owner the [design interview](skills/design-interview/SKILL.md).",
+    "2. Learn from the reference CLI below: its provider, its store and its commands.",
+    "3. Ask the further questions in the interview that the reference CLI does not answer, and write the answers here.",
+    "   Build only after the owner has read this page.",
+    "4. When the first command reaches the service, rewrite `README.md`, `docs/index.md` and the description in",
+    `   \`skills/${names.name}/SKILL.md\` to say what the tool does and who it is for. Rewrite the MCP server's`,
+    "   instructions in `src/mcp.ts` too: name the kinds of outside text the CLI carries (WC-MCP-11).",
+    "",
     "## Answers",
     "",
     ...rows,
@@ -165,6 +177,8 @@ const removeKit = (command: string): string =>
     .filter((part) => !/\bkit[:/]/.test(part))
     .join(" && ")
 
+const CLI_FILES = ["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"]
+
 export const cliPackageJson = (text: string, names: Names): string => {
   const pkg: unknown = JSON.parse(text)
   if (!isRecord(pkg)) throw new Error("package.json must be a JSON object")
@@ -176,8 +190,8 @@ export const cliPackageJson = (text: string, names: Names): string => {
     ...Object.fromEntries(Object.entries(bin).filter(([, value]) => !isKit(value))),
     [names.command]: `dist/bin/${names.command}.js`,
   }
-  if (Array.isArray(pkg.files))
-    next.files = pkg.files.filter((entry) => !isKit(entry) && !Object.values(PACKED_AS).includes(entry))
+  // The template's own list ships the skeleton's sources for `new` to copy; a CLI ships what runs (WC-REL-16).
+  if (Array.isArray(pkg.files)) next.files = CLI_FILES
   if (isRecord(pkg.scripts)) {
     next.scripts = Object.fromEntries(
       Object.entries(pkg.scripts)

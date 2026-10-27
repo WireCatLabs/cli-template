@@ -29,10 +29,13 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   compares its `commands`, `upgrade`, `config` and `skill` paths with theirs. It is in neither list, so a new CLI does
   not get it: the file replaces cli-base's `PARITY_GROUPS`, and a new CLI joins those groups instead (step 4 of
   `new`'s output).
-- `docs/dev/DESIGN.md` is always a seed: it holds the CLI's interview answers.
+- `docs/dev/DESIGN.md` is always a seed: it holds the CLI's interview answers and the one-time first task, which
+  the CLI deletes when it is done. `AGENTS.md` is template-owned, so it holds only what is true for every CLI.
 - `package.json` is always a seed. `new` rewrites it: `name` becomes `--package`, `version` becomes `0.0.0`, and
-  `repository`, `homepage` and `bugs` point at `<owner>/<name>`. It also drops every `bin`, `files` entry and script
-  that points into `kit/`, and the `&& pnpm kit:…` parts of other scripts. `src/version.ts` gets `VERSION = "0.0.0"`.
+  `repository`, `homepage` and `bugs` point at `<owner>/<name>`. `files` becomes what a CLI runs from: `dist`,
+  `skills`, `/README.md`, `CHANGELOG.md` and `LICENSE`. The template's own list ships the skeleton's sources, which a
+  CLI must not publish (WC-REL-16). `new` also drops every `bin` entry and script that points into `kit/`, and the
+  `&& pnpm kit:…` parts of other scripts. `src/version.ts` gets `VERSION = "0.0.0"`.
 - `placeholders` names the words `new` and `upgrade` replace. The command word is replaced as a whole word, so
   `clidev` changes but `clidevs` and cli-base's `cli-dev` do not. Its upper-case form changes too: `CLIDEV_HOME`
   becomes `CAL_HOME`. Followed by a colon and a space it is a key and stays: `clidev: CLIDEV` becomes `clidev: CAL`.

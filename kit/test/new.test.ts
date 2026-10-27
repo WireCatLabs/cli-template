@@ -73,7 +73,7 @@ describe("new", () => {
     expect(pkg.name).toBe("@example/cal-cli")
     expect(pkg.version).toBe("0.0.0")
     expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js" })
-    expect(pkg.files).not.toContain("kit/dist")
+    expect(pkg.files).toEqual(["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"])
     expect(pkg.scripts).toEqual({ build: "tsc --build", prepack: "pnpm build" })
     expect(pkg.repository.url).toBe("git+https://github.com/example/cal-cli.git")
   })
@@ -131,6 +131,17 @@ describe("new", () => {
     expect(design).toContain("**Category:** messenger")
     expect(design).toContain("**How people filter:** by person, other: by location")
     expect(JSON.parse(read(join(cwd, "cal-cli"), "template.json")).names.owner).toBe("Example-Org")
+  })
+
+  it("puts the one-time first task into DESIGN.md, not into the template-owned AGENTS.md", async () => {
+    const cwd = tempDir("first-task")
+
+    await runNew(cwd, await loadSource(fixture("0.1.0", V1)), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
+    expect(design).toContain("## First task")
+    expect(design).toContain("`skills/cal-cli/SKILL.md`")
+    expect(read(join(cwd, "cal-cli"), "AGENTS.md")).not.toMatch(/first task/i)
   })
 
   it("stops when the package lacks a file template.json lists", async () => {

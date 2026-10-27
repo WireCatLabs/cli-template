@@ -5,6 +5,30 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
+## Unreleased
+
+### Security
+
+- **`.gitleaks.toml` catches Google OAuth tokens.** gitleaks' own rules know Google API keys only, so an access token
+  (`ya29.…`) or a refresh token (`1//…`) with no keyword beside it went through. Two rules now catch them. A CLI takes
+  them with `upgrade`; scan its history once with `gitleaks git` after that, since CI scans all of it.
+
+### Fixed
+
+- **`pnpm audit:commands` prints the CLI's own scorecard lines**, not the last CLI's total, which was zoom-cli's. It
+  fails when the scorecard has no line for the CLI. Whether a new finding fails the run did not change.
+- **`AGENTS.md` keeps only what holds for the CLI's whole life.** The one-time first task (interview, reference CLI,
+  rewrite the README and the MCP instructions) moved into the `DESIGN.md` that `new` writes, which the CLI owns and
+  deletes the section from when it is done. `upgrade` drops the old text from `AGENTS.md`.
+- **`new` writes a `files` list that ships only what the CLI runs from**: `dist`, `skills`, `README.md`,
+  `CHANGELOG.md` and `LICENSE`. It copied the template's own list, so a new CLI published its `src/` with tests and
+  fakes, `scripts/`, `.github/`, `bin/release`, `config/`, `lint/` and `template.json` (WC-REL-16). `package.json` is
+  a seed, so a CLI made before this trims its list by hand; `pnpm smoke` then checks the package still runs.
+- `docs/dev/TESTING.md` and `ci.yml` give both reasons `contracts:upgrade` is skipped: it needs local state of the
+  CLI's own and a published version to upgrade from (WC-TEST-14).
+- `docs/dev/reference-clis.md` shows the provider call cli-core has, `store.accounts.registerProvider(entry)`.
+  `@wirecat/cli-core/store` exports no `registerProvider` function.
+
 ## 0.8.0 — 27.10.2026
 
 ### Fixed
