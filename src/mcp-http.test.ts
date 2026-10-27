@@ -1,7 +1,9 @@
 import { createServer } from "node:net"
 import {
   Client,
+  type OAuthClientInformationMixed,
   type OAuthClientProvider,
+  type OAuthTokens,
   StreamableHTTPClientTransport,
   UnauthorizedError,
 } from "@modelcontextprotocol/client"
@@ -31,7 +33,7 @@ const REDIRECT = "http://localhost/callback"
 /** Logs in the way a browser app does: registers, types the terminal's code on the consent page, swaps it for tokens. */
 const loggedInClient = async (base: URL, loginCode: () => string) => {
   const endpoint = new URL("/mcp", base)
-  const saved: { info?: object; tokens?: object; verifier?: string; consentAt?: URL } = {}
+  const saved: { info?: OAuthClientInformationMixed; tokens?: OAuthTokens; verifier?: string; consentAt?: URL } = {}
   const authProvider: OAuthClientProvider = {
     get redirectUrl() {
       return REDIRECT
@@ -45,11 +47,11 @@ const loggedInClient = async (base: URL, loginCode: () => string) => {
         response_types: ["code"],
       }
     },
-    clientInformation: () => saved.info as never,
+    clientInformation: () => saved.info,
     saveClientInformation: (info) => {
       saved.info = info
     },
-    tokens: () => saved.tokens as never,
+    tokens: () => saved.tokens,
     saveTokens: (tokens) => {
       saved.tokens = tokens
     },
@@ -161,4 +163,9 @@ it("refuses --json for MCP over stdio", async () => {
   const one = started(["personal", "mcp", "--json"])
   expect(await one.code).toBe(2)
   expect(one.err.join("\n")).toContain("MCP over stdio controls its own output")
+})
+
+it("refuses --revoke under the read-only lock", async () => {
+  const one = started(["personal", "mcp", "--revoke", "--json"], undefined, { ...process.env, CLIDEV_READ_ONLY: "1" })
+  expect(await one.code).toBe(5)
 })

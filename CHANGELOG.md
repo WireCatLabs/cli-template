@@ -10,12 +10,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 ### Added
 
 - **`clidev <profile> mcp --http` serves the profile to ChatGPT and Claude in the browser**, on `127.0.0.1` behind the
-  owner's tunnel, with a one-time login code; `--revoke` ends every login. **`mcp server start|stop|status`** runs it
-  in the background (from cli-core 0.445.0): `status` shows the port, the connector address, the current login code
-  and the apps logged in, and the background server writes no login code to its log. A second `mcp --http` for the
-  same profile is refused. `mcp --permission key=level` makes a permission stricter for one server, over stdio too. A
-  CLI made from an older template takes this with `upgrade`, or mounts `mcpServerCommand` on its own `mcp` and passes
-  `lockFile: httpLockFile(tokenFile)` to `serveOverHttp`.
+  owner's tunnel, with a one-time login code; `--revoke` ends every login, and is refused under `CLIDEV_READ_ONLY`.
+  **`mcp server start|stop|status`** runs it in the background (from cli-core 0.445.0): `status` shows the port, the
+  connector address, the current login code and the apps logged in, and the background server writes no login code to
+  its log. A second `mcp --http` for the same profile is refused. `mcp --permission key=level` makes a permission
+  stricter for one server, over stdio too. A CLI made from an older template takes this with `upgrade`, or mounts
+  `mcpServerCommand` on its own `mcp` and passes `lockFile: httpLockFile(tokenFile)` to `serveOverHttp`.
 
 ### Fixed
 
