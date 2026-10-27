@@ -6,6 +6,10 @@ What WireCat CLIs share — the keyring, permissions, MCP and what never reaches
 `clidev` keeps its settings in `config.json` and its state in the folders `clidev doctor` shows. It sends nothing
 to any service yet.
 
+`clidev personal mcp serve --http` listens on `127.0.0.1` only, for browser apps that reach it through your own
+tunnel. Each app logs in with a one-time code, and the server keeps a hash of each login it gives, in the state
+folder, readable by you only. `clidev personal mcp revoke` forgets every one of them.
+
 A run record keeps the command line as you typed it, so `clidev runs show` tells you what was run. A secret is still
 stored as `[redacted]`: an option named like a token or password, a password in a link, a long opaque string. A
 phone number is replaced by `[redacted]` inside the word you typed, message text included: one written with its "+" and

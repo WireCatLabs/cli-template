@@ -5,7 +5,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words katex smol whatsapp -->
 
-## Unreleased
+## 0.9.0 — 27.10.2026
 
 ### Changed — may break callers
 
@@ -31,6 +31,11 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Fixed
 
+- **A command other than `mcp serve` no longer loads the MCP library.** `src/commands/mcp.ts` imported `portOf` and
+  `publicUrlOf` from `@wirecat/cli-core/mcp` at the top, so `--version` and `doctor` loaded the MCP server SDK too
+  (WC-LIFE-6). `mcp serve --http` now imports them when it runs.
+- `docs/security.md` says what `mcp serve --http` listens on, what it keeps of each browser login, and that
+  `mcp revoke` ends them.
 - **`pnpm audit:commands` prints the CLI's own scorecard lines**, not the last CLI's total, which was zoom-cli's. It
   fails when the scorecard has no line for the CLI. Whether a new finding fails the run did not change.
 - **`AGENTS.md` keeps only what holds for the CLI's whole life.** The one-time first task (interview, reference CLI,
