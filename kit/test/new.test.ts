@@ -60,6 +60,12 @@ describe("new", () => {
     expect(out).not.toContain("&&")
   })
 
+  it("sends the person to the handbook's list of taken monthly cron minutes", async () => {
+    const { out } = await makeNew(NOTES_FLAGS)
+
+    expect(out).toContain("cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9)")
+  })
+
   it("rewrites package.json for the new CLI and drops the copy tool", async () => {
     const { dir } = await makeNew(NOTES_FLAGS)
     const pkg = JSON.parse(read(dir, "package.json"))
@@ -182,7 +188,7 @@ describe("new from this repository", () => {
     expect(identity).toMatch(/issues: "[^"]+",\n {2}messenger: false,\n {2}contentLanguages: \["en", "ru"\],\n\}/)
     const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
     expect(design).toContain("Languages: en, ru.")
-    expect(design).toContain("set its `speechModels` to `parakeet-v3`")
+    expect(design).not.toContain("speechModels")
   })
 
   it("keeps the neutral wording for a CLI that is not a messenger and turns a messenger's on", async () => {
@@ -197,6 +203,9 @@ describe("new from this repository", () => {
     const identity = read(join(messenger, "cal-cli"), "src/identity.ts")
     expect(identity).toContain("  messenger: true,\n")
     expect(identity).not.toContain("messenger: false")
+    expect(read(join(messenger, "cal-cli"), "docs/dev/DESIGN.md")).toContain(
+      "Set the messenger's `speechModels` to `parakeet-v3`.",
+    )
   })
 
   it("leaves cli-base's cli-dev alone in every file", async () => {
@@ -225,10 +234,16 @@ describe("content languages", () => {
   })
 
   it("warns about a language with no stemmer or speech model", () => {
-    expect(languageWarnings(["en", "de", "ja"])).toEqual([
+    expect(languageWarnings(["en", "de", "ja"], true)).toEqual([
       "de: cli-core has no search stemmer for it; search matches whole words only",
       "ja: cli-core has no search stemmer for it; search matches whole words only",
       "ja: no speech model in cli-core hears it",
+    ])
+  })
+
+  it("warns about speech models only for a messenger", () => {
+    expect(languageWarnings(["ja"], false)).toEqual([
+      "ja: cli-core has no search stemmer for it; search matches whole words only",
     ])
   })
 })

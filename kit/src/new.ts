@@ -36,12 +36,13 @@ export const speechModels = (languages: string[]): string[] | undefined => {
   return undefined
 }
 
-export const languageWarnings = (languages: string[]): string[] =>
+// Speech models transcribe voice messages, so only a messenger needs them.
+export const languageWarnings = (languages: string[], messenger: boolean): string[] =>
   languages.flatMap((lang) => [
     ...(STEMMED.includes(baseLang(lang))
       ? []
       : [`${lang}: cli-core has no search stemmer for it; search matches whole words only`]),
-    ...(PARAKEET.includes(baseLang(lang)) ? [] : [`${lang}: no speech model in cli-core hears it`]),
+    ...(messenger && !PARAKEET.includes(baseLang(lang)) ? [`${lang}: no speech model in cli-core hears it`] : []),
   ])
 
 const NAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/
@@ -49,7 +50,7 @@ const NAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/
 const NAME_QUESTION: Question = {
   key: "name",
   flag: "name",
-  text: "The folder (and repository) name, e.g. cal-cli",
+  text: "The folder (and repository) name, e.g. gcal-cli",
   check: (value) => (NAME_PATTERN.test(value) ? undefined : "lowercase letters, digits, dots and dashes"),
 }
 
@@ -122,8 +123,9 @@ export const designDoc = (names: Names, answers: Answers): string => {
       `- **${question.title ?? question.text}:** ${(answers[question.key] ?? []).map((value) => labelOf(question, value)).join(", ")}`,
   )
   const languages = answers.contentLang ?? []
+  const messenger = answers.category?.[0] === "messenger"
   const speech = speechModels(languages)
-  const warnings = languageWarnings(languages)
+  const warnings = languageWarnings(languages, messenger)
   return [
     `# ${names.command} — design`,
     "",
@@ -141,9 +143,13 @@ export const designDoc = (names: Names, answers: Answers): string => {
     "## Content languages",
     "",
     `Languages: ${languages.join(", ")}.`,
-    speech
-      ? `If this CLI defines a messenger, set its \`speechModels\` to ${speech.map((model) => `\`${model}\``).join(", ")}.`
-      : "No speech model in cli-core covers all of these languages: leave `speechModels` out.",
+    ...(messenger
+      ? [
+          speech
+            ? `Set the messenger's \`speechModels\` to ${speech.map((model) => `\`${model}\``).join(", ")}.`
+            : "No speech model in cli-core covers all of these languages: leave `speechModels` out.",
+        ]
+      : []),
     ...warnings.map((warning) => `- ${warning}`),
     "",
     "## Further answers",
@@ -257,7 +263,7 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
 export const manualSteps = (names: Names): string[] => [
   `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
   `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), and add any secrets.`,
-  "3. Give .github/workflows/monthly.yml a cron minute between 02:17 and 03:20 UTC that no other repository uses.",
+  "3. Give .github/workflows/monthly.yml a free cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9).",
   "4. WireCat CLIs only: a pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
 ]
 
@@ -299,7 +305,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     target,
     [...rendered].filter(([, file]) => file.mode & 0o111).map(([path]) => path),
   )
-  const warnings = languageWarnings(answers.contentLang ?? [])
+  const warnings = languageWarnings(answers.contentLang ?? [], category === "messenger")
   return [
     `Created ${target} from ${source.name}@${source.version}.`,
     ...(warnings.length ? ["", "Content languages:", ...warnings.map((warning) => `  ${warning}`)] : []),
