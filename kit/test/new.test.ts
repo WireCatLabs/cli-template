@@ -133,6 +133,17 @@ describe("new", () => {
     expect(JSON.parse(read(join(cwd, "cal-cli"), "template.json")).names.owner).toBe("Example-Org")
   })
 
+  it("puts the one-time first task into DESIGN.md, not into the template-owned AGENTS.md", async () => {
+    const cwd = tempDir("first-task")
+
+    await runNew(cwd, await loadSource(fixture("0.1.0", V1)), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
+    expect(design).toContain("## First task")
+    expect(design).toContain("`skills/cal-cli/SKILL.md`")
+    expect(read(join(cwd, "cal-cli"), "AGENTS.md")).not.toMatch(/first task/i)
+  })
+
   it("stops when the package lacks a file template.json lists", async () => {
     const { "docs/meta.json": _, ...files } = V1
     const source = await loadSource(fixture("0.1.0", files))
