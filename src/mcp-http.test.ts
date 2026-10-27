@@ -131,12 +131,6 @@ it("forgets every browser login on --revoke", async () => {
   expect(await answer(["personal", "mcp", "--revoke", "--json"])).toEqual({ revoked: true, profile: "personal" })
 })
 
-it("reads --permission through the profile's settings, refusing one that is not a command path and level", async () => {
-  const one = started(["personal", "mcp", "--permission", "messages.send", "--json"])
-  expect(await one.code).toBe(2)
-  expect(one.err.join("\n")).toContain("--permission takes a command path and level")
-})
-
 it("keeps the login code out of a background server's log, and refuses a port in use", async () => {
   const port = await freePort()
   const url = `http://127.0.0.1:${port}`

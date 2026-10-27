@@ -33,26 +33,17 @@ const settingsOf = (command: Command) => {
   return { flags, env, profile, tokenFile: httpTokenFile(IDENTITY, profile, env) }
 }
 
-const withPermission = (command: Command) =>
-  command.option(
-    "--permission <key=level>",
-    "make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys",
-    (value: string, previous: string[] = []) => [...previous, value],
-  )
-
 export const mcpCommand = (): Command =>
-  withPermission(
-    annotate(new Command("mcp"), {
-      effects: REMOTE_WRITE,
-      lifetime: "persistent",
-      mcp: false,
-      examples: [`${IDENTITY.command} personal mcp`],
-    })
-      .summary("serve this profile's commands to an AI agent")
-      .description(
-        `serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — \`claude mcp add ${IDENTITY.command} -- ${IDENTITY.command} personal mcp\``,
-      ),
-  )
+  annotate(new Command("mcp"), {
+    effects: REMOTE_WRITE,
+    lifetime: "persistent",
+    mcp: false,
+    examples: [`${IDENTITY.command} personal mcp`],
+  })
+    .summary("serve this profile's commands to an AI agent")
+    .description(
+      `serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — \`claude mcp add ${IDENTITY.command} -- ${IDENTITY.command} personal mcp\``,
+    )
     .option(
       "--http",
       "serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide",
