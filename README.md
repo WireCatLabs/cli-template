@@ -33,14 +33,15 @@ such as `personal` in `clidev personal config show`; none is ever assumed. `CLID
 | `clidev commands --json` | Prints every command as JSON, for agents and scripts |
 | `clidev personal config show` | Shows each setting and where it came from |
 | `clidev skill install` | Installs the agent skill for Claude Code, Codex, Gemini CLI and OpenClaw; `--for hermes` for Hermes Agent |
-| `clidev personal mcp` | Serves the profile's commands to an AI agent over MCP; `--http` for agents in the browser |
+| `clidev personal mcp serve` | Serves the profile's commands to an AI agent over MCP; `--http` for agents in the browser |
 | `clidev runs list` | Lists recorded runs, newest first: every command that failed is kept |
 | `clidev upgrade --check` | Says whether a newer version is on npm |
 
 ## For AI agents
 
-`clidev skill show` prints the rules an agent follows with this tool. `clidev personal mcp` serves every command to an
-agent, writes included: the profile's permissions decide what runs. See [MCP and permissions](docs/usage.md#agents).
+`clidev skill show` prints the rules an agent follows with this tool. `clidev personal mcp serve` serves every
+command to an agent, writes included: the profile's permissions decide what runs. See
+[MCP and permissions](docs/usage.md#agents).
 
 ## Why this template
 

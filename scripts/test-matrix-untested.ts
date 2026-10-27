@@ -12,29 +12,23 @@ export const UNTESTED: { command: string; option?: string; reason: string }[] = 
   {
     command: "mcp server start",
     reason:
-      "starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
+      "starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
   },
   {
     command: "mcp server start",
     option: "--port",
     reason:
-      "starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
+      "starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
   },
   {
     command: "mcp server start",
     option: "--public-url",
     reason:
-      "starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
-  },
-  {
-    command: "mcp server start",
-    option: "--permission",
-    reason:
-      "cli-core adds it and passes it to `mcp --http`, which no longer takes it, so the started server refuses it; checked by hand against dist/",
+      "starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
   },
   {
     command: "mcp server stop",
     reason:
-      "starts a detached `mcp --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
+      "starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
   },
 ]
