@@ -7,14 +7,6 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
-### Added
-
-- **`new --category calendar` names gcal-cli as the reference CLI** in `AGENTS.md` and `DESIGN.md`, and the
-  Reference CLIs page lists it, instead of "No reference CLI for this category yet". gcal-cli is the WireCat Google
-  Calendar CLI. A CLI made before this keeps what it wrote; edit its `AGENTS.md` by hand if you want the link.
-
-## Unreleased
-
 ### Changed — may break callers
 
 - **The skeleton runs on cli-core 0.469.0**, the first cli-core that accepts cli-base 0.65, which the skeleton pins
@@ -27,6 +19,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   CLI made from the template removes the same entries. `<cli> upgrade` now restarts the HTTP MCP server
   that `mcp server start` started, on the new version, and names the MCP sessions over stdio that still run the old
   one (cli-core #2117).
+
+### Added
+
+- **`new --category calendar` names gcal-cli as the reference CLI** in `AGENTS.md` and `DESIGN.md`, and the
+  Reference CLIs page lists it, instead of "No reference CLI for this category yet". gcal-cli is the WireCat Google
+  Calendar CLI. A CLI made before this keeps what it wrote; edit its `AGENTS.md` by hand if you want the link.
+- **`scripts/audit.sh` audits beside gcal-cli too**: it installs `@wirecat/gcal-cli` with the other published CLIs
+  and passes its `gcal` bin to `cli-dev audit`.
 
 ### Fixed
 
