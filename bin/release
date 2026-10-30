@@ -111,6 +111,7 @@ next=$(pnpm exec cli-dev next-version "$version" "$latest" "$versions")
 if [ "$next" != "$version" ]; then
   taken=""
   if published; then taken=1; why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
+  next=$(node --experimental-strip-types scripts/version-level.ts --next "$next")
   echo "$why — publishing $next instead"
   # A version npm already has keeps its changelog section; the unreleased one becomes the new version.
   node -e 'const fs = require("fs"); const [o, n, taken] = process.argv.slice(1)

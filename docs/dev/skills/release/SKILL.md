@@ -24,7 +24,8 @@ The rules are the handbook's [Releases page](../../../../node_modules/@wirecat/c
    before `1.0.0` this narrows `WC-REL-7`: a section with `Changed — may break callers` or `Removed` raises the minor
    (`0.1.8` to `0.2.0`), and so does one with `Added`; only a section of `Fixed`, `Security` or docs raises the patch.
    From `1.0.0`, a breaking change raises the major. `pnpm version:check` refuses a dated section whose number is
-   raised less than its headings need. Set the next version in `package.json`, run `pnpm version:sync`, date the
+   raised less than its headings need, and when `bin/release` moves to the next free number on npm it raises that
+   number to the level the headings need. Set the next version in `package.json`, run `pnpm version:sync`, date the
    section as `## <version> — DD.MM.YYYY`, run `pnpm release:check` again, and open the pull request
    `chore(release): <version>`.
 7. **The publish.** Merge it when its checks pass, then run `bin/release` on a clean `main`: it starts

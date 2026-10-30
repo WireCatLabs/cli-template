@@ -33,6 +33,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Fixed
 
+- **`bin/release` raises the next free version to the level the changelog needs.** When npm already had the version, it
+  took the next patch, so a release with `Added` (`0.1.1` taken, `0.1.2` proposed) failed `version:check` and stopped;
+  it now proposes `0.2.0`. A generated CLI gets it with the next template update.
+
 - **A CLI made from the template starts from an esbuild bundle.** `pnpm build` runs `tsc`, then cli-base's
   `cli-dev bundle` ([WC-LAY-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/layout.md)), and the
   bin becomes a loader for `dist/bundle/`: the skeleton's `config show --help` starts in 151 ms instead of 366.
