@@ -27,6 +27,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   Calendar CLI. A CLI made before this keeps what it wrote; edit its `AGENTS.md` by hand if you want the link.
 - **`scripts/audit.sh` audits beside gcal-cli too**: it installs `@wirecat/gcal-cli` with the other published CLIs
   and passes its `gcal` bin to `cli-dev audit`.
+- **An agent publishes a release itself.** The release skill and `bin/release` let an agent merge the release pull
+  request and run `bin/release`, which publishes from GitHub Actions. `bin/release --local` stays the owner's, for
+  the first release.
 
 ### Fixed
 
