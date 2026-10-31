@@ -32,8 +32,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `contracts`, `docs/dev` or `template.json`** (WC-REL-16); it only checked that npm packs what `files` names. The
   template's own package still ships them, since `new` copies them. `scripts/` is not updated by `upgrade`, so an
   existing CLI copies the check from `scripts/smoke.ts` by hand.
-- **0.10.0's note that runs record successes too was wrong for the skeleton.** A built skeleton keeps only a failed
-  run, from a terminal or an agent, and also with `--record`, as the README and the settings page say.
+- **0.10.0's note that runs record successes too needs one detail.** A command that does its work in `context.run`
+  is kept on success by default. The skeleton's own commands only read local files and open no run, so a built
+  skeleton keeps only a failed run, with or without `--record`.
 
 ## 0.10.0 — 31.10.2026
 
