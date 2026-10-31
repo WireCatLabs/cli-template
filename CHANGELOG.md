@@ -5,20 +5,18 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
-## Unreleased
+## 0.10.0 — 31.10.2026
 
 ### Changed — may break callers
 
-- **The skeleton runs on cli-core 0.469.0**, the first cli-core that accepts cli-base 0.65, which the skeleton pins
-  since 0.65's own update. A non-messenger CLI no longer offers messenger settings or the `follow-ups` and
-  `link-conversations` skills (cli-core 0.468); every run is recorded by default, successes too (cli-core 0.467).
-- **The skeleton runs on cli-core 0.464.0 and cli-base 0.65.0**; a CLI that pins cli-base moves both pins together.
-  cli-base 0.64 adds `cli-dev bundle`, the shared build that ships the bin as an esbuild bundle, and calendar words in
-  the command vocabulary. cli-base 0.65 adds the verbs `serve` and `revoke`, and `cli-dev lint` fails on a baseline
-  entry that names them: the skeleton's `lint/baseline/unknown-verb.json` (`mcp serve`, `mcp revoke`) is gone, and a
-  CLI made from the template removes the same entries. `<cli> upgrade` now restarts the HTTP MCP server
-  that `mcp server start` started, on the new version, and names the MCP sessions over stdio that still run the old
-  one (cli-core #2117).
+- **The skeleton runs on cli-core 0.469.0 and cli-base 0.65.0**; a CLI that pins cli-base moves both pins together.
+  A non-messenger CLI no longer offers messenger settings or the `follow-ups` and `link-conversations` skills
+  (cli-core 0.468); runs record successes too, under cli-core 0.467's rules. cli-base 0.64 adds `cli-dev bundle`, the
+  shared build that ships the bin as an esbuild bundle, and calendar words in the command vocabulary. cli-base 0.65 adds
+  the verbs `serve` and `revoke`, and `cli-dev lint` fails on a baseline entry that names them: the skeleton's
+  `lint/baseline/unknown-verb.json` (`mcp serve`, `mcp revoke`) is gone, and a CLI made from the template removes the
+  same entries. `<cli> upgrade` now restarts the HTTP MCP server that `mcp server start` started, on the new version,
+  and names the MCP sessions over stdio that still run the old one (cli-core #2117).
 
 ### Added
 
@@ -40,11 +38,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 - **The release audit never uses the owner's accounts.** Its prompt now says: no sign-in, every folder moved, the
   keyring hidden with `DBUS_SESSION_BUS_ADDRESS=disabled:`, and no command that writes to a service.
-
 - **`bin/release` raises the next free version to the level the changelog needs.** When npm already had the version, it
   took the next patch, so a release with `Added` (`0.1.1` taken, `0.1.2` proposed) failed `version:check` and stopped;
   it now proposes `0.2.0`. A generated CLI gets it with the next template update.
-
 - **A CLI made from the template starts from an esbuild bundle.** `pnpm build` runs `tsc`, then cli-base's
   `cli-dev bundle` ([WC-LAY-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/layout.md)), and the
   bin becomes a loader for `dist/bundle/`: the skeleton's `config show --help` starts in 151 ms instead of 366.
