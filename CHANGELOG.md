@@ -5,6 +5,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **0.11.0's note on run records gave the wrong reason.** A built skeleton keeps only a failed run because its own
+  commands only read local files and open no run. A command you add that does its work in `context.run` is kept on
+  success by default; [Configuration](docs/configuration.md#run-records) says so now.
+
 ## 0.11.0 — 31.10.2026
 
 ### Added
