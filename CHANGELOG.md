@@ -3,7 +3,7 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-<!-- cspell:words gcal katex smol whatsapp -->
+<!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
 ## Unreleased
 
@@ -22,6 +22,11 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Added
 
+- **A CLI made from the template publishes its skill on ClawHub as `wirecat-<command>` after each release.** `release.yml`
+  gets a dry run through ClawHub's pinned workflow and, after the tag, a publish that only warns while ClawHub still holds
+  the version pending its scan ([openclaw/clawhub#4046](https://github.com/openclaw/clawhub/issues/4046)); the template's
+  own release skips both. The skill names its binary and npm package for OpenClaw (`metadata.openclaw`). It needs the
+  `CLAWHUB_TOKEN` secret, which the WireCatLabs organization shares.
 - **`new --category calendar` names gcal-cli as the reference CLI** in `AGENTS.md` and `DESIGN.md`, and the
   Reference CLIs page lists it, instead of "No reference CLI for this category yet". gcal-cli is the WireCat Google
   Calendar CLI. A CLI made before this keeps what it wrote; edit its `AGENTS.md` by hand if you want the link.

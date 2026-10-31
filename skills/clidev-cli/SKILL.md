@@ -1,6 +1,14 @@
 ---
 name: clidev-cli
 description: Use clidev, a WireCat CLI started from cli-template, from an agent — find a command, run it with the owner's profile, read JSON answers. Use when a task needs clidev. It does not connect to a service yet.
+metadata:
+  openclaw:
+    requires:
+      bins: [clidev]
+    install:
+      - kind: node
+        package: "@wirecat/clidev-cli"
+        bins: [clidev]
 ---
 
 # clidev
