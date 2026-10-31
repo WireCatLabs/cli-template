@@ -29,6 +29,6 @@ export const UNTESTED: { command: string; option?: string; reason: string }[] = 
   {
     command: "mcp server stop",
     reason:
-      "starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/",
+      "stops the detached server that `mcp server start` wrote a pid file for; cli-core tests mcpServerCommand, and no live scenario starts a server to stop",
   },
 ]

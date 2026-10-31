@@ -24,6 +24,23 @@ const shipped = files
   .map((entry) => entry.replace(/^\//, ""))
   .map((entry) => (statSync(join(root, entry), { throwIfNoEntry: false })?.isDirectory() ? `${entry}/` : entry))
 assert.deepEqual(packContents(root, ["package.json", ...shipped], "package.json and the paths in its files list")(), [])
+// WC-REL-16. The template's own package ships the skeleton's sources, since `new` copies them.
+const FORBIDDEN = [
+  "src",
+  "scripts",
+  ".github",
+  "bin/release",
+  "config",
+  "lint",
+  "contracts",
+  "docs/dev",
+  "template.json",
+]
+const overlaps = (entry: string, path: string) =>
+  entry === path || entry.startsWith(`${path}/`) || path.startsWith(`${entry}/`)
+const forbidden = shipped.flatMap((entry) => FORBIDDEN.filter((path) => overlaps(entry.replace(/\/$/, ""), path)))
+if (name !== "@wirecat/cli-template")
+  assert.deepEqual(forbidden, [], "package.json's files ships paths WC-REL-16 forbids")
 const temp = mkdtempSync(join(tmpdir(), "clidev-package-"))
 try {
   const userConfig = join(temp, "npm-user-config")
