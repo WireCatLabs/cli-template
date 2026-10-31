@@ -27,7 +27,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp server start` |  | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
 | `mcp server start` | `--port` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
 | `mcp server start` | `--public-url` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
-| `mcp server stop` |  | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp server stop` |  | ⛔ | stops the detached server that `mcp server start` wrote a pid file for; cli-core tests mcpServerCommand, and no live scenario starts a server to stop |
 | `mcp server status` |  | ✅ |  |
 | `upgrade` |  | ✅ |  |
 | `upgrade` | `--check` | ✅ |  |

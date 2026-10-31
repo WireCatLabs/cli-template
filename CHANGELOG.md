@@ -5,6 +5,17 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **`pnpm package:check` refuses a `files` list that ships `src`, `scripts`, `.github`, `bin/release`, `config`, `lint`,
+  `contracts`, `docs/dev` or `template.json`** (WC-REL-16); it only checked that npm packs what `files` names. The
+  template's own package still ships them, since `new` copies them. `scripts/` is not updated by `upgrade`, so an
+  existing CLI copies the check from `scripts/smoke.ts` by hand.
+- **0.10.0's note that runs record successes too was wrong for the skeleton.** A built skeleton keeps only a failed
+  run, from a terminal or an agent, and also with `--record`, as the README and the settings page say.
+
 ## 0.10.0 — 31.10.2026
 
 ### Changed — may break callers
