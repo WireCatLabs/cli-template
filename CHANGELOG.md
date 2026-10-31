@@ -38,6 +38,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Fixed
 
+- **The release audit never uses the owner's accounts.** Its prompt now says: no sign-in, every folder moved, the
+  keyring hidden with `DBUS_SESSION_BUS_ADDRESS=disabled:`, and no command that writes to a service.
+
 - **`bin/release` raises the next free version to the level the changelog needs.** When npm already had the version, it
   took the next patch, so a release with `Added` (`0.1.1` taken, `0.1.2` proposed) failed `version:check` and stopped;
   it now proposes `0.2.0`. A generated CLI gets it with the next template update.
