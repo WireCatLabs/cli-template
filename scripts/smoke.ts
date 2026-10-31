@@ -65,6 +65,7 @@ try {
     ...process.env,
     NODE_OPTIONS: "",
     HOME: temp,
+    DBUS_SESSION_BUS_ADDRESS: "disabled:",
     CLIDEV_CONFIG_DIR: join(temp, "config"),
     CLIDEV_STATE_DIR: join(temp, "state"),
     CLIDEV_CACHE_DIR: join(temp, "cache"),

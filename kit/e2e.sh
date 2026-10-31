@@ -26,7 +26,7 @@ pnpm test:coverage
 bin=$(node -p 'require("./package.json").bin.demo')
 node "$bin" --version
 # A run record must not land in the real home folder.
-demo() { env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" node "$bin" "$@"; }
+demo() { env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" DBUS_SESSION_BUS_ADDRESS=disabled: node "$bin" "$@"; }
 demo personal skill show "weekly report" >/dev/null 2>&1 || true
 kept=$(demo personal runs list --json | grep -o '"argv":\[[^]]*"weekly report"[^]]*\]')
 demo personal skill show "+1 202 555 0123" >/dev/null 2>&1 || true
