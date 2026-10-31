@@ -27,7 +27,6 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   the version pending its scan ([openclaw/clawhub#4046](https://github.com/openclaw/clawhub/issues/4046)); the template's
   own release skips both. The skill names its binary and npm package for OpenClaw (`metadata.openclaw`). It needs the
   `CLAWHUB_TOKEN` secret, which the WireCatLabs organization shares.
-
 - **`new --category calendar` names gcal-cli as the reference CLI** in `AGENTS.md` and `DESIGN.md`, and the
   Reference CLIs page lists it, instead of "No reference CLI for this category yet". gcal-cli is the WireCat Google
   Calendar CLI. A CLI made before this keeps what it wrote; edit its `AGENTS.md` by hand if you want the link.
