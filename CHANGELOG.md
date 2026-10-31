@@ -13,6 +13,8 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `contracts`, `docs/dev` or `template.json`** (WC-REL-16); it only checked that npm packs what `files` names. The
   template's own package still ships them, since `new` copies them. `scripts/` is not updated by `upgrade`, so an
   existing CLI copies the check from `scripts/smoke.ts` by hand.
+- **0.10.0's note that runs record successes too was wrong for the skeleton.** A built skeleton keeps only a failed
+  run, from a terminal or an agent, and also with `--record`, as the README and the settings page say.
 
 ## 0.10.0 — 31.10.2026
 
@@ -20,7 +22,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 - **The skeleton runs on cli-core 0.469.0 and cli-base 0.65.0**; a CLI that pins cli-base moves both pins together.
   A non-messenger CLI no longer offers messenger settings or the `follow-ups` and `link-conversations` skills
-  (cli-core 0.468). cli-base 0.64 adds `cli-dev bundle`, the
+  (cli-core 0.468); runs record successes too, under cli-core 0.467's rules. cli-base 0.64 adds `cli-dev bundle`, the
   shared build that ships the bin as an esbuild bundle, and calendar words in the command vocabulary. cli-base 0.65 adds
   the verbs `serve` and `revoke`, and `cli-dev lint` fails on a baseline entry that names them: the skeleton's
   `lint/baseline/unknown-verb.json` (`mcp serve`, `mcp revoke`) is gone, and a CLI made from the template removes the
