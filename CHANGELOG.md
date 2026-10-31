@@ -7,8 +7,27 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **`pnpm test:slow`** lists the 20 slowest tests and the 10 slowest files (WC-TEST-5).
+- **A Node 22.16.0 job in `ci.yml`** builds, runs the tests and runs the built bin, since `engines` allows Node 22 and
+  full validation runs only on Node 24 (WC-TOOL-6).
+- **The release skill re-checks the comparison page** at each release: each mark against the release build, and the
+  check date and version in the intro (WC-CMP-11).
+
+### Changed — may break callers
+
+- **The skeleton runs on cli-core 0.495.0** (from 0.469.0); cli-base stays at 0.65.0. The root help's "Works with"
+  list now names gcal and mail.
+
 ### Fixed
 
+- **`scripts/audit.sh` passes the CLI's own entity schemas and error reasons** (`--schemas`, `--reasons`) from
+  `commands info`, so the audit measures same-entity-schema and same-error-reason for it, as gcal-cli's does.
+- **The scripts that run the CLI in throwaway folders hide the keyring** with `DBUS_SESSION_BUS_ADDRESS=disabled:`:
+  `scripts/audit.sh`, `scripts/smoke.ts` and `scripts/smoke-bundle.ts`. Moved folders alone do not hide it, since it
+  is reached over D-Bus. `scripts/` is not updated by `upgrade`, so an existing CLI copies these by hand;
+  `scripts/audit.sh` is updated.
 - **`pnpm package:check` refuses a `files` list that ships `src`, `scripts`, `.github`, `bin/release`, `config`, `lint`,
   `contracts`, `docs/dev` or `template.json`** (WC-REL-16); it only checked that npm packs what `files` names. The
   template's own package still ships them, since `new` copies them. `scripts/` is not updated by `upgrade`, so an
