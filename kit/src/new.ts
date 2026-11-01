@@ -204,6 +204,8 @@ export const cliPackageJson = (text: string, names: Names): string => {
   if (pkg.repository) next.repository = { type: "git", url: repoUrl }
   if (pkg.homepage) next.homepage = `https://github.com/${names.owner}/${names.name}#readme`
   if (pkg.bugs) next.bugs = { url: `https://github.com/${names.owner}/${names.name}/issues` }
+  // The MCP Registry takes dev.wirecat/ names only from wirecat.dev's DNS key, which only WireCatLabs holds.
+  if (names.owner === "WireCatLabs") next.mcpName = `dev.wirecat/${names.name}`
   return `${JSON.stringify(next, null, 2)}\n`
 }
 

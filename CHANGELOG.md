@@ -7,6 +7,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **A new CLI is published to the official MCP Registry as `dev.wirecat/<name>`.** `server.json` is a new seed (run
+  with `npx`, `mcp serve --profiles all`), `new` sets `mcpName` in `package.json` for a WireCatLabs CLI, and
+  `release.yml` gets `mcp-registry-dry-run` and `mcp-registry`, copied from tg-cli. A CLI without `server.json`, or a
+  repository without `MCP_REGISTRY_PRIVATE_KEY`, publishes nothing and says so. An existing CLI gets the jobs from
+  `upgrade`; it adds `server.json` and `mcpName` itself, since both are its own files.
+
 ### Fixed
 
 - **0.11.0's note on run records gave the wrong reason.** A built skeleton keeps only a failed run because its own
