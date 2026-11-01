@@ -33,6 +33,7 @@
     "package.json",
     "pnpm-workspace.yaml",
     "scripts/",
+    "server.json",
     "skills/",
     "src/",
     "vitest.config.ts"

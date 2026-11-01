@@ -78,6 +78,14 @@ describe("new", () => {
     expect(pkg.repository.url).toBe("git+https://github.com/example/cal-cli.git")
   })
 
+  it("names the MCP Registry server only for a WireCatLabs CLI", async () => {
+    const { dir } = await makeNew(NOTES_FLAGS)
+    const { dir: wirecat } = await makeNew({ ...NOTES_FLAGS, owner: "WireCatLabs" })
+
+    expect(JSON.parse(read(dir, "package.json"))).not.toHaveProperty("mcpName")
+    expect(JSON.parse(read(wirecat, "package.json")).mcpName).toBe("dev.wirecat/cal-cli")
+  })
+
   it("records the version, template-owned hashes and seeds in template.json", async () => {
     const { dir } = await makeNew(NOTES_FLAGS)
     const manifest = JSON.parse(read(dir, "template.json"))

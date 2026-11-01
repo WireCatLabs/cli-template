@@ -26,6 +26,7 @@
     "docs",
     "lint",
     "scripts",
+    "server.json",
     "skills",
     "src",
     "AGENTS.md",
