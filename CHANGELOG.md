@@ -5,6 +5,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Added
+
+- **`ci.yml` runs `pnpm peers check`.** A cli-core whose cli-base peer range misses the pinned cli-base passed every
+  local test, since pnpm let cli-core use the app's own cli-base, and crashed the packed CLI, which `npm install` gave
+  two cli-base copies. The check reads the lockfile, so `--frozen-lockfile` cannot hide it. It fails on any unmet
+  peer, not only cli-base; a CLI gets it from `upgrade`.
+
 ## 0.12.0 — 01.11.2026
 
 ### Added
