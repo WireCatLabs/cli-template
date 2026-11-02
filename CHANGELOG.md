@@ -5,6 +5,17 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **`release.yml` publishes only the file the build checked.** `build` passes the sha256 of the package it uploads to
+  `publish`, which checks it before `npm publish`. A CLI that changes the package after the check must unpack the new
+  file and compare it with the checked one in `build`; gcal-cli does this for its Google client.
+- **The ClawHub dry run gets no OIDC token.** `clawhub-dry-run` called ClawHub's shared workflow, which asks for
+  `id-token: write` while it runs ClawHub's code outside the `npm` environment. It now runs the same pinned ClawHub
+  CLI directly with `--dry-run`, as the `clawhub` job already did. A CLI gets both from `upgrade`.
+
 ## 0.13.1 — 02.11.2026
 
 ### Fixed
