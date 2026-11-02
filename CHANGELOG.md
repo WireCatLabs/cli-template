@@ -5,6 +5,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **`pnpm release:check` no longer downloads the other WireCat CLIs on every run.** Its command audit gave npm the
+  throwaway home folder, so npm's cache was empty each time and a slow network failed the release with `ECONNRESET`.
+  The install now uses your own npm cache and retries a failed download with longer waits; the CLIs it runs still get
+  the throwaway folder. A CLI gets it from `upgrade`.
+
 ## 0.13.0 — 01.11.2026
 
 ### Added
