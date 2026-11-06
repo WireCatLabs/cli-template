@@ -5,6 +5,28 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Added
+
+- **The skeleton runs on cli-core 0.584.0 and cli-base 0.77.1.** cli-core 0.584 is the newest; its peer range takes
+  cli-base `>=0.76.0 <0.78.0`, so cli-base stays at 0.77.1, not 0.78.0. A new CLI gets the shared `config migrate`,
+  `config repair` (with `--dry-run`) and the global `--compact`, each with a test, the error code `conflict` (exit 15)
+  and the `page.total` and `meta.now` fields in its MCP schemas. The reusable workflows in `.github/` move from
+  cli-base v0.61.2 to v0.77.1; their files are the same. A CLI gets the workflow pins from `upgrade`. `package.json`,
+  `contracts/` and the docs belong to the CLI, so it raises cli-core and cli-base itself and regenerates
+  `contracts/mcp-tools.json` and `docs/commands.md`.
+
+### Changed — may break callers
+
+- **`config show`, `set` and `unset` no longer offer the messenger-only `--bot`, `--personal`, `speech_model` and
+  `picture_search`** (cli-core 0.565). A script that passes them gets an error.
+
+### Fixed
+
+- **`new` no longer copies the template's own description into the new CLI's `package.json`.** It writes a neutral
+  placeholder, and the first task in `DESIGN.md` says to rewrite it with `README.md`.
+
 ## 0.13.2 — 03.11.2026
 
 ### Fixed

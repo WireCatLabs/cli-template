@@ -72,6 +72,7 @@ describe("new", () => {
 
     expect(pkg.name).toBe("@example/cal-cli")
     expect(pkg.version).toBe("0.0.0")
+    expect(pkg.description).toBe("A new WireCat CLI, started from cli-template")
     expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js" })
     expect(pkg.files).toEqual(["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"])
     expect(pkg.scripts).toEqual({ build: "tsc --build", prepack: "pnpm build" })
