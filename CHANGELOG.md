@@ -5,7 +5,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
-## Unreleased
+## 0.16.0 — 06.11.2026
 
 ### Added
 
@@ -36,11 +36,6 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **A new CLI passes `pnpm lint` from its first commit.** Renaming `clidev` changes line lengths, so Biome wraps some
   lines differently, and the first commit's hook or CI failed on formatting. `new`'s next steps now run
   `pnpm lint:fix` after `pnpm install`, and `kit:e2e` does the same before it runs `pnpm lint`.
-
-## 0.16.0 — 06.11.2026
-
-### Fixed
-
 - **The MCP server applies the permission table too (WC-PERM-23).** `src/mcp.ts` built its tools without it, so a
   command a profile denies was offered to an agent as available and ran. It now passes `permissions` to
   `toolsFromCommands` and to each tool call: the command is listed as unavailable and refused before it runs. A CLI
