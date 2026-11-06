@@ -179,7 +179,7 @@ it("a failed run keeps the words typed, and record_input false masks them", asyn
 })
 
 it("runs list --compact prints one plain line per run and the next page as a # line, not JSON", async () => {
-  expect((await ran(["--no-such-flag"])).code).toBe(2)
+  for (const _ of [1, 2]) expect((await ran(["--no-such-flag"])).code).toBe(2)
   const { code, out } = await ran(["runs", "list", "--limit", "1", "--compact"])
   expect(code).toBe(0)
   expect(out.trim().split("\n")).toEqual([
