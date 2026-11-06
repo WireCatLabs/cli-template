@@ -49,8 +49,13 @@ demo personal skill show "token sk-$(printf 'x%.0s' {1..24})" >/dev/null 2>&1 ||
 token=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","token \[redacted\]"\]')
 demo personal skill show "password tulip42" >/dev/null 2>&1 || true
 named=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","password \[redacted\]"\]')
+# The sample: a preview names the write's key and sends nothing; without a sign-in a read stops before any request.
+preview=$(demo personal comments create --text "kit e2e" --dry-run --json | grep -o '"key":"comments.create"')
+unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"code":"authentication_error"' || true)
+[ -n "$unsigned" ]
 echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
 echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"
 echo "kit e2e: a password typed after its name is hidden: $named"
+echo "kit e2e: the sample's --dry-run names $preview, and without a sign-in it says $unsigned"

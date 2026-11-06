@@ -14,6 +14,23 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   broke Biome's formatting passed it before. The `kit-e2e` job in `.github/workflows/ci.yml` runs it on every pull
   request and merge, in this repository only: a CLI made from the template has no `kit/` and skips the job.
 
+- **A working sample shows every pattern a command that reaches a service needs.** `comments list | show | create |
+  update` and `session start | status | end | list` reach Example Comments, a made-up service whose address never
+  resolves. The token is kept with cli-base's `Credentials`; every request runs inside cli-core's `baseContext` run
+  with its `events`; the transport keeps the token in a header, times out and never retries; writes pass the guard
+  and the send journal and answer with `operation_id`, and a lost write is `outcome_unknown`. The tests run against a
+  strict fake that refuses unknown paths, parameters and fields. `AGENTS.md` lists what to keep and what to replace,
+  pattern by pattern, with the rules each follows, and the code marks each replaceable part with `SAMPLE:`. Before,
+  the template had no sample, and agents copied the patterns from other CLIs, their bugs included.
+
+### Changed — may break callers
+
+- **MCP and doctor are cli-core's.** `src/program.ts` mounts `appMcpCommand` and `appDoctorCommand`, as gcal-cli
+  does, in place of the template's own `src/mcp.ts`, `src/commands/mcp.ts` and `src/commands/doctor.ts`. `mcp` gains
+  `config`, `add`, `check`, `--profiles` and `--permission`; `doctor` gains `--online`, and its answer `store` and
+  `profile_lock`. A CLI made from an older skeleton swaps them the same way and removes `@modelcontextprotocol/server`
+  and `@modelcontextprotocol/client` from its dependencies.
+
 ### Fixed
 
 - **A new CLI passes `pnpm lint` from its first commit.** Renaming `clidev` changes line lengths, so Biome wraps some

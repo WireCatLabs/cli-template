@@ -5,8 +5,9 @@
 
 `clidev` is a command-line tool started from [cli-template](https://github.com/WireCatLabs/cli-template), the kit for
 new WireCat CLIs. It is a working skeleton: the shared root commands, the settings, the agent skill and the MCP
-server run, and every check of the WireCat standards passes. It does not connect to a service yet. Replace this page
-with the tool's own introduction once it does.
+server run, and every check of the WireCat standards passes. Its one service is a sample, Example Comments, made up
+to show how a command reaches a service; its address never resolves. Replace this page with the tool's own
+introduction once the CLI reaches its real service.
 
 To start a new CLI from the template:
 
@@ -30,6 +31,8 @@ such as `personal` in `clidev personal config show`; none is ever assumed. `CLID
 | Command | What it does |
 | --- | --- |
 | `clidev doctor` | Checks this installation: version, paths, settings and profiles, without the network |
+| `clidev personal session start` | Signs the profile in with the service's token, kept in the OS keyring |
+| `clidev personal comments list` | The sample: lists, shows, creates and updates comments in Example Comments |
 | `clidev commands --json` | Prints every command as JSON, for agents and scripts |
 | `clidev personal config show` | Shows each setting and where it came from |
 | `clidev skill install` | Installs the agent skill for Claude Code, Codex, Gemini CLI and OpenClaw; `--for hermes` for Hermes Agent |
@@ -57,6 +60,9 @@ keeps the shared files in step later, so a CLI made today does not drift from on
 - **`upgrade`** merges each template change into your CLI file by file, and asks before it touches a file you changed.
 - **The skeleton runs.** The shared root commands, settings with permissions, the agent skill and the MCP server
   work before a line of your own code.
+- **A sample shows every pattern.** `comments` reaches a made-up service the way a real command must: the token in
+  the keyring, every request inside cli-core's run, writes behind the guard, and a strict fake in the tests.
+  `AGENTS.md` lists what to keep and what to replace.
 - **Every check is wired in:** lint, types, tests with a coverage floor, command contracts, the docs checks and the
   release script.
 
@@ -66,7 +72,8 @@ The copy tool is described in [kit/README.md](kit/README.md).
 
 A profile is a name you choose for one account, such as `personal` or `work`. It is the first word of every command
 that uses an account. No profile is ever assumed: a command without one stops and lists the profiles on this
-computer. The skeleton has no sign-in yet; the CLI built from it adds one.
+computer. `session start` signs a profile in; its token goes to the OS keyring, or to a private file where no
+keyring works.
 
 ## Settings and permissions
 
@@ -80,7 +87,8 @@ The skeleton connects to no service, keeps no messages and has no commands of it
 
 ## Security
 
-`clidev` keeps its settings and state on this computer and sends nothing to any service yet. See
+`clidev` keeps its settings and state on this computer, and its token in the OS keyring. Its only service is the
+sample's, whose address never resolves. See
 [Security](docs/security.md), and report a vulnerability privately as [SECURITY.md](SECURITY.md) says.
 
 ## When it does not work

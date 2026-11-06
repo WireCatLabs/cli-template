@@ -53,15 +53,165 @@ clidev commands info [path]
 
 **Example:** `clidev commands info commands`
 
-## `clidev doctor`
+## `clidev session`
 
-check this installation: version, paths, config, profiles; no keyring or network
+keep this profile's Example Comments token in the OS keyring
+
+### `clidev session start`
+
+sign this profile in: the Example Comments API token is asked hidden or read from stdin, never taken as an argument, checked against the service, and only then kept in the keyring, or in a private file
+
+**Changes something on this computer only.**
 
 ```sh
-clidev doctor
+clidev session start [options]
 ```
 
-**Returns:** check this installation: version, paths, config, profiles; no keyring or network
+| Option | What it does |
+|---|---|
+| `--credential-storage <storage>` | where the token is kept: keyring, which falls back to a private file by itself, or file. Default: `keyring`. |
+
+**Returns:** sign in to Example Comments with an API token
+
+**Example:** `clidev personal session start`, `clidev personal session start --credential-storage file`
+
+### `clidev session status`
+
+show where this profile's token comes from: CLIDEV_TOKEN, the keyring or a file, never the token; --check asks Example Comments whose token it is
+
+```sh
+clidev session status [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--check` | ask Example Comments whether the token still works, and whose it is. |
+
+**Returns:** show where this profile's token comes from; never the token
+
+**Example:** `clidev personal session status`, `clidev personal session status --check --json`
+
+### `clidev session end`
+
+forget this profile's token on this computer; the token itself stays valid in Example Comments
+
+**Changes something on this computer only.**
+
+```sh
+clidev session end
+```
+
+**Returns:** forget this profile's token on this computer
+
+**Example:** `clidev personal session end`
+
+### `clidev session list`
+
+list the profiles on this computer and whether each has a token; picks none
+
+```sh
+clidev session list
+```
+
+**Returns:** list the profiles here and whether each is signed in
+
+**Example:** `clidev session list`, `clidev session list --json`
+
+## `clidev comments`
+
+read and write comments in Example Comments, the sample service
+
+### `clidev comments list`
+
+list the comments in Example Comments, newest first
+
+```sh
+clidev comments list [query] [options]
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `query` | optional | field:value terms that narrow the list — the fields are below. |
+
+| Option | What it does |
+|---|---|
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+| `--all` | every row, no paging. |
+
+**Returns:** comment — id, text, author, created_at; every field: clidev commands info comments list
+
+**Example:** `clidev personal comments list`, `clidev personal comments list author:u2 --json=id,text`
+
+### `clidev comments show`
+
+show one comment in Example Comments
+
+```sh
+clidev comments show <id>
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `id` | required | the comment's id, as list prints it. |
+
+**Returns:** comment — id, text, author, created_at; every field: clidev commands info comments show
+
+**Example:** `clidev personal comments show c1`, `clidev personal comments show c1 --json`
+
+### `clidev comments create`
+
+post a comment in Example Comments
+
+**Changes something in the service.**
+
+```sh
+clidev comments create [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--text <text>` | the comment's text. |
+
+**Returns:** post a comment in Example Comments
+
+**Example:** `clidev personal comments create --text "Looks good to me"`, `clidev personal comments create --text "Looks good to me" --dry-run`
+
+### `clidev comments update`
+
+change the text of your comment in Example Comments
+
+**Changes something in the service.**
+
+```sh
+clidev comments update <id> [options]
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `id` | required | the comment's id, as list prints it. |
+
+| Option | What it does |
+|---|---|
+| `--text <text>` | the new text. |
+
+**Returns:** change the text of your comment in Example Comments
+
+**Example:** `clidev personal comments update c1 --text "Looks good now"`
+
+## `clidev doctor`
+
+the state this installation is in, without connecting unless --online
+
+```sh
+clidev doctor [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--online` | also connect once and read the account; sends nothing. |
+
+**Returns:** the state this installation is in, without connecting unless --online
 
 **Example:** `clidev doctor`, `clidev doctor --json`
 
@@ -117,11 +267,11 @@ clidev skill status
 
 ## `clidev mcp`
 
-serve this profile's commands to an agent over MCP — `claude mcp add clidev -- clidev personal mcp serve`
+serve this profile to an agent over MCP and set it up — `claude mcp add clidev -- clidev <profile> mcp serve`
 
 ### `clidev mcp serve`
 
-serve this profile's commands to an agent over MCP, on stdin and stdout, writes included; the profile's permissions decide — `claude mcp add clidev -- clidev personal mcp serve`
+serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add clidev -- clidev <profile> mcp serve`; `clidev mcp serve --profiles a,b` or `--profiles all` serves those profiles from one server and each tool asks which
 
 **Changes something in the service.**
 
@@ -131,27 +281,33 @@ clidev mcp serve [options]
 
 | Option | What it does |
 |---|---|
+| `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
+| `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
-| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
+| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 
 **Returns:** serve this profile's commands to an AI agent
 
-**Example:** `clidev personal mcp serve`, `clidev personal mcp serve --http --public-url https://laptop.example.ts.net`
+**Example:** `clidev personal mcp serve`, `clidev mcp serve --profiles work,personal`, `clidev personal mcp serve --http --public-url https://laptop.example.ts.net`
 
 ### `clidev mcp revoke`
 
-forget every login `mcp serve --http` gave a browser app; each must log in again
+forget every login `mcp serve --http` gave a browser app, of this profile or of the server `--profiles` names; each app must log in again
 
 **Changes something on this computer only.**
 
 ```sh
-clidev mcp revoke
+clidev mcp revoke [options]
 ```
+
+| Option | What it does |
+|---|---|
+| `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
 
 **Returns:** forget every login given to a browser app
 
-**Example:** `clidev personal mcp revoke`
+**Example:** `clidev personal mcp revoke`, `clidev mcp revoke --profiles all`
 
 ### `clidev mcp server`
 
@@ -171,6 +327,8 @@ clidev mcp server start [options]
 |---|---|
 | `--port <port>` | the local port (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
+| `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
+| `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
 **Returns:** start the HTTP MCP server in the background
 
@@ -183,8 +341,12 @@ stop `mcp serve --http` — only one that `mcp server start` started
 **Changes something on this computer only.**
 
 ```sh
-clidev mcp server stop
+clidev mcp server stop [options]
 ```
+
+| Option | What it does |
+|---|---|
+| `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
 **Returns:** stop the background HTTP MCP server
 
@@ -195,12 +357,72 @@ clidev mcp server stop
 whether `mcp serve --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
 
 ```sh
-clidev mcp server status
+clidev mcp server status [options]
 ```
+
+| Option | What it does |
+|---|---|
+| `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
 **Returns:** whether the HTTP MCP server runs, its login code and the apps logged in
 
 **Example:** `clidev personal mcp server status --json`
+
+### `clidev mcp config`
+
+print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes nothing
+
+```sh
+clidev mcp config [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
+| `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
+
+**Returns:** print the local MCP configuration of this profile, or of those --profiles names
+
+**Example:** `clidev personal mcp config`, `clidev mcp config --profiles all`
+
+### `clidev mcp add`
+
+add this profile's local MCP server to Codex or Claude Code
+
+**Changes something on this computer only.**
+
+```sh
+clidev mcp add <client> [options]
+```
+
+| Argument | | What it is |
+|---|---|---|
+| `client` | required | codex or claude-code. |
+
+| Option | What it does |
+|---|---|
+| `--allow-writes` | acknowledge that this profile offers writing tools. |
+| `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
+
+**Returns:** add this profile's local MCP server to Codex or Claude Code
+
+**Example:** `clidev personal mcp add codex --allow-writes`
+
+### `clidev mcp check`
+
+check this profile's local MCP handshake and tool list
+
+```sh
+clidev mcp check [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
+
+**Returns:** check this profile's local MCP handshake and tool list
+
+**Example:** `clidev personal mcp check`
 
 ## `clidev upgrade`
 

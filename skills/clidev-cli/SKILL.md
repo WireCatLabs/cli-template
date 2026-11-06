@@ -1,6 +1,6 @@
 ---
 name: clidev-cli
-description: Use clidev, a WireCat CLI started from cli-template, from an agent — find a command, run it with the owner's profile, read JSON answers. Use when a task needs clidev. It does not connect to a service yet.
+description: Use clidev, a WireCat CLI started from cli-template, from an agent — find a command, run it with the owner's profile, read JSON answers. Use when a task needs clidev. Its one service is a made-up sample, Example Comments.
 metadata:
   openclaw:
     requires:

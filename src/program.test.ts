@@ -3,9 +3,7 @@ import { join } from "node:path"
 import { annotate } from "@wirecat/cli-base/commands"
 import { REMOTE_READ, run as runShared } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
-import { expect, it, vi } from "vitest"
-import { doctorReport } from "./commands/doctor.js"
-import { configuration } from "./config.js"
+import { expect, it } from "vitest"
 import { IDENTITY } from "./identity.js"
 import { definition, run } from "./program.js"
 
@@ -69,20 +67,15 @@ it("doctor reports an unknown setting with the command that removes it", async (
   )
 })
 
-it("doctor reports settings an environment variable breaks, and still answers", () => {
-  const { report } = doctorReport({ ...process.env, CLIDEV_EMBEDDING_DIMS: "many" })
-  expect(report).toMatchObject({ config: { issues: [] }, settings: { error: expect.any(String) }, profiles: null })
-})
-
-it("doctor answers when reading the settings fails with an unexpected error", () => {
-  const spy = vi.spyOn(configuration, "resolveSettings").mockImplementation(() => {
-    throw new TypeError("boom")
+it("doctor reports settings an environment variable breaks, and still answers", async () => {
+  const out: string[] = []
+  const code = await run(["doctor", "--json"], {
+    streams: { data: (text) => out.push(text), diagnostic: () => {} },
+    tty: false,
+    env: { ...process.env, CLIDEV_EMBEDDING_DIMS: "many" },
   })
-  try {
-    expect(doctorReport(process.env).report).toMatchObject({ settings: { error: "boom" }, profiles: null })
-  } finally {
-    spy.mockRestore()
-  }
+  expect(code).toBe(0)
+  expect(json(out.join("")).item).toMatchObject({ config: { issues: [] }, version: IDENTITY.version })
 })
 
 it.skipIf(process.platform === "win32")(
