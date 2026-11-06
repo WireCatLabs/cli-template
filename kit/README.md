@@ -26,7 +26,7 @@ choices. Nothing is guessed.
 | `--command` | the command word |
 | `--package` | the npm package name |
 | `--owner` | the GitHub owner |
-| `--category` | `messenger`, `mail`, `notes`, `files`, `calendar`, `meetings` |
+| `--category` | `messenger`, `mail`, `notes`, `files`, `calendar`, `meetings`, `crm` |
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |

@@ -10,7 +10,7 @@ the first question of the [design interview](skills/design-interview/SKILL.md):
 | calendar | [gcal-cli](https://github.com/WireCatLabs/gcal-cli) |
 | meetings | [zoom-cli](https://github.com/WireCatLabs/zoom-cli) |
 | notes | [cli-memo](https://github.com/WireCatLabs/cli-memo) |
-| mail, other | none of its own yet: pick the nearest one with the owner. cli-memo [imports mail](https://github.com/WireCatLabs/cli-memo/blob/c2d21254ab360aed7149a3250d17e879283aa603/docs/mail.md) |
+| mail, CRM, other | none of its own yet: pick the nearest one with the owner. cli-memo [imports mail](https://github.com/WireCatLabs/cli-memo/blob/c2d21254ab360aed7149a3250d17e879283aa603/docs/mail.md) |
 
 A messenger CLI sets `messenger: true` in `src/identity.ts`, and `new --category messenger` writes it. Every other
 category keeps the template's `messenger: false`, so the shared help and `commands` do not speak of chats, messages

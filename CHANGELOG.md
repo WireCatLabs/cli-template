@@ -16,6 +16,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   cli-base v0.61.2 to v0.77.1; their files are the same. A CLI gets the workflow pins from `upgrade`. `package.json`,
   `contracts/` and the docs belong to the CLI, so it raises cli-core and cli-base itself and regenerates
   `contracts/mcp-tools.json` and `docs/commands.md`.
+- **CRM is a category of its own.** `new --category crm` and the design interview offer "CRM (sales: deals, contacts,
+  companies)". It has no reference CLI yet, so `AGENTS.md` asks to pick the nearest one with the owner, and the CLI
+  keeps `messenger: false`.
 
 ### Changed — may break callers
 
