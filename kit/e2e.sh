@@ -24,6 +24,8 @@ build() {
   cmp "$root/.gitignore" "$1/.gitignore"
   cd "$1"
   pnpm install
+  # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
+  pnpm lint:fix
   pnpm lint
   pnpm ci:quick
   pnpm test:coverage

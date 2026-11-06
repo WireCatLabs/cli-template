@@ -14,6 +14,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   broke Biome's formatting passed it before. The `kit-e2e` job in `.github/workflows/ci.yml` runs it on every pull
   request and merge, in this repository only: a CLI made from the template has no `kit/` and skips the job.
 
+### Fixed
+
+- **A new CLI passes `pnpm lint` from its first commit.** Renaming `clidev` changes line lengths, so Biome wraps some
+  lines differently, and the first commit's hook or CI failed on formatting. `new`'s next steps now run
+  `pnpm lint:fix` after `pnpm install`, and `kit:e2e` does the same before it runs `pnpm lint`.
+
 ## 0.16.0 — 06.11.2026
 
 ### Fixed
