@@ -7,28 +7,59 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**54 ✅ · 6 ⛔ · 0 ❌** — 21 commands, 39 options.
+**71 ✅ · 20 ⛔ · 0 ❌** — 32 commands, 59 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
 | `commands` |  | ✅ |  |
 | `commands info` |  | ✅ |  |
+| `session start` |  | ✅ |  |
+| `session start` | `--credential-storage` | ✅ |  |
+| `session status` |  | ✅ |  |
+| `session status` | `--check` | ✅ |  |
+| `session end` |  | ✅ |  |
+| `session list` |  | ✅ |  |
+| `comments list` |  | ✅ |  |
+| `comments list` | `--limit` | ✅ |  |
+| `comments list` | `--page` | ✅ |  |
+| `comments list` | `--all` | ✅ |  |
+| `comments show` |  | ✅ |  |
+| `comments create` |  | ✅ |  |
+| `comments create` | `--text` | ✅ |  |
+| `comments update` |  | ✅ |  |
+| `comments update` | `--text` | ✅ |  |
 | `doctor` |  | ✅ |  |
+| `doctor` | `--online` | ✅ |  |
 | `skill show` |  | ✅ |  |
 | `skill show` | `--for` | ✅ |  |
 | `skill install` |  | ✅ |  |
 | `skill install` | `--for` | ✅ |  |
 | `skill status` |  | ✅ |  |
 | `mcp serve` |  | ✅ |  |
-| `mcp serve` | `--http` | ✅ |  |
-| `mcp serve` | `--port` | ✅ |  |
-| `mcp serve` | `--public-url` | ✅ |  |
+| `mcp serve` | `--permission` | ✅ |  |
+| `mcp serve` | `--profiles` | ✅ |  |
+| `mcp serve` | `--http` | ⛔ | starts an HTTP server or a background process that runs until stopped; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp serve` | `--port` | ⛔ | starts an HTTP server or a background process that runs until stopped; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp serve` | `--public-url` | ⛔ | starts an HTTP server or a background process that runs until stopped; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
 | `mcp revoke` |  | ✅ |  |
+| `mcp revoke` | `--profiles` | ⛔ | cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
 | `mcp server start` |  | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
 | `mcp server start` | `--port` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
 | `mcp server start` | `--public-url` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp server start` | `--permission` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
+| `mcp server start` | `--profiles` | ⛔ | starts a detached `mcp serve --http` from the built entry; cli-core tests mcpServerCommand, and the background run was checked by hand against dist/ |
 | `mcp server stop` |  | ⛔ | stops the detached server that `mcp server start` wrote a pid file for; cli-core tests mcpServerCommand, and no live scenario starts a server to stop |
-| `mcp server status` |  | ✅ |  |
+| `mcp server stop` | `--profiles` | ⛔ | stops the detached server that `mcp server start` wrote a pid file for; cli-core tests mcpServerCommand, and no live scenario starts a server to stop |
+| `mcp server status` |  | ⛔ | starts an HTTP server or a background process that runs until stopped; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp server status` | `--profiles` | ⛔ | starts an HTTP server or a background process that runs until stopped; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp config` |  | ✅ |  |
+| `mcp config` | `--permission` | ✅ |  |
+| `mcp config` | `--profiles` | ✅ |  |
+| `mcp add` |  | ⛔ | writes Codex's or Claude Code's own MCP settings; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp add` | `--allow-writes` | ⛔ | writes Codex's or Claude Code's own MCP settings; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp add` | `--permission` | ⛔ | writes Codex's or Claude Code's own MCP settings; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp check` |  | ⛔ | starts the installed CLI as a child process, as the agent would; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
+| `mcp check` | `--permission` | ⛔ | starts the installed CLI as a child process, as the agent would; cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs this CLI's own server, config, revoke and refusals |
 | `upgrade` |  | ✅ |  |
 | `upgrade` | `--check` | ✅ |  |
 | `config show` |  | ✅ |  |

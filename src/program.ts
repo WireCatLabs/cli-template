@@ -1,9 +1,12 @@
 import { join } from "node:path"
-import { resolvePaths } from "@wirecat/cli-base"
+import { type KeyringStore, resolvePaths } from "@wirecat/cli-base"
 import {
+  appDoctorCommand,
+  appMcpCommand,
   commandsCommand,
   configCommand,
   createProgram as createSharedProgram,
+  environmentOf,
   outputFor,
   type ProgramDefinition,
   type ProgramOptions,
@@ -15,10 +18,12 @@ import {
 } from "@wirecat/cli-core/cli"
 import { appUpdate } from "@wirecat/cli-core/update"
 import type { Command } from "commander"
-import { doctorCommand } from "./commands/doctor.js"
-import { mcpCommand } from "./commands/mcp.js"
+import { commentsCommand } from "./commands/comments.js"
+import { sessionCommand } from "./commands/session.js"
 import { configuration } from "./config.js"
 import { IDENTITY, PACKAGE, SKILL } from "./identity.js"
+import { SERVICE } from "./sample/transport.js"
+import { holdsToken } from "./token.js"
 
 const update = appUpdate({
   packageName: PACKAGE,
@@ -31,13 +36,32 @@ const update = appUpdate({
   offVariables: [`${IDENTITY.envPrefix}_NO_UPDATE_CHECK`],
 })
 
+const mcpCommand = () => {
+  // cli-core asks `signedIn` with no keyring; the run's own one, a test's `memoryKeyring()`, is taken here. Each
+  // program builds its own `mcp`, so a tool call run beside it never swaps the server's keyring (WC-ARCH-22).
+  let keyring: KeyringStore | undefined
+  const mcp = appMcpCommand(IDENTITY, configuration, {
+    name: SERVICE,
+    // SAMPLE: name the kinds of text other people wrote that your answers carry (WC-MCP-11).
+    untrusted: ["comment text", "author names"],
+    permissionExample: "comments.create=deny",
+    skill: SKILL,
+    signedIn: (profile, env) => holdsToken(env, profile, keyring),
+  })
+  return mcp.hook("preAction", (_mcp, action) => {
+    keyring = environmentOf(action).keyring
+  })
+}
+
 export const definition = (): ProgramDefinition => ({
   app: IDENTITY,
   // The whole object: cli-core refuses a command by its key only when it gets the permission table too.
   configuration,
   commands: () => [
     commandsCommand(IDENTITY),
-    doctorCommand(),
+    sessionCommand(),
+    commentsCommand(),
+    appDoctorCommand(IDENTITY, configuration, { packageName: PACKAGE }),
     skillCommand(IDENTITY, SKILL),
     mcpCommand(),
     upgradeCommand(IDENTITY, PACKAGE, (command) => ({

@@ -1,136 +1,83 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { Client } from "@modelcontextprotocol/client"
-import { InMemoryTransport } from "@modelcontextprotocol/server"
-import { annotate, describeProgram } from "@wirecat/cli-base/commands"
-import {
-  changesAuthorityAt,
-  createProgram as createSharedProgram,
-  REMOTE_READ,
-  run as runShared,
-} from "@wirecat/cli-core/cli"
-import { Command } from "commander"
-import { afterEach, expect, it } from "vitest"
-import { configuration } from "./config.js"
-import { createMcpServer, serveMcp } from "./mcp.js"
-import { createProgram, definition, run } from "./program.js"
+import type { RunOptions } from "@wirecat/cli-core/cli"
+import { mcpOverStdio } from "@wirecat/cli-core/testing"
+import { expect, it } from "vitest"
+import type { ServiceEnvironment } from "./context.js"
+import { IDENTITY } from "./identity.js"
+import { run } from "./program.js"
+import { fakeComments } from "./testing/fake-comments.js"
+import { clidev, signedIn } from "./testing/harness.js"
 
-const clients: Client[] = []
-afterEach(async () => {
-  for (const client of clients.splice(0)) await client.close()
-})
-
-const connect = async () => {
-  const program = createProgram()
-  const server = createMcpServer({
-    profile: "personal",
-    commands: describeProgram(program),
-    levels: () => configuration.resolveSettings({ profile: "personal" }).permissions,
-    authority: changesAuthorityAt(program),
-    run,
-  })
-  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
-  await server.connect(serverSide)
-  const client = new Client({ name: "test", version: "1.0.0" })
-  await client.connect(clientSide)
-  clients.push(client)
-  return client
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value)
-const structured = (result: unknown) => {
-  if (!isRecord(result) || !isRecord(result.structuredContent))
-    throw new Error("the tool answered without structured content")
-  return result.structuredContent
-}
-
-it("offers search, read and write", async () => {
-  const client = await connect()
-  const { tools } = await client.listTools()
-  expect(tools.map((tool) => tool.name).sort()).toEqual(["clidev_read", "clidev_tools_search", "clidev_write"])
-})
-
-it("finds writes as well as reads", async () => {
-  const client = await connect()
-  const found = structured(await client.callTool({ name: "clidev_tools_search", arguments: {} }))
-  expect(found.items).toContainEqual(expect.objectContaining({ writes: true }))
-  expect(found.items).not.toContainEqual(expect.objectContaining({ command: expect.stringMatching(/^mcp\b/) }))
-})
-
-it("runs a command through the CLI and answers with its result", async () => {
-  const client = await connect()
-  const answer = structured(await client.callTool({ name: "clidev_read", arguments: { command: "doctor" } }))
-  expect(answer.item).toMatchObject({ version: expect.any(String), profiles: [] })
-})
-
-it("serves until the command is stopped", async () => {
-  const program = createProgram()
-  const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
-  const stop = new AbortController()
-  const serving = serveMcp({
-    profile: "personal",
-    commands: describeProgram(program),
-    levels: () => ({}),
-    authority: () => false,
-    run,
-    signal: stop.signal,
-    transport: serverSide,
-  })
-  const client = new Client({ name: "test", version: "1.0.0" })
-  await client.connect(clientSide)
-  expect((await client.listTools()).tools).toHaveLength(3)
-  stop.abort()
-  await expect(serving).resolves.toBeUndefined()
-})
-
-it("clidev <profile> mcp serve starts the server and ends on a signal", async () => {
-  const stop = new AbortController()
-  const serving = run(["personal", "mcp", "serve"], {
-    signal: stop.signal,
-    tty: false,
-    streams: { data: () => {}, diagnostic: () => {} },
-  })
-  stop.abort()
-  expect(await serving).toBe(0)
-})
-
-it("a denied command is offered as unavailable and refused before it runs", async () => {
-  const reached: string[] = []
-  const probe = () =>
-    annotate(new Command("probe"), { effects: REMOTE_READ, offline: false }).action(() => {
-      reached.push("probe")
-    })
-  const withProbe = { ...definition(), commands: () => [...definition().commands(), probe()] }
-  const dir = process.env.CLIDEV_CONFIG_DIR ?? ""
-  mkdirSync(dir, { recursive: true })
-  writeFileSync(
-    join(dir, "config.json"),
-    JSON.stringify({ profiles: { personal: { permissions: { probe: "deny" } } } }),
-  )
+it("mcp serve offers search, read and write, and runs a command through the CLI", async () => {
+  const mcp = await mcpOverStdio((streams) => run(["personal", "mcp", "serve"], { tty: false, ...streams }))
   try {
-    const program = createSharedProgram(withProbe)
-    const server = createMcpServer({
-      profile: "personal",
-      commands: describeProgram(program),
-      levels: () => configuration.resolveSettings({ profile: "personal" }).permissions,
-      authority: changesAuthorityAt(program),
-      run: (argv, options) => runShared(argv, withProbe, options),
-    })
-    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair()
-    await server.connect(serverSide)
-    const client = new Client({ name: "test", version: "1.0.0" })
-    await client.connect(clientSide)
-    clients.push(client)
-    const found = structured(await client.callTool({ name: "clidev_tools_search", arguments: { query: "probe" } }))
-    expect(found.items).toContainEqual(
-      expect.objectContaining({ command: "probe", availability: expect.objectContaining({ available: false }) }),
-    )
-    const answer = await client.callTool({ name: "clidev_read", arguments: { command: "probe" } })
-    expect(answer.isError).toBe(true)
-    expect(structured(answer).error).toMatchObject({ code: "permission_error" })
-    expect(reached).toEqual([])
+    expect((await mcp.tools()).sort()).toEqual(["clidev_read", "clidev_tools_search", "clidev_write"])
+    const doctor = await mcp.call("clidev_read", { command: "doctor" })
+    expect(doctor.body).toMatchObject({ item: { version: IDENTITY.version } })
   } finally {
-    rmSync(join(dir, "config.json"))
+    expect(await mcp.close()).toBe(0)
+  }
+})
+
+it("mcp serve refuses a --permission that names no command, and a --profiles this computer lacks", async () => {
+  const unknown = await clidev(["personal", "mcp", "serve", "--permission", "comments.nope=deny"])
+  expect(unknown.code).toBe(2)
+  expect(unknown.err).toContain("comments.nope")
+  const missing = await clidev(["mcp", "serve", "--profiles", "nope"])
+  expect(missing.code).toBe(2)
+  expect(missing.err).toContain("nope")
+})
+
+it("mcp config prints an entry that serves the named profile, or every profile only when told", async () => {
+  const one = await clidev(["personal", "mcp", "config", "--permission", "comments.create=deny", "--json"])
+  const entry = one.json().item as { config: { mcpServers: Record<string, { args: string[] }> } }
+  expect(entry.config.mcpServers["clidev-personal"]?.args.slice(-5)).toEqual([
+    "personal",
+    "mcp",
+    "serve",
+    "--permission",
+    "comments.create=deny",
+  ])
+  const all = await clidev(["mcp", "config", "--profiles", "all", "--json"])
+  expect(JSON.stringify(all.json())).toContain('"--profiles","all"')
+})
+
+it("mcp revoke answers for the profile it names", async () => {
+  const revoked = await clidev(["personal", "mcp", "revoke", "--json"])
+  expect(revoked.code).toBe(0)
+  expect(revoked.json().item).toMatchObject({ profile: "personal" })
+})
+
+it("doctor --online answers even when npm cannot be reached", async () => {
+  const online = await clidev(["doctor", "--online", "--json"])
+  expect(online.code).toBe(0)
+  expect(online.json().item).toMatchObject({ version: IDENTITY.version, online: expect.any(Object) })
+})
+
+it("a denied command is offered as unavailable and refused before any request (WC-PERM-23)", async () => {
+  const file = join(process.env.CLIDEV_CONFIG_DIR ?? "", "config.json")
+  mkdirSync(join(file, ".."), { recursive: true })
+  writeFileSync(file, JSON.stringify({ profiles: { personal: { permissions: { "comments.list": "deny" } } } }))
+  const service = fakeComments()
+  const options: RunOptions & ServiceEnvironment = { tty: false, keyring: signedIn(), fetch: service.fetch }
+  const mcp = await mcpOverStdio((streams) => run(["personal", "mcp", "serve"], { ...options, ...streams }))
+  try {
+    const found = await mcp.call("clidev_tools_search", { query: "comments list" })
+    expect(found.body).toMatchObject({
+      items: expect.arrayContaining([
+        expect.objectContaining({
+          command: "comments list",
+          availability: expect.objectContaining({ available: false }),
+        }),
+      ]),
+    })
+    const listed = await mcp.call("clidev_read", { command: "comments list" })
+    expect(listed.isError).toBe(true)
+    expect(JSON.stringify(listed.body)).toContain("permission_error")
+    expect(service.calls).toEqual([])
+  } finally {
+    expect(await mcp.close()).toBe(0)
+    rmSync(file, { force: true })
   }
 })
