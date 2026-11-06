@@ -10,8 +10,8 @@ this order, one at a time, and write each answer down as it comes. `npx @wirecat
 questions in a terminal and takes them as flags without one; when `DESIGN.md` already has the answers, read them and
 go to the further questions.
 
-1. **What kind of tool is it?** messenger · mail · notes · files and documents · calendar · meetings · other. It
-   picks the reference CLI (see [Reference CLIs](../../reference-clis.md)).
+1. **What kind of tool is it?** messenger · mail · notes · files and documents · calendar · meetings · CRM (sales:
+   deals, contacts, companies) · other. It picks the reference CLI (see [Reference CLIs](../../reference-clis.md)).
 2. **Which languages is the content in?** Any languages, several allowed: the messages, documents or transcripts the
    CLI handles. The answer picks the language-dependent parts: search stemming, the embedding and speech models.
 3. **How does a person sign in?** OAuth in the browser · an API token or key · a session (phone code, QR) · none ·

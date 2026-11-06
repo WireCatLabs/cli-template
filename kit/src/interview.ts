@@ -54,6 +54,7 @@ export const INTERVIEW: Question[] = [
       { value: "files", label: "files and documents" },
       { value: "calendar", label: "calendar" },
       { value: "meetings", label: "meetings" },
+      { value: "crm", label: "CRM (sales: deals, contacts, companies)" },
     ],
   },
   {

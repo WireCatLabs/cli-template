@@ -23,14 +23,15 @@ const makeNew = async (flags: Record<string, string>, name = "cal-cli") => {
 
 describe("new", () => {
   it.each([
-    ["messenger", "whatsapp-cli"],
-    ["mail", "No reference CLI"],
-    ["notes", "cli-memo"],
-    ["files", "drive-cli"],
-    ["calendar", "gcal-cli"],
-    ["meetings", "zoom-cli"],
-    ["other:issue tracker", "No reference CLI"],
-  ])("copies the template for the %s category", async (category, reference) => {
+    ["messenger", "whatsapp-cli", "messenger"],
+    ["mail", "No reference CLI", "mail"],
+    ["notes", "cli-memo", "notes"],
+    ["files", "drive-cli", "files and documents"],
+    ["calendar", "gcal-cli", "calendar"],
+    ["meetings", "zoom-cli", "meetings"],
+    ["crm", "No reference CLI", "CRM (sales: deals, contacts, companies)"],
+    ["other:issue tracker", "No reference CLI", "other: issue tracker"],
+  ])("copies the template for the %s category", async (category, reference, label) => {
     const { dir, out } = await makeNew({ ...NOTES_FLAGS, category })
 
     expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL, command: "cal" })')
@@ -48,7 +49,7 @@ describe("new", () => {
     expect(read(dir, "README.md")).toContain("node dist/bin/cal.js doctor")
     expect(read(dir, "AGENTS.md")).toContain(reference)
     expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
-    expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${category.replace("other:", "other: ")}`)
+    expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${label}\n`)
     expect(read(dir, "src/version.ts")).toBe('export const VERSION = "0.0.0"\n')
     expect(out).toContain("Create the repository example/cal-cli")
   })
@@ -214,12 +215,16 @@ describe("new from this repository", () => {
   it("keeps the neutral wording for a CLI that is not a messenger and turns a messenger's on", async () => {
     const source = await loadSource(root)
     const notes = tempDir("real")
+    const crm = tempDir("real")
     const messenger = tempDir("real")
 
     await runNew(notes, source, { name: "cal-cli", flags: NOTES_FLAGS }, io())
+    await runNew(crm, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, category: "crm" } }, io())
     await runNew(messenger, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, category: "messenger" } }, io())
 
     expect(read(join(notes, "cal-cli"), "src/identity.ts")).toContain("  messenger: false,\n")
+    expect(read(join(crm, "cal-cli"), "src/identity.ts")).toContain("  messenger: false,\n")
+    expect(read(join(crm, "cal-cli"), "docs/dev/DESIGN.md")).not.toContain("speechModels")
     const identity = read(join(messenger, "cal-cli"), "src/identity.ts")
     expect(identity).toContain("  messenger: true,\n")
     expect(identity).not.toContain("messenger: false")
