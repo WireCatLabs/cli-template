@@ -3,6 +3,12 @@
     "includes": ["**", "!**/node_modules", "!**/dist", "!.worktrees", "!pnpm-lock.yaml", "!config/wirecat"]
   },
   "extends": ["./config/wirecat/biome.base.json"],
+  "plugins": [
+    {
+      "path": "./node_modules/@wirecat/cli-base/config/lint/no-own-settings.grit",
+      "includes": ["src/**", "!**/*.test.ts", "!src/testing/**"]
+    }
+  ],
   "overrides": [
     {
       "includes": ["src/**", "!**/*.test.ts"],

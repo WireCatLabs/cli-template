@@ -289,6 +289,7 @@ export const manualSteps = (names: Names): string[] => [
   `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), and add any secrets.`,
   "3. Give .github/workflows/monthly.yml a free cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9).",
   "4. WireCat CLIs only: a pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
+  "CI's repo-setup job (cli-dev repo-check) fails until steps 1, 3 and 4 are done.",
 ]
 
 export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs, io: Io): Promise<string> => {

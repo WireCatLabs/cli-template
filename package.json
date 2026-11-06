@@ -86,8 +86,8 @@
     "kit:docs": "cspell lint --config cspell.json --no-progress --no-summary kit/*.md && rumdl check --config config/wirecat/rumdl.toml kit/*.md"
   },
   "dependencies": {
-    "@wirecat/cli-base": "0.77.1",
-    "@wirecat/cli-core": "0.584.0",
+    "@wirecat/cli-base": "0.80.3",
+    "@wirecat/cli-core": "0.595.0",
     "commander": "15.0.0",
     "valibot": "1.5.0"
   },
@@ -98,7 +98,7 @@
     "@cspell/dict-ru_ru": "2.3.4",
     "@types/node": "22.20.5",
     "@vitest/coverage-v8": "5.0.5",
-    "@wirecat/cli-testing": "0.5.3",
+    "@wirecat/cli-testing": "0.6.0",
     "cspell": "10.4.0",
     "esbuild": "0.28.2",
     "lefthook": "2.2.2",
