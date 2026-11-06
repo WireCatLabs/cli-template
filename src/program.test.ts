@@ -1,10 +1,13 @@
 import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { annotate } from "@wirecat/cli-base/commands"
+import { REMOTE_READ, run as runShared } from "@wirecat/cli-core/cli"
+import { Command } from "commander"
 import { expect, it, vi } from "vitest"
 import { doctorReport } from "./commands/doctor.js"
 import { configuration } from "./config.js"
 import { IDENTITY } from "./identity.js"
-import { run } from "./program.js"
+import { definition, run } from "./program.js"
 
 const ran = async (argv: string[]) => {
   const out: string[] = []
@@ -231,5 +234,31 @@ it("config repair --dry-run changes nothing, and config repair fixes the JSON wi
   } finally {
     rmSync(file)
     if (backup) rmSync(backup)
+  }
+})
+
+it("a deny in the profile stops a read command before its action runs", async () => {
+  const reached: string[] = []
+  const probe = annotate(new Command("probe"), { effects: REMOTE_READ, offline: false }).action(() => {
+    reached.push("probe")
+  })
+  const withProbe = { ...definition(), commands: () => [...definition().commands(), probe] }
+  const dir = process.env.CLIDEV_CONFIG_DIR ?? ""
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(
+    join(dir, "config.json"),
+    JSON.stringify({ profiles: { personal: { permissions: { probe: "deny" } } } }),
+  )
+  const err: string[] = []
+  try {
+    const code = await runShared(["personal", "probe", "--json"], withProbe, {
+      streams: { data: () => {}, diagnostic: (text) => err.push(text) },
+      tty: false,
+    })
+    expect(code).not.toBe(0)
+    expect(err.join("\n")).toContain("permission_error")
+    expect(reached).toEqual([])
+  } finally {
+    rmSync(join(dir, "config.json"))
   }
 })

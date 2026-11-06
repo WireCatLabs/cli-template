@@ -5,6 +5,16 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **A `deny` in a profile stops a command again.** The skeleton handed cli-core only `resolveSettings`, and cli-core
+  checks a command's key only when it gets the permission table too, so a denied read still ran and `--dry-run`
+  previewed every command as allowed. `src/program.ts` now passes the whole `configuration`, and `src/config.ts`
+  declares `commandPermissions()`, so each command is checked against its own path. A CLI made from an older
+  skeleton makes the same two changes by hand.
+
 ## 0.14.0 — 06.11.2026
 
 ### Added
