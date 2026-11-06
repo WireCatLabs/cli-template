@@ -5,6 +5,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Added
+
+- **`pnpm kit:e2e` runs in CI and checks more.** It makes a CLI with a short name and one with a long name, since a
+  rename changes line lengths, and runs `pnpm lint` in each besides `ci:quick` and `test:coverage`. A rename that
+  broke Biome's formatting passed it before. The `kit-e2e` job in `.github/workflows/ci.yml` runs it on every pull
+  request and merge, in this repository only: a CLI made from the template has no `kit/` and skips the job.
+
 ## 0.16.0 — 06.11.2026
 
 ### Fixed
