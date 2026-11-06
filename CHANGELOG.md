@@ -5,6 +5,20 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Added
+
+- **CI fails a CLI made from the template on mistakes no check caught before.** `contracts/plan.json`
+  has a `deny` block (cli-testing 0.6.0): in an empty home, each command that reaches the service gets `deny` in the
+  profile and must exit 5 before any request, on the command line and over `mcp serve`. Biome refuses a
+  `resolveSettings` call outside `baseContext` (cli-base's `no-own-settings` plugin). `release-pr.yml` fails a pull
+  request that changes the version without a `## Conformance` section, and `bin/release` refuses a version with no
+  passed live check in `docs/dev/live-checks.txt` (`cli-dev live record`), or whose code changed since. The
+  `repo-setup` job in `ci.yml` checks main's ruleset, a monthly cron minute no other repository holds, and the CLI in
+  a parity group: the three setup steps `new` prints. The skeleton moves to cli-core 0.595.0 and cli-base 0.80.3
+  (from 0.584.0 and 0.77.1) for them.
+
 ## 0.16.0 — 06.11.2026
 
 ### Added

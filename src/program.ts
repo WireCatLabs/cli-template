@@ -32,6 +32,7 @@ const update = appUpdate({
   entry: import.meta.url,
   statePath: (env) =>
     join(resolvePaths({ appName: IDENTITY.appName, prefix: IDENTITY.envPrefix, env }).state, "update-check.json"),
+  // biome-ignore lint/plugin/no-own-settings: the update check runs before any command exists to give baseContext
   enabled: (env) => configuration.resolveSettings({}, { env, needsProfile: false }).updateCheck,
   offVariables: [`${IDENTITY.envPrefix}_NO_UPDATE_CHECK`],
 })

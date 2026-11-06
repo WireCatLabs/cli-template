@@ -119,9 +119,9 @@ const listCommand = () =>
     .summary("list the profiles here and whether each is signed in")
     .description("list the profiles on this computer and whether each has a token; picks none")
     .action(function (this: Command) {
-      // Not contextOf: cli-core's baseContext needs a profile, and this command names none.
       const environment = environmentOf(this)
       const env = environment.env ?? process.env
+      // biome-ignore lint/plugin/no-own-settings: baseContext needs a profile, and this local read names none
       const { configuredProfiles } = configuration.resolveSettings({}, { env, needsProfile: false })
       const tokens = tokenStore(env, environment.keyring, outputFor(this).renderer.warn)
       const items = profilesHere(IDENTITY, configuredProfiles, env).map((profile) => {
