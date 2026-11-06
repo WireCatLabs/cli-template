@@ -142,8 +142,8 @@ export const designDoc = (names: Names, answers: Answers): string => {
     "3. Ask the further questions in the interview that the reference CLI does not answer, and write the answers here.",
     "   Build only after the owner has read this page.",
     "4. When the first command reaches the service, rewrite `README.md`, `docs/index.md` and the description in",
-    `   \`skills/${names.name}/SKILL.md\` to say what the tool does and who it is for. Rewrite the MCP server's`,
-    "   instructions in `src/mcp.ts` too: name the kinds of outside text the CLI carries (WC-MCP-11).",
+    `   \`package.json\` and \`skills/${names.name}/SKILL.md\` to say what the tool does and who it is for. Rewrite the`,
+    "   MCP server's instructions in `src/mcp.ts` too: name the kinds of outside text the CLI carries (WC-MCP-11).",
     "",
     "## Answers",
     "",
@@ -185,7 +185,12 @@ export const cliPackageJson = (text: string, names: Names): string => {
   if (!isRecord(pkg)) throw new Error("package.json must be a JSON object")
   const isKit = (value: unknown) => typeof value === "string" && /^(\.\/)?kit(\/|$)/.test(value)
   const repoUrl = `git+https://github.com/${names.owner}/${names.name}.git`
-  const next: Record<string, unknown> = { ...pkg, name: names.package, version: "0.0.0" }
+  const next: Record<string, unknown> = {
+    ...pkg,
+    name: names.package,
+    version: "0.0.0",
+    description: "A new WireCat CLI, started from cli-template",
+  }
   const bin = typeof pkg.bin === "object" && pkg.bin ? pkg.bin : {}
   next.bin = {
     ...Object.fromEntries(Object.entries(bin).filter(([, value]) => !isKit(value))),

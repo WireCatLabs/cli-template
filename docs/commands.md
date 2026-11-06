@@ -27,6 +27,7 @@ lists the profiles on this computer.
 | `--max-output-bytes <bytes>` | maximum machine output bytes (default: 4194304; 0 disables). |
 | `--brief` | found items as reference, title, time, author and excerpt only. |
 | `--full` | found items with their whole text and every provider field. |
+| `--compact` | one line per item for an agent: reference first, text last, paging and next steps as # lines. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
 | `--record` | keep this run even where the config says record false; record_input false leaves the typed words out. |
@@ -228,12 +229,8 @@ the settings in force, and where each one came from
 the profile, the profiles that exist, and each setting with where it came from
 
 ```sh
-clidev config show [options]
+clidev config show
 ```
-
-| Option | What it does |
-|---|---|
-| `--bot` | the settings a bot command on this profile gets, rather than the personal account's. |
 
 **Returns:** the profile, the profiles that exist, and each setting with where it came from
 
@@ -251,14 +248,12 @@ clidev config set <setting> <value> [options]
 
 | Argument | | What it is |
 |---|---|---|
-| `setting` | required | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, requests_per_minute, speech_model, picture_search, search_reranker, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, update_check, skill_hint, search_stemmers.cyrillic, search_stemmers.latin. |
+| `setting` | required | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, requests_per_minute, search_reranker, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, update_check, skill_hint, search_stemmers.cyrillic, search_stemmers.latin. |
 | `value` | required | a number, true or false; for a group tg:work,max:Alice,email:me@x. |
 
 | Option | What it does |
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile. |
-| `--personal` | only for personal accounts — the personal section of the file. |
-| `--bot` | only for bots — the bot section of the file. |
 
 **Returns:** save a setting to the configuration file
 
@@ -276,17 +271,47 @@ clidev config unset <setting> [options]
 
 | Argument | | What it is |
 |---|---|---|
-| `setting` | required | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, requests_per_minute, speech_model, picture_search, search_reranker, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, update_check, skill_hint, search_stemmers.cyrillic, search_stemmers.latin. |
+| `setting` | required | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, requests_per_minute, search_reranker, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, update_check, skill_hint, search_stemmers.cyrillic, search_stemmers.latin. |
 
 | Option | What it does |
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile. |
-| `--personal` | only for personal accounts — the personal section of the file. |
-| `--bot` | only for bots — the bot section of the file. |
 
 **Returns:** remove a setting from the configuration file
 
 **Example:** `clidev personal config unset limit`
+
+### `clidev config migrate`
+
+write each setting the file lacks at its default, keeping yours
+
+**Changes something on this computer only.**
+
+```sh
+clidev config migrate
+```
+
+**Returns:** write each setting the file lacks at its default, keeping yours
+
+**Example:** `clidev config migrate`
+
+### `clidev config repair`
+
+fix broken JSON syntax in the settings file — comments, a missing or extra comma, unquoted keys, single quotes, missing closing brackets at the end — keeping every value, with a backup beside it; refuses anything with more than one reading and changes nothing then
+
+**Changes something on this computer only.**
+
+```sh
+clidev config repair [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--dry-run` | say what it would fix, and change nothing. |
+
+**Returns:** fix the settings file's JSON syntax, keeping every value
+
+**Example:** `clidev config repair`, `clidev config repair --dry-run`
 
 ## `clidev runs`
 
@@ -369,5 +394,6 @@ Branch on the code, not on the text: the text can change, the code does not.
 | `12` | `provider_unavailable` |
 | `13` | `invalid_response` |
 | `14` | `outcome_unknown` |
+| `15` | `conflict` |
 | `130` | `cancelled` |
 | `1` | anything else |

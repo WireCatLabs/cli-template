@@ -177,3 +177,59 @@ it("a failed run keeps the words typed, and record_input false masks them", asyn
     expect((await ran(["personal", "config", "unset", "record_input"])).code).toBe(0)
   }
 })
+
+it("runs list --compact prints one plain line per run and the next page as a # line, not JSON", async () => {
+  expect((await ran(["--no-such-flag"])).code).toBe(2)
+  const { code, out } = await ran(["runs", "list", "--limit", "1", "--compact"])
+  expect(code).toBe(0)
+  expect(out.trim().split("\n")).toEqual([
+    expect.stringContaining("failed"),
+    "# more: clidev runs list --page 2 --limit 1 --compact",
+  ])
+  expect(() => JSON.parse(out)).toThrow()
+})
+
+it("config migrate writes the missing defaults, keeps the owner's value, and repeats as a no-op", async () => {
+  const file = join(process.env.CLIDEV_CONFIG_DIR ?? "", "config.json")
+  mkdirSync(join(file, ".."), { recursive: true })
+  writeFileSync(file, '{ "defaults": { "limit": 5 } }')
+  try {
+    const first = await ran(["config", "migrate", "--json"])
+    expect(first.code).toBe(0)
+    expect(json(first.out).item.added).toContain("defaults.record")
+    expect(JSON.parse(readFileSync(file, "utf8")).defaults).toMatchObject({ limit: 5, record: expect.any(Boolean) })
+    const again = await ran(["config", "migrate", "--json"])
+    expect(json(again.out).item.added).toEqual([])
+  } finally {
+    rmSync(file)
+  }
+})
+
+it("config repair --dry-run changes nothing, and config repair fixes the JSON with a backup", async () => {
+  const dir = process.env.CLIDEV_CONFIG_DIR ?? ""
+  const file = join(dir, "config.json")
+  const broken = '{ "defaults": { "limit": 5, }, }'
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(file, broken)
+  let backup = ""
+  try {
+    const preview = await ran(["config", "repair", "--dry-run", "--json"])
+    expect(preview.code).toBe(0)
+    expect(json(preview.out).item).toMatchObject({ dry_run: true, repaired: false, backup: null })
+    expect(readFileSync(file, "utf8")).toBe(broken)
+
+    const fixed = await ran(["config", "repair", "--json"])
+    expect(fixed.code).toBe(0)
+    const item = json(fixed.out).item
+    expect(item).toMatchObject({
+      repaired: true,
+      changes: expect.arrayContaining([{ kind: "trailing_comma", line: 1 }]),
+    })
+    backup = String(item.backup)
+    expect(readFileSync(backup, "utf8")).toBe(broken)
+    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual({ defaults: { limit: 5 } })
+  } finally {
+    rmSync(file)
+    if (backup) rmSync(backup)
+  }
+})

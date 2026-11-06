@@ -73,6 +73,7 @@
                           "provider_unavailable",
                           "invalid_response",
                           "outcome_unknown",
+                          "conflict",
                           "cancelled"
                         ],
                         "type": "string"
@@ -90,6 +91,15 @@
                     "type": "object"
                   },
                   "type": "array"
+                },
+                "now": {
+                  "format": "date-time",
+                  "pattern": "Z$",
+                  "type": "string"
+                },
+                "now_local": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$",
+                  "type": "string"
                 },
                 "run_id": {
                   "pattern": "\\S",
@@ -228,6 +238,21 @@
                     "next_page": {
                       "minimum": 2,
                       "type": "integer"
+                    },
+                    "total": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": ["eq", "gte"],
+                          "type": "string"
+                        },
+                        "value": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["value", "relation"],
+                      "type": "object"
                     }
                   },
                   "required": ["mode", "limit", "has_more"],
@@ -249,6 +274,21 @@
                     "next_cursor": {
                       "pattern": "\\S",
                       "type": "string"
+                    },
+                    "total": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": ["eq", "gte"],
+                          "type": "string"
+                        },
+                        "value": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["value", "relation"],
+                      "type": "object"
                     }
                   },
                   "required": ["mode", "limit", "has_more"],
@@ -300,6 +340,7 @@
                           "provider_unavailable",
                           "invalid_response",
                           "outcome_unknown",
+                          "conflict",
                           "cancelled"
                         ],
                         "type": "string"
@@ -317,6 +358,15 @@
                     "type": "object"
                   },
                   "type": "array"
+                },
+                "now": {
+                  "format": "date-time",
+                  "pattern": "Z$",
+                  "type": "string"
+                },
+                "now_local": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$",
+                  "type": "string"
                 },
                 "run_id": {
                   "pattern": "\\S",
@@ -547,6 +597,7 @@
                           "provider_unavailable",
                           "invalid_response",
                           "outcome_unknown",
+                          "conflict",
                           "cancelled"
                         ],
                         "type": "string"
@@ -564,6 +615,15 @@
                     "type": "object"
                   },
                   "type": "array"
+                },
+                "now": {
+                  "format": "date-time",
+                  "pattern": "Z$",
+                  "type": "string"
+                },
+                "now_local": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$",
+                  "type": "string"
                 },
                 "run_id": {
                   "pattern": "\\S",
@@ -702,6 +762,21 @@
                     "next_page": {
                       "minimum": 2,
                       "type": "integer"
+                    },
+                    "total": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": ["eq", "gte"],
+                          "type": "string"
+                        },
+                        "value": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["value", "relation"],
+                      "type": "object"
                     }
                   },
                   "required": ["mode", "limit", "has_more"],
@@ -723,6 +798,21 @@
                     "next_cursor": {
                       "pattern": "\\S",
                       "type": "string"
+                    },
+                    "total": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "relation": {
+                          "enum": ["eq", "gte"],
+                          "type": "string"
+                        },
+                        "value": {
+                          "minimum": 0,
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["value", "relation"],
+                      "type": "object"
                     }
                   },
                   "required": ["mode", "limit", "has_more"],
@@ -774,6 +864,7 @@
                           "provider_unavailable",
                           "invalid_response",
                           "outcome_unknown",
+                          "conflict",
                           "cancelled"
                         ],
                         "type": "string"
@@ -791,6 +882,15 @@
                     "type": "object"
                   },
                   "type": "array"
+                },
+                "now": {
+                  "format": "date-time",
+                  "pattern": "Z$",
+                  "type": "string"
+                },
+                "now_local": {
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$",
+                  "type": "string"
                 },
                 "run_id": {
                   "pattern": "\\S",
