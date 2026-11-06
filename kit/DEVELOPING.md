@@ -66,6 +66,8 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   bin from a tarball installed with `npm install` to catch that.
 - `kit:build` (`tsc -p kit`, then the copy to `gitignore`) run by `build`, because `bin/release` and CI pack with
   `--ignore-scripts`. Node does not strip types under `node_modules`, so the bin must be JavaScript.
-- `pnpm kit:e2e` packs this repository, installs the tarball with npm, runs `new` and then `pnpm install` and
-  `pnpm ci:quick` in the new CLI. It needs the network and takes a few minutes, so it is not part of `pnpm test`.
+- `pnpm kit:e2e` packs this repository, installs the tarball with npm, runs `new` for a short and a long name, and
+  then, in each new CLI, the steps `new` prints (`pnpm install`, `pnpm lint:fix`, `pnpm ci:quick`), `pnpm lint` and
+  `pnpm test:coverage`. It needs the network and takes a few minutes, so it is not part of `pnpm test`; the
+  `kit-e2e` job in `.github/workflows/ci.yml` runs it on every pull request and merge, in this repository only.
 - `kit/test/**/*.test.ts` in vitest's `include`; `kit/dist` is ignored by the root `**/dist` rules of Biome and git.

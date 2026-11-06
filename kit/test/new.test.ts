@@ -57,7 +57,7 @@ describe("new", () => {
   it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {
     const { out } = await makeNew(NOTES_FLAGS)
 
-    expect(out).toContain("\n  cd cal-cli\n  pnpm install\n  pnpm ci:quick\n  git add -A\n")
+    expect(out).toContain("\n  cd cal-cli\n  pnpm install\n  pnpm lint:fix\n  pnpm ci:quick\n  git add -A\n")
     expect(out).not.toContain("&&")
   })
 

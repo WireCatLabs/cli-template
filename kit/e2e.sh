@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Installs the packed template the way npx does, never by unpacking the tarball: npm renames files on install
-# that a tar unpack keeps. Then builds a CLI made from it. Needs the network; takes a few minutes.
+# that a tar unpack keeps. Then builds a CLI made from it, once with a name shorter than the template's and once
+# with a longer one, since a rename changes line lengths and Biome's formatting with them. Needs the network; takes
+# a few minutes.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -12,20 +14,31 @@ pnpm build >/dev/null
 tarball=$(npm pack --silent --ignore-scripts --pack-destination "$work" | tail -n 1)
 npm install --silent --no-save --prefix "$work/install" "$work/$tarball"
 
-mkdir "$work/new"
-cd "$work/new"
-"$work/install/node_modules/.bin/cli-template" new demo-cli --command demo --package @example/demo-cli \
-  --owner example --category notes --content-lang en --sign-in none --api official-docs --filters time \
-  --never-store tokens --untrusted none >/dev/null
-cmp "$root/.gitignore" demo-cli/.gitignore
+# build <name> <command>
+build() {
+  mkdir "$work/new-$2"
+  cd "$work/new-$2"
+  "$work/install/node_modules/.bin/cli-template" new "$1" --command "$2" --package "@example/$1" \
+    --owner example --category notes --content-lang en --sign-in none --api official-docs --filters time \
+    --never-store tokens --untrusted none >/dev/null
+  cmp "$root/.gitignore" "$1/.gitignore"
+  cd "$1"
+  pnpm install
+  # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
+  pnpm lint:fix
+  pnpm lint
+  pnpm ci:quick
+  pnpm test:coverage
+  echo "kit e2e: new $1 ($2) passed lint, ci:quick and test:coverage"
+}
 
-cd demo-cli
-pnpm install
-pnpm ci:quick
-pnpm test:coverage
+build demo-cli demo
+build acme-workspace-cli acme-workspace
+
+cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')
 node "$bin" --version
-# A run record must not land in the real home folder.
+# A run record must not land in the real home folder, and no run may reach the owner's keyring.
 demo() { env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" DBUS_SESSION_BUS_ADDRESS=disabled: node "$bin" "$@"; }
 demo personal skill show "weekly report" >/dev/null 2>&1 || true
 kept=$(demo personal runs list --json | grep -o '"argv":\[[^]]*"weekly report"[^]]*\]')
@@ -36,7 +49,7 @@ demo personal skill show "token sk-$(printf 'x%.0s' {1..24})" >/dev/null 2>&1 ||
 token=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","token \[redacted\]"\]')
 demo personal skill show "password tulip42" >/dev/null 2>&1 || true
 named=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","password \[redacted\]"\]')
-echo "kit e2e: $tarball installed with npm, new demo-cli built, passed ci:quick and test:coverage, and runs as demo"
+echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
 echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"
