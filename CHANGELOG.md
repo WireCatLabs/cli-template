@@ -5,6 +5,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **The MCP server applies the permission table too (WC-PERM-23).** `src/mcp.ts` built its tools without it, so a
+  command a profile denies was offered to an agent as available and ran. It now passes `permissions` to
+  `toolsFromCommands` and to each tool call: the command is listed as unavailable and refused before it runs. A CLI
+  made from an older skeleton adds `permissions` in both places by hand.
+
 ## 0.15.0 — 06.11.2026
 
 ### Fixed
