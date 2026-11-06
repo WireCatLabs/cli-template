@@ -9,7 +9,38 @@
     "name": "template-config",
     "members": ["clidev", "tg", "max", "wa"],
     "covers": ["config"],
-    "differences": []
+    "differences": [
+      {
+        "rule": "same-path-contract",
+        "target": "config set --bot",
+        "absent": "clidev",
+        "reason": "cli-core 0.565 offers the personal and bot sections of the config file only to a messenger CLI; the template is not one"
+      },
+      {
+        "rule": "same-path-contract",
+        "target": "config set --personal",
+        "absent": "clidev",
+        "reason": "cli-core 0.565 offers the personal and bot sections of the config file only to a messenger CLI; the template is not one"
+      },
+      {
+        "rule": "same-path-contract",
+        "target": "config show --bot",
+        "absent": "clidev",
+        "reason": "cli-core 0.565 offers the personal and bot sections of the config file only to a messenger CLI; the template is not one"
+      },
+      {
+        "rule": "same-path-contract",
+        "target": "config unset --bot",
+        "absent": "clidev",
+        "reason": "cli-core 0.565 offers the personal and bot sections of the config file only to a messenger CLI; the template is not one"
+      },
+      {
+        "rule": "same-path-contract",
+        "target": "config unset --personal",
+        "absent": "clidev",
+        "reason": "cli-core 0.565 offers the personal and bot sections of the config file only to a messenger CLI; the template is not one"
+      }
+    ]
   },
   {
     "name": "template-skill",
