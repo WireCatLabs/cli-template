@@ -7,7 +7,7 @@ import type { ServiceEnvironment } from "./context.js"
 import { IDENTITY } from "./identity.js"
 import { run } from "./program.js"
 import { fakeComments } from "./testing/fake-comments.js"
-import { clidev, signedIn } from "./testing/harness.js"
+import { runCli, signedIn } from "./testing/harness.js"
 
 it("mcp serve offers search, read and write, and runs a command through the CLI", async () => {
   const mcp = await mcpOverStdio((streams) => run(["personal", "mcp", "serve"], { tty: false, ...streams }))
@@ -21,16 +21,16 @@ it("mcp serve offers search, read and write, and runs a command through the CLI"
 })
 
 it("mcp serve refuses a --permission that names no command, and a --profiles this computer lacks", async () => {
-  const unknown = await clidev(["personal", "mcp", "serve", "--permission", "comments.nope=deny"])
+  const unknown = await runCli(["personal", "mcp", "serve", "--permission", "comments.nope=deny"])
   expect(unknown.code).toBe(2)
   expect(unknown.err).toContain("comments.nope")
-  const missing = await clidev(["mcp", "serve", "--profiles", "nope"])
+  const missing = await runCli(["mcp", "serve", "--profiles", "nope"])
   expect(missing.code).toBe(2)
   expect(missing.err).toContain("nope")
 })
 
 it("mcp config prints an entry that serves the named profile, or every profile only when told", async () => {
-  const one = await clidev(["personal", "mcp", "config", "--permission", "comments.create=deny", "--json"])
+  const one = await runCli(["personal", "mcp", "config", "--permission", "comments.create=deny", "--json"])
   const entry = one.json().item as { config: { mcpServers: Record<string, { args: string[] }> } }
   expect(entry.config.mcpServers["clidev-personal"]?.args.slice(-5)).toEqual([
     "personal",
@@ -39,18 +39,18 @@ it("mcp config prints an entry that serves the named profile, or every profile o
     "--permission",
     "comments.create=deny",
   ])
-  const all = await clidev(["mcp", "config", "--profiles", "all", "--json"])
+  const all = await runCli(["mcp", "config", "--profiles", "all", "--json"])
   expect(JSON.stringify(all.json())).toContain('"--profiles","all"')
 })
 
 it("mcp revoke answers for the profile it names", async () => {
-  const revoked = await clidev(["personal", "mcp", "revoke", "--json"])
+  const revoked = await runCli(["personal", "mcp", "revoke", "--json"])
   expect(revoked.code).toBe(0)
   expect(revoked.json().item).toMatchObject({ profile: "personal" })
 })
 
 it("doctor --online answers even when npm cannot be reached", async () => {
-  const online = await clidev(["doctor", "--online", "--json"])
+  const online = await runCli(["doctor", "--online", "--json"])
   expect(online.code).toBe(0)
   expect(online.json().item).toMatchObject({ version: IDENTITY.version, online: expect.any(Object) })
 })

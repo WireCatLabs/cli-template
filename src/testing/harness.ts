@@ -17,7 +17,7 @@ export interface Ran {
 }
 
 /** The CLI through its own `run()`, as a person or an agent types it, against the fake service (WC-TEST-6). */
-export const clidev = async (
+export const runCli = async (
   argv: string[],
   {
     service = fakeComments(),
