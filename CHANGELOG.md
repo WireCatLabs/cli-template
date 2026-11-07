@@ -9,6 +9,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Fixed
 
+- **`bin/release` checks the live record in a CLI made from the template again.** 0.17.0 skipped `cli-dev live
+  check` when `template.json` existed, and `new` writes one into every CLI, so the WC-REL-17 gate ran nowhere. It now
+  skips only where `kit/` exists, which is the template alone. A CLI gets it from `upgrade`.
 - **cli-base 0.80.4 and cli-testing 0.6.1.** `repo-check` skips the ruleset of a private repository on GitHub's free
   plan, which cannot have one, and the contract `deny` check fails instead of passing when it could call no MCP tool
   or a command's `--dry-run` failed.
