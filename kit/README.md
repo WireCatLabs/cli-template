@@ -39,7 +39,8 @@ offers only the choices of the category; as a flag it takes any of them.
 
 The new CLI's `package.json` names two programs for the same file: the command word, and `wcat-<command>`, which
 `wcat <command>` runs (WC-CMD-29). Its bin calls `wcatStart` from `@wirecat/cli-base/wcat/start` before the program
-loads, and its `files` lists `contracts/wirecat.json`, the manifest WireCat Desktop reads.
+loads, and its `files` lists `contracts/wirecat.json`, the manifest WireCat Desktop reads, which ships once
+`cli-dev manifest` writes it.
 
 `new` writes the content languages into `contentLanguages` in `src/identity.ts`; on the first run, cli-core ticks them
 in advance in the search-language question, and the person confirms. `DESIGN.md` records them too, with the
@@ -61,10 +62,11 @@ A CLI made by someone outside WireCatLabs publishes under its own npm scope, suc
 4. **Release with `bin/release`.** It starts `release.yml`, which publishes with no npm token. Trusted publishing
    needs npm 11.5.1 or later and Node 22.14.0 or later.
 
-WireCat Desktop adds a tool it has not checked only when its owner turns that on. Before it installs anything, it
-reads the package's npm details, its provenance record and its `contracts/wirecat.json` out of the tarball, and shows
-the publisher, the repository, the version, where npm built it and the access the tool asks for. This arrives with a
-Desktop release; `contracts/wirecat.json` comes from `cli-dev manifest` in a later cli-base release.
+Planned for a WireCat Desktop release: Desktop adds a tool it has not checked only when its owner turns that on.
+Before it installs anything, it reads the package's npm details, its provenance record and its
+`contracts/wirecat.json` out of the tarball, and shows the publisher, the repository, the version, where npm built
+it and the access the tool asks for. `contracts/wirecat.json` comes from `cli-dev manifest` in a later cli-base
+release.
 
 To list the tool on wirecat.dev and in WireCat Desktop for everyone who turns community tools on, follow cli-docs'
 [Community tools](https://github.com/WireCatLabs/cli-docs/blob/main/docs/REVIEWING.md#community-tools) review, and the
