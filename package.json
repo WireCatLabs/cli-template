@@ -86,7 +86,7 @@
     "kit:docs": "cspell lint --config cspell.json --no-progress --no-summary kit/*.md && rumdl check --config config/wirecat/rumdl.toml kit/*.md"
   },
   "dependencies": {
-    "@wirecat/cli-base": "0.80.4",
+    "@wirecat/cli-base": "0.80.8",
     "@wirecat/cli-core": "0.598.0",
     "commander": "15.0.0",
     "valibot": "1.5.0"
