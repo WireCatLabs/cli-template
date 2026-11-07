@@ -7,6 +7,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **A run-scope test, `src/run-scope.test.ts`.** cli-core's `runScopeCases` runs each remote command against the fake
+  with `--record`, which must keep a run named after it, and against a service that never answers, which `--timeout`
+  must end. A new remote command fails it until it is given words or a reason to skip. cli-core 0.598.0.
+
 ### Fixed
 
 - **`bin/release` checks the live record in a CLI made from the template again.** 0.17.0 skipped `cli-dev live
