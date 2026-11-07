@@ -12,7 +12,8 @@ export type TemplateManifest = {
   placeholders: Placeholders
 }
 
-export type Names = { name: string; command: string; package: string; owner: string }
+// envPrefix is missing in a CLI made before 0.19.0, whose prefix came from the command word.
+export type Names = { name: string; command: string; package: string; owner: string; envPrefix?: string }
 
 export type CliManifest = {
   template: string
@@ -53,7 +54,9 @@ export const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isPlaceholder = (key: string): key is keyof Placeholders => key in DEFAULT_PLACEHOLDERS
 
 const isNames = (value: unknown): value is Names =>
-  isRecord(value) && ["name", "command", "package", "owner"].every((key) => typeof value[key] === "string")
+  isRecord(value) &&
+  ["name", "command", "package", "owner"].every((key) => typeof value[key] === "string") &&
+  (value.envPrefix === undefined || typeof value.envPrefix === "string")
 
 const isHashes = (value: unknown): value is Record<string, string> =>
   isRecord(value) && Object.values(value).every((hash) => typeof hash === "string")

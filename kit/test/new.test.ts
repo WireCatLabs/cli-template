@@ -36,7 +36,7 @@ describe("new", () => {
   ])("copies the template for the %s category", async (category, reference, label) => {
     const { dir, out } = await makeNew({ ...NOTES_FLAGS, category })
 
-    expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL, command: "cal" })')
+    expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL_CLI, command: "cal" })')
     expect(existsSync(join(dir, "kit"))).toBe(false)
     expect(existsSync(join(dir, ".git"))).toBe(true)
     expect(execFileSync("git", ["ls-files", "-s", "bin/release"], { cwd: dir, encoding: "utf8" })).toMatch(/^100755 /)
@@ -50,7 +50,7 @@ describe("new", () => {
     expect(read(dir, "vitest.config.ts")).toBe('export default { include: ["src/**/*.test.ts"], exclude: [] }\n')
     expect(read(dir, "README.md")).toContain("node dist/bin/cal.js doctor")
     expect(read(dir, "AGENTS.md")).toContain(reference)
-    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
+    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_CLI_HOME out of logs.")
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${label}\n`)
     expect(read(dir, "src/version.ts")).toBe('export const VERSION = "0.0.0"\n')
     expect(out).toContain("Create the repository example/cal-cli")
@@ -255,6 +255,23 @@ describe("new from this repository", () => {
     const withNone = read(join(none, "cal-cli"), "src/identity.ts")
     expect(withNone).toContain('  tagline: "Cal events, offline",\n')
     expect(withNone).not.toContain("signIn")
+  })
+
+  it("names the data folder and the env prefix after the package, as WireCat Desktop requires of its own tools", async () => {
+    const cwd = tempDir("real")
+    const flags = { ...NOTES_FLAGS, command: "acme", package: "@leemour/acme-crm-cli" }
+
+    await runNew(cwd, await loadSource(root), { name: "acme-tools", flags }, io())
+
+    const identity = read(join(cwd, "acme-tools"), "src/identity.ts")
+    const app = /appName: "([^"]+)"/.exec(identity)?.[1] ?? ""
+    const env = /envPrefix: "([^"]+)"/.exec(identity)?.[1] ?? ""
+    const name = "acme-crm-cli"
+    const prefix = name.toUpperCase().replace(/[-.]/g, "_")
+    expect(app.toLowerCase() === name || app.toLowerCase().startsWith(`${name}-`)).toBe(true)
+    expect(env === prefix || env.startsWith(`${prefix}_`)).toBe(true)
+    expect(read(join(cwd, "acme-tools"), "docs/configuration.md")).toContain("ACME_CRM_CLI_")
+    expect(JSON.parse(read(join(cwd, "acme-tools"), "template.json")).names.envPrefix).toBe("ACME_CRM_CLI")
   })
 
   it("runs cli-dev manifest in the CLI's generate and checks, never in the template's", async () => {

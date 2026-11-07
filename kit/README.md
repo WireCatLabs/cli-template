@@ -56,6 +56,12 @@ model in cli-core. `new` writes no search or model setting.
 A CLI made by someone outside WireCatLabs publishes under its own npm scope, such as `@example/acme-cli`. The
 `@wirecat` scope and the name "WireCat" stay WireCat's, and so do the names `cli-dev lint` warns about (WC-CMD-29).
 
+WireCat Desktop takes a tool it has not checked only when its data folder and environment prefix come from the
+package name without its scope. For `@example/acme-crm-cli` that is `acme-crm-cli`: the identity's `appName`, lower
+case, is `acme-crm-cli` or starts with `acme-crm-cli-`, and `envPrefix` is `ACME_CRM_CLI` or starts with
+`ACME_CRM_CLI_`. `new` writes both this way, whatever the command word, so variables read `ACME_CRM_CLI_PROFILE`.
+Keep them when you rename the command.
+
 1. **Make the repository public.** npm makes no provenance record for a package built in a private repository, and
    WireCat Desktop checks that record.
 2. **Publish the first version by hand**, `npm publish --access public` from your own computer: npm sets a trusted

@@ -98,7 +98,7 @@ describe("upgrade", () => {
 
     expect(out).toContain(".github/workflows/ci.yml (clean): applied")
     expect(out).toContain("AGENTS.md (edited): applied")
-    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME and tokens out of logs.")
+    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_CLI_HOME and tokens out of logs.")
   })
 
   it("without a terminal or a flag, stops and names the choices", async () => {
@@ -114,7 +114,7 @@ describe("upgrade", () => {
 
     expect(read(dir, ".github/workflows/ci.yml")).toContain("node dist/bin/cal.js personal doctor --json")
     const agents = read(dir, "AGENTS.md")
-    expect(agents).toContain("Keep CAL_HOME and tokens out of logs.")
+    expect(agents).toContain("Keep CAL_CLI_HOME and tokens out of logs.")
     expect(agents).toContain("[cli-memo](https://github.com/WireCatLabs/cli-memo)")
     expect(read(dir, "docs/meta.json")).toMatch(
       /<<<<<<< this CLI[\s\S]*Calendar[\s\S]*=======[\s\S]*>>>>>>> template now/,
@@ -172,7 +172,7 @@ describe("upgrade", () => {
 
     expect(terminal.text()).toContain('+{ "title": "cal", "pages": [] }')
     expect(read(dir, ".github/workflows/ci.yml")).toContain("--json")
-    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
+    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_CLI_HOME out of logs.")
     expect(read(dir, "docs/meta.json")).toBe('{ "title": "cal", "pages": [] }\n')
     expect(manifest(dir).version).toBe("0.2.0")
   })
@@ -222,7 +222,7 @@ describe("upgrade across the placeholder rename", () => {
     expect(out.split("\n").filter((line) => line.startsWith("  "))).toEqual(["  AGENTS.md (edited): applied"])
     const agents = read(dir, "AGENTS.md")
     expect(agents).toContain("Our own rule.")
-    expect(agents).toContain("Keep CAL_HOME and tokens out of logs.")
+    expect(agents).toContain("Keep CALENDAR_HOME and tokens out of logs.")
     expect(agents).toContain("The skill is skills/calendar/SKILL.md, from example/calendar.")
     expect(manifest(dir)).toMatchObject({ version: "0.1.2" })
     expect(manifest(dir).pending).toBeUndefined()

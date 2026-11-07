@@ -28,6 +28,11 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 - **The categories come from cli-core's kinds, in their order:** `messenger`, `mail`, `notes`, `files`, `meetings`,
   `calendar`, `crm`. The values are the same; a script that picks a category by its menu number gets `calendar` and
   `meetings` swapped.
@@ -98,6 +103,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **MCP and doctor are cli-core's.** `src/program.ts` mounts `appMcpCommand` and `appDoctorCommand`, as gcal-cli
   does, in place of the template's own `src/mcp.ts`, `src/commands/mcp.ts` and `src/commands/doctor.ts`. `mcp` gains
   `config`, `add`, `check`, `--profiles` and `--permission`; `doctor` gains `--online`, and its answer `store` and
@@ -140,6 +151,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   keeps `messenger: false`.
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **`config show`, `set` and `unset` no longer offer the messenger-only `--bot`, `--personal`, `speech_model` and
   `picture_search`** (cli-core 0.565). A script that passes them gets an error.
@@ -206,6 +223,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.495.0** (from 0.469.0); cli-base stays at 0.65.0. The root help's "Works with"
   list now names gcal and mail.
 
@@ -227,6 +250,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 ## 0.10.0 — 31.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The skeleton runs on cli-core 0.469.0 and cli-base 0.65.0**; a CLI that pins cli-base moves both pins together.
   A non-messenger CLI no longer offers messenger settings or the `follow-ups` and `link-conversations` skills
@@ -268,6 +297,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 ## 0.9.0 — 27.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The MCP server is `clidev <profile> mcp serve`; `mcp` alone only shows its commands** (WC-CMD-3). `--http`,
   `--port` and `--public-url` move to `mcp serve`, and `mcp --revoke` is its own command, `mcp revoke`, still refused
@@ -329,6 +364,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.449.0 and cli-base 0.62.0**, the only cli-base line cli-core 0.449 accepts; a CLI
   that pins cli-base moves both pins together. The commands and their help do not change, apart from the `mcp`
   additions below.
@@ -378,6 +419,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.444.0; cli-base stays at 0.59.0**, the only line cli-core 0.444 accepts. A run
   record now hides more of what was typed: a full 40-character commit hash, and the value of a flag or argument named
   like a secret (`--pin <chat>`). A test of a CLI that expects such a word back in `runs show` needs updating. The
@@ -399,6 +446,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.442.0; cli-base stays at 0.59.0**, the only line cli-core 0.442 accepts. A CLI
   with its own program that calls `recordRuns` now keeps the command line in its run records without passing the
   typed words through `run()`, secrets hidden; the skeleton's commands record through cli-core and need nothing.
@@ -418,6 +471,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 ## 0.4.0 — 26.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The skeleton runs on cli-core 0.440.0; cli-base stays at 0.59.0**, the only line cli-core 0.440 accepts. The
   `--record` help now says what a run keeps: "keep this run, with the command as typed and secrets hidden;
@@ -440,6 +499,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 ## 0.3.0 — 26.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The skeleton runs on cli-core 0.439.0; cli-base stays at 0.59.0.** A run record now keeps the command line as
   typed, so `runs show` tells what was run; a secret is still `[redacted]`. The new setting `record_input`
@@ -472,6 +537,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.437.0 and cli-base 0.59.0.** cli-core 0.437 accepts only cli-base 0.59.x, so a
   CLI that pins cli-base moves both. `--help-all` now gives `clidev personal mcp` as the profile example, not
   `clidev personal doctor`, since `doctor` takes no profile; a CLI that keeps help snapshots refreshes them once.
@@ -499,6 +570,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 ## 0.1.8 — 26.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The shared standards in `config/wirecat/` come from community at `c846abf`.** The release lock is now
   `wirecat-release-<package>.lock`, still one per npm package. The shared spelling list no longer has the owner's
@@ -531,6 +608,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.428.0 and cli-base 0.57.0.** `config set` saves `config.json` readable by its
   owner only (`0600`); it used to rewrite it as `0644`. Anything that reads the file as another user can no longer
   read it after the next save. `skill status` and `skill show --for claude|agents` are new shared commands. A run
@@ -562,6 +645,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.426.0.** A `--dry-run` preview says `effects.service_contacted: false` and no
   longer has `effects.messenger_contacted`. MCP no longer offers a command group that only prints its help, such as
   `config`; `config show`, `set` and `unset` stay. The example in the MCP read and write tools is `runs list`, a
@@ -584,6 +673,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 ## 0.1.5 — 25.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The skeleton runs on cli-core 0.424.0.** When no profile exists on the computer, the error shows the command
   that was typed with a profile added, such as `clidev personal mcp`. It used to suggest a `setup` command, which the
@@ -648,6 +743,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.422.0 and says `messenger: false` in `src/identity.ts`.** The shared help,
   `commands`, `config` and the MCP tools no longer speak of chats and messages: `--help-all`'s profile example is
   `clidev personal doctor`, `--brief` and `--full` describe found items and their author, and `config set` and
@@ -669,6 +770,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 
 ### Changed — may break callers
 
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
+
 - **The skeleton runs on cli-core 0.421.0 and cli-base 0.53.0.** A new CLI gets cli-core's changes since 0.412.0,
   including the `contentLanguages` field on its identity. cli-base stays on 0.53, because cli-core 0.421.0 accepts
   only cli-base 0.53.
@@ -688,6 +795,12 @@ file, and change `claude mcp add` lines in its docs to end in `mcp serve`.
 ## 0.1.2 — 25.10.2026
 
 ### Changed — may break callers
+
+- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
+  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
+  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
+  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
+  command-word prefix.
 
 - **The template's placeholder is `clidev`, not `app`.** Readers took `app` for a real command. The template's files
   now say `clidev`, `clidev-cli`, `@wirecat/clidev-cli` and `WireCatLabs/clidev-cli`, and `new` replaces them with

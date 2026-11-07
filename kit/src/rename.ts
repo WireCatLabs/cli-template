@@ -6,6 +6,11 @@ const word = (text: string): string => `(?<![A-Za-z0-9_])${escapeRegex(text)}(?!
 
 export const upperCommand = (command: string): string => command.toUpperCase().replaceAll("-", "_")
 
+export const unscoped = (pkg: string): string => pkg.replace(/^@[^/]*\//, "")
+
+// WireCat Desktop takes a tool it has not checked only when its env prefix is the package name's (WC-CMD-29).
+export const envPrefixOf = (pkg: string): string => unscoped(pkg).toUpperCase().replace(/[-.]/g, "_")
+
 // The command word followed by ": " is a key and stays: 0.1.x used `app`, which is also cli-core's key in
 // `app: IDENTITY`. One pass, so a replacement that itself contains the command placeholder (a package named
 // "@x/clidev-tools") is never renamed a second time.
@@ -15,7 +20,7 @@ export const renamer = (placeholders: Placeholders, names: Names): ((text: strin
     [placeholders.repository, `${names.owner}/${names.name}`],
     [placeholders.name, names.name],
     [placeholders.command, names.command],
-    [upperCommand(placeholders.command), upperCommand(names.command)],
+    [upperCommand(placeholders.command), names.envPrefix ?? upperCommand(names.command)],
   ])
   const pattern = new RegExp(
     [escapeRegex(placeholders.package), escapeRegex(placeholders.repository), word(placeholders.name)]

@@ -47,6 +47,8 @@ import { manifestSchema } from "@wirecat/cli-base/wcat/manifest"
 import * as v from "valibot"
 const { issues } = v.safeParse(manifestSchema, JSON.parse(readFileSync("contracts/wirecat.json", "utf8")))
 if (issues) throw new Error(JSON.stringify(issues))
+const { app, env } = JSON.parse(readFileSync("contracts/wirecat.json", "utf8")).desktop.storage
+if (app !== "demo-cli" || env !== "DEMO_CLI") throw new Error(`storage ${app} ${env} is not the package name`)
 '
 # A run record must not land in the real home folder, and no run may reach the owner's keyring.
 demo() { env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" DBUS_SESSION_BUS_ADDRESS=disabled: node "$bin" "$@"; }

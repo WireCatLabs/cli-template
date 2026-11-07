@@ -15,6 +15,7 @@ import {
   type Question,
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
+import { envPrefixOf, unscoped } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -126,7 +127,13 @@ const collect = async (args: NewArgs, io: Io): Promise<{ names: Names; answers: 
   }
   const one = (key: string) => answers[key]?.[0] ?? ""
   return {
-    names: { name: one("name"), command: one("command"), package: one("package"), owner: one("owner") },
+    names: {
+      name: one("name"),
+      command: one("command"),
+      package: one("package"),
+      owner: one("owner"),
+      envPrefix: envPrefixOf(one("package")),
+    },
     answers,
   }
 }
@@ -304,6 +311,12 @@ export const withDesktopTexts = (text: string, command: string, tagline: string,
 }
 const IDENTITY_FILE = "src/identity.ts"
 
+// The data folder is named after the package, not the folder, so WireCat Desktop takes the tool (WC-CMD-29).
+export const withAppName = (text: string, pkg: string): string => {
+  if (!/^ {2}appName: ".*",$/m.test(text)) throw new Error(`${IDENTITY_FILE}: no appName to rewrite`)
+  return text.replace(/^ {2}appName: ".*",$/m, `  appName: ${JSON.stringify(unscoped(pkg))},`)
+}
+
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {
   const match = /export const IDENTITY: AppIdentity = \{\n[\s\S]*?\n\}/.exec(text)
   if (!match) throw new Error(`${IDENTITY_FILE}: no IDENTITY object to add contentLanguages to`)
@@ -392,7 +405,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
     [IDENTITY_FILE]: (text) =>
       withDesktopTexts(
-        withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
+        withAppName(withMessenger(withContentLanguages(text, answers.contentLang ?? []), category), names.package),
         names.command,
         answers.tagline?.[0] ?? "",
         answers.signIn?.[0] ?? "none",
