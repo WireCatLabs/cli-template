@@ -37,11 +37,8 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   CLI must not publish (WC-REL-16). `new` also drops every `bin` entry and script that points into `kit/`, and the
   `&& pnpm kit:…` parts of other scripts. `src/version.ts` gets `VERSION = "0.0.0"`.
 - `placeholders` names the words `new` and `upgrade` replace. The command word is replaced as a whole word, so
-  `clidev` changes but `clidevs` and cli-base's `cli-dev` do not. Its upper-case form becomes the env prefix, made from the
-  package name without its scope: `CLIDEV_HOME` becomes `CAL_CLI_HOME` for `@example/cal-cli`, as WireCat Desktop
-  requires. `template.json` keeps it as `names.envPrefix`; a CLI made before it has none and keeps the command word's
-  `CAL`. Followed by a colon and a space the command word is a key and stays: `clidev: CLIDEV` becomes
-  `clidev: CAL_CLI`.
+  `clidev` changes but `clidevs` and cli-base's `cli-dev` do not. Its upper-case form changes too: `CLIDEV_HOME`
+  becomes `CAL_HOME`. Followed by a colon and a space it is a key and stays: `clidev: CLIDEV` becomes `clidev: CAL`.
   `name` (`clidev-cli`) is the repository name: `skills/clidev-cli/` becomes `skills/cal-cli/`. The word `clidev`
   cannot appear in prose for any other meaning. Paths are renamed the same way: `src/bin/clidev.ts` becomes
   `src/bin/cal.ts`.

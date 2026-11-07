@@ -36,7 +36,7 @@ describe("new", () => {
   ])("copies the template for the %s category", async (category, reference, label) => {
     const { dir, out } = await makeNew({ ...NOTES_FLAGS, category })
 
-    expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL_CLI, command: "cal" })')
+    expect(read(dir, "src/bin/cal.ts")).toContain('run({ app: CAL, command: "cal" })')
     expect(existsSync(join(dir, "kit"))).toBe(false)
     expect(existsSync(join(dir, ".git"))).toBe(true)
     expect(execFileSync("git", ["ls-files", "-s", "bin/release"], { cwd: dir, encoding: "utf8" })).toMatch(/^100755 /)
@@ -50,7 +50,7 @@ describe("new", () => {
     expect(read(dir, "vitest.config.ts")).toBe('export default { include: ["src/**/*.test.ts"], exclude: [] }\n')
     expect(read(dir, "README.md")).toContain("node dist/bin/cal.js doctor")
     expect(read(dir, "AGENTS.md")).toContain(reference)
-    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_CLI_HOME out of logs.")
+    expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${label}\n`)
     expect(read(dir, "src/version.ts")).toBe('export const VERSION = "0.0.0"\n')
     expect(out).toContain("Create the repository example/cal-cli")
@@ -257,21 +257,21 @@ describe("new from this repository", () => {
     expect(withNone).not.toContain("signIn")
   })
 
-  it("names the data folder and the env prefix after the package, as WireCat Desktop requires of its own tools", async () => {
-    const cwd = tempDir("real")
+  it("names the data folder <scope>-<name> outside @wirecat, as WireCat Desktop requires of its own tools", async () => {
+    const source = await loadSource(root)
+    const own = tempDir("real")
+    const wirecat = tempDir("real")
     const flags = { ...NOTES_FLAGS, command: "acme", package: "@leemour/acme-crm-cli" }
 
-    await runNew(cwd, await loadSource(root), { name: "acme-tools", flags }, io())
+    await runNew(own, source, { name: "acme-tools", flags }, io())
+    await runNew(wirecat, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, package: "@wirecat/cal-cli" } }, io())
 
-    const identity = read(join(cwd, "acme-tools"), "src/identity.ts")
-    const app = /appName: "([^"]+)"/.exec(identity)?.[1] ?? ""
-    const env = /envPrefix: "([^"]+)"/.exec(identity)?.[1] ?? ""
-    const name = "acme-crm-cli"
-    const prefix = name.toUpperCase().replace(/[-.]/g, "_")
-    expect(app.toLowerCase() === name || app.toLowerCase().startsWith(`${name}-`)).toBe(true)
-    expect(env === prefix || env.startsWith(`${prefix}_`)).toBe(true)
-    expect(read(join(cwd, "acme-tools"), "docs/configuration.md")).toContain("ACME_CRM_CLI_")
-    expect(JSON.parse(read(join(cwd, "acme-tools"), "template.json")).names.envPrefix).toBe("ACME_CRM_CLI")
+    const app = /appName: "([^"]+)"/.exec(read(join(own, "acme-tools"), "src/identity.ts"))?.[1]?.toLowerCase() ?? ""
+    expect(app === "leemour-acme-crm-cli" || app.startsWith("leemour-acme-crm-cli-")).toBe(true)
+    expect(read(join(own, "acme-tools"), "src/identity.ts")).toContain('envPrefix: "ACME",')
+    const first = read(join(wirecat, "cal-cli"), "src/identity.ts")
+    expect(first).toContain('appName: "cal-cli",')
+    expect(first).toContain('envPrefix: "CAL",')
   })
 
   it("runs cli-dev manifest in the CLI's generate and checks, never in the template's", async () => {

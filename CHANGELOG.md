@@ -28,11 +28,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Changed — may break callers
 
-- **A new CLI's data folder and environment prefix come from its package name, not its command word.** For
-  `@example/acme-crm-cli` with the command `acme`, `appName` is `acme-crm-cli` and every variable starts with
-  `ACME_CRM_CLI_`, where it was `ACME_`. WireCat Desktop takes a tool it has not checked only with names like these.
-  `template.json` records the prefix as `names.envPrefix`; a CLI made earlier has none, and `upgrade` keeps its
-  command-word prefix.
+- **A new CLI outside `@wirecat` keeps its data in `<scope>-<name>`.** For `@example/acme-crm-cli`, `appName` is
+  `example-acme-crm-cli`, where it was the folder name: WireCat Desktop takes a tool it has not checked only with
+  such a folder, so no package can take another publisher's. A `@wirecat` CLI and every env prefix are unchanged.
 - **The categories come from cli-core's kinds, in their order:** `messenger`, `mail`, `notes`, `files`, `meetings`,
   `calendar`, `crm`. The values are the same; a script that picks a category by its menu number gets `calendar` and
   `meetings` swapped.

@@ -15,7 +15,6 @@ import {
   type Question,
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { envPrefixOf, unscoped } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -132,7 +131,6 @@ const collect = async (args: NewArgs, io: Io): Promise<{ names: Names; answers: 
       command: one("command"),
       package: one("package"),
       owner: one("owner"),
-      envPrefix: envPrefixOf(one("package")),
     },
     answers,
   }
@@ -311,10 +309,13 @@ export const withDesktopTexts = (text: string, command: string, tagline: string,
 }
 const IDENTITY_FILE = "src/identity.ts"
 
-// The data folder is named after the package, not the folder, so WireCat Desktop takes the tool (WC-CMD-29).
+// WireCat Desktop takes a tool outside @wirecat only when its data folder is <scope>-<name>, so no package can take
+// another publisher's folder; WireCat's own CLIs keep the folder name.
 export const withAppName = (text: string, pkg: string): string => {
+  const scoped = /^@([^/]+)\/(.+)$/.exec(pkg)
+  if (!scoped || scoped[1] === "wirecat") return text
   if (!/^ {2}appName: ".*",$/m.test(text)) throw new Error(`${IDENTITY_FILE}: no appName to rewrite`)
-  return text.replace(/^ {2}appName: ".*",$/m, `  appName: ${JSON.stringify(unscoped(pkg))},`)
+  return text.replace(/^ {2}appName: ".*",$/m, `  appName: ${JSON.stringify(`${scoped[1]}-${scoped[2]}`)},`)
 }
 
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {
