@@ -237,7 +237,7 @@ clidev skill show [options]
 
 ### `clidev skill install`
 
-write SKILL.md to \~/.claude/skills/clidev-cli/ (Claude Code) and \~/.agents/skills/clidev-cli/ (Codex, Gemini CLI, OpenClaw); --for hermes also has Hermes read \~/.agents/skills, which changes Hermes's own settings, so all leaves it out
+write SKILL.md to \~/.claude/skills/clidev-app/ (Claude Code) and \~/.agents/skills/clidev-app/ (Codex, Gemini CLI, OpenClaw); --for hermes also has Hermes read \~/.agents/skills, which changes Hermes's own settings, so all leaves it out
 
 **Changes something on this computer only.**
 

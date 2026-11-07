@@ -4,8 +4,18 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
-import { ask, choiceList, INTERVIEW, labelOf, NAME_QUESTIONS, parseAnswer, type Question } from "./interview.js"
+import {
+  ask,
+  choiceList,
+  forCategory,
+  INTERVIEW,
+  labelOf,
+  NAME_QUESTIONS,
+  parseAnswer,
+  type Question,
+} from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
+import { appNameOf } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -18,10 +28,12 @@ export type Answers = Record<string, string[]>
 
 const REFERENCES: Record<string, string[]> = {
   messenger: ["whatsapp-cli", "tg-cli", "max-cli"],
+  mail: ["mail-cli"],
   files: ["drive-cli"],
   calendar: ["gcal-cli"],
   meetings: ["zoom-cli"],
   notes: ["cli-memo"],
+  crm: ["bitrix24-cli"],
 }
 
 const STEMMED = ["en", "ru", "es"]
@@ -55,13 +67,38 @@ const NAME_QUESTION: Question = {
   check: (value) => (NAME_PATTERN.test(value) ? undefined : "lowercase letters, digits, dots and dashes"),
 }
 
+const DESCRIPTION = "A new WireCat CLI, started from cli-template"
+const TAGLINE_MAX = 55
+const ONE_LINE = /^\S(?:[^\n\r]*\S)?$/
+
+export const taglineOf = (description: string): string => {
+  const text = description.trim().replace(/\.$/, "")
+  const line = text.charAt(0).toUpperCase() + text.slice(1)
+  if (line.length <= TAGLINE_MAX) return line
+  const cut = line.slice(0, TAGLINE_MAX + 1)
+  return cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:—-]+$/, "")
+}
+
+const TAGLINE_QUESTION: Question = {
+  key: "tagline",
+  flag: "tagline",
+  text: `The line WireCat Desktop shows for the tool, at most ${TAGLINE_MAX} characters`,
+  check: (value) =>
+    value.length <= TAGLINE_MAX && ONE_LINE.test(value) ? undefined : `one line of at most ${TAGLINE_MAX} characters`,
+  fallback: taglineOf(DESCRIPTION),
+}
+
 const collect = async (args: NewArgs, io: Io): Promise<{ names: Names; answers: Answers }> => {
-  const questions = [NAME_QUESTION, ...NAME_QUESTIONS, ...INTERVIEW]
+  const questions = [NAME_QUESTION, ...NAME_QUESTIONS, TAGLINE_QUESTION, ...INTERVIEW]
   const given: Record<string, string | undefined> = { ...args.flags, name: args.name }
   const answers: Answers = {}
   const missing: Question[] = []
   for (const question of questions) {
     const raw = given[question.flag]
+    if (raw === undefined && question.fallback && !io.interactive) {
+      answers[question.key] = [question.fallback]
+      continue
+    }
     if (raw === undefined) {
       missing.push(question)
       continue
@@ -72,21 +109,30 @@ const collect = async (args: NewArgs, io: Io): Promise<{ names: Names; answers: 
   }
   if (missing.length > 0 && !io.interactive) {
     const lines = missing.map((question) =>
-      question === NAME_QUESTION ? "  <name>: the folder to create" : `  --${question.flag}: ${choiceList(question)}`,
+      question === NAME_QUESTION
+        ? "  <name>: the folder to create"
+        : `  --${question.flag}: ${choiceList(forCategory(question, answers.category?.[0]))}`,
     )
     throw new Error(`no terminal to ask in, and these answers are missing:\n${lines.join("\n")}`)
   }
   if (missing.length > 0) {
     const rl = createInterface({ input: io.input, output: io.output, terminal: false })
     try {
-      for (const question of missing) answers[question.key] = await ask(rl, io.output, question)
+      for (const question of missing) {
+        answers[question.key] = await ask(rl, io.output, forCategory(question, answers.category?.[0]))
+      }
     } finally {
       rl.close()
     }
   }
   const one = (key: string) => answers[key]?.[0] ?? ""
   return {
-    names: { name: one("name"), command: one("command"), package: one("package"), owner: one("owner") },
+    names: {
+      name: one("name"),
+      command: one("command"),
+      package: one("package"),
+      owner: one("owner"),
+    },
     answers,
   }
 }
@@ -143,9 +189,10 @@ export const designDoc = (names: Names, answers: Answers): string => {
     "3. Ask the further questions in the interview that the reference CLI does not answer, and write the answers here.",
     "   Build only after the owner has read this page.",
     "4. When the first command reaches the service, rewrite `README.md`, `docs/index.md` and the description in",
-    `   \`package.json\` and \`skills/${names.name}/SKILL.md\` to say what the tool does and who it is for. Rewrite`,
+    `   \`package.json\` and \`skills/${appNameOf(names)}/SKILL.md\` to say what the tool does and who it is for. Rewrite`,
     "   `appMcpCommand`'s `name` and `untrusted` in `src/program.ts` too: name the kinds of outside text the CLI",
-    "   carries (WC-MCP-11).",
+    "   carries (WC-MCP-11). Rewrite the tagline and the sign-in texts of `DESKTOP` in `src/identity.ts`, then run",
+    "   `pnpm generate`: WireCat Desktop shows them before it installs the tool.",
     "",
     "## Answers",
     "",
@@ -180,7 +227,8 @@ const removeKit = (command: string): string =>
     .filter((part) => !/\bkit[:/]/.test(part))
     .join(" && ")
 
-const CLI_FILES = ["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"]
+// contracts/wirecat.json is what WireCat Desktop reads out of the tarball before it installs the CLI (WC-CMD-29).
+const CLI_FILES = ["dist", "skills", "contracts/wirecat.json", "/README.md", "CHANGELOG.md", "LICENSE"]
 
 export const cliPackageJson = (text: string, names: Names): string => {
   const pkg: unknown = JSON.parse(text)
@@ -191,12 +239,13 @@ export const cliPackageJson = (text: string, names: Names): string => {
     ...pkg,
     name: names.package,
     version: "0.0.0",
-    description: "A new WireCat CLI, started from cli-template",
+    description: DESCRIPTION,
   }
   const bin = typeof pkg.bin === "object" && pkg.bin ? pkg.bin : {}
   next.bin = {
     ...Object.fromEntries(Object.entries(bin).filter(([, value]) => !isKit(value))),
     [names.command]: `dist/bin/${names.command}.js`,
+    [`wcat-${names.command}`]: `dist/bin/${names.command}.js`,
   }
   // The template's own list ships the skeleton's sources for `new` to copy; a CLI ships what runs (WC-REL-16).
   if (Array.isArray(pkg.files)) next.files = CLI_FILES
@@ -208,6 +257,7 @@ export const cliPackageJson = (text: string, names: Names): string => {
         .filter(([, value]) => value.length > 0),
     )
   }
+  if (isRecord(next.scripts)) next.scripts = withManifestSteps(next.scripts)
   if (pkg.repository) next.repository = { type: "git", url: repoUrl }
   if (pkg.homepage) next.homepage = `https://github.com/${names.owner}/${names.name}#readme`
   if (pkg.bugs) next.bugs = { url: `https://github.com/${names.owner}/${names.name}/issues` }
@@ -216,7 +266,48 @@ export const cliPackageJson = (text: string, names: Names): string => {
   return `${JSON.stringify(next, null, 2)}\n`
 }
 
+// The template's own package.json installs no clidev program for cli-dev manifest to name, so only a CLI runs it.
+const MANIFEST_STEP = "cli-dev manifest --program dist/program.js --identity dist/wcat.js"
+const MANIFEST_STEPS: Record<string, string> = {
+  generate: MANIFEST_STEP,
+  "generate:check": `${MANIFEST_STEP} --check`,
+  "contracts:check": `${MANIFEST_STEP} --check`,
+}
+
+const withManifestSteps = (scripts: Record<string, unknown>): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(scripts).map(([key, value]) => {
+      const step = MANIFEST_STEPS[key]
+      return [key, step && typeof value === "string" ? `${value} && ${step}` : value]
+    }),
+  )
+
 const VERSION_FILE = "src/version.ts"
+
+const signInTexts = (command: string, signIn: string): { gives: string; asks: string } | undefined => {
+  if (signIn === "none") return undefined
+  const asks: Record<string, string> = {
+    oauth: "Signing in to the service in the browser, to allow access.",
+    token: "An API token or key from the service.",
+    session: "A sign-in code or QR code from the service's app.",
+  }
+  return {
+    gives: `Lets your agent read and change your account through ${command}.`,
+    asks: asks[signIn] ?? "The sign-in the service asks for.",
+  }
+}
+
+export const withDesktopTexts = (text: string, command: string, tagline: string, signIn: string): string => {
+  const taglineLine = /^ {2}tagline: .*,$/m
+  const block = /^ {2}signIn: \{\n[\s\S]*?\n {2}\},\n/m
+  if (!taglineLine.test(text) || !block.test(text))
+    throw new Error(`${IDENTITY_FILE}: no tagline and signIn to rewrite`)
+  const texts = signInTexts(command, signIn)
+  const signInBlock = texts
+    ? `  signIn: {\n    gives: ${JSON.stringify(texts.gives)},\n    asks: ${JSON.stringify(texts.asks)},\n  },\n`
+    : ""
+  return text.replace(taglineLine, `  tagline: ${JSON.stringify(tagline)},`).replace(block, signInBlock)
+}
 const IDENTITY_FILE = "src/identity.ts"
 
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {
@@ -305,7 +396,13 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "docs/security.md": ownRepository(names),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
-    [IDENTITY_FILE]: (text) => withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
+    [IDENTITY_FILE]: (text) =>
+      withDesktopTexts(
+        withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
+        names.command,
+        answers.tagline?.[0] ?? "",
+        answers.signIn?.[0] ?? "none",
+      ),
     "AGENTS.md": (text) => withReference(text, category),
   }
   const hashes: Record<string, string> = {}
@@ -339,6 +436,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     `  cd ${names.name}`,
     "  pnpm install",
     "  pnpm lint:fix",
+    "  pnpm generate",
     "  pnpm ci:quick",
     "  git add -A",
     '  git commit -m "chore: start from @wirecat/cli-template"',

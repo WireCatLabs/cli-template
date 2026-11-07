@@ -83,7 +83,8 @@ may do: `allow`, `ask`, `readonly` or `deny`. `CLIDEV_READ_ONLY=1` refuses every
 
 ## Limits
 
-The skeleton connects to no service, keeps no messages and has no commands of its own beyond the shared ones above.
+The skeleton reaches only the sample's service, Example Comments, whose address never resolves, and stores none of
+its data.
 
 ## Security
 
