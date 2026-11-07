@@ -9,7 +9,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Added
 
-- **A CLI made from the template describes itself to WireCat Desktop (WC-CMD-29), cli-base 0.81.0.** The bin calls
+- **A CLI made from the template describes itself to WireCat Desktop (WC-CMD-29), cli-base 0.82.0 and cli-core 0.605.0.** The bin calls
   `wcatStart` with `DESKTOP` from `src/identity.ts` before the program loads, so `wcat --help` lists the tool and
   `wcat <command>` runs it. `DESKTOP` holds the docs link, the tagline and the sign-in texts; `src/wcat.ts` adds the
   permission keys as `WCAT`. `new` asks one more question, `--tagline` (at most 55 characters, made from the
