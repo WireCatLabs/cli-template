@@ -52,9 +52,9 @@ git fetch -q origin
 pnpm install --frozen-lockfile
 package=$(node -p 'require("./package.json").name')
 version=$(node -p 'require("./package.json").version')
-# The code released is the code a person checked against the real service (WC-REL-17). template.json is the
-# template's own file, never copied: the template has no service.
-[ -f template.json ] || pnpm exec cli-dev live check --version "$version"
+# The code released is the code a person checked against the real service (WC-REL-17). Only the template has kit/,
+# and no service to check; every CLI made from it has a template.json too, so that file cannot tell them apart.
+[ -d kit ] || pnpm exec cli-dev live check --version "$version"
 # A 404 for a package npm has never seen is "not published", like any other failure of `npm view`.
 published() {
   npm view "$package@$version" version --prefer-online >/dev/null 2>&1
