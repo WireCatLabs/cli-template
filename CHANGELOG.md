@@ -15,6 +15,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Fixed
 
+- **markdownlint's re2js is overridden to 2.8.7.** markdownlint 0.42.0, its latest, pins re2js 2.8.6 exactly, which
+  has GHSA-gg6h-894w-4m9c (high, development path only: the docs lint). Every CLI made from the template carried an
+  open Dependabot alert that Dependabot could not fix. A CLI gets the override from `upgrade`; tg-cli has the same.
+- **cli-base 0.80.8.** `repo-check` now fails unless main's ruleset requires the template's checks, `conformance` and
+  `validation / repo-setup` among them, and unless only `main` can deploy to the GitHub `npm` environment (skipped
+  while there is none). `new` prints the environment limit in step 2. `cli-dev live record` hashes the checked files,
+  so `bin/release` in a fresh clone passes after the squash merge dropped the branch commit; record the live check
+  again to get the new line.
 - **`bin/release` checks the live record in a CLI made from the template again.** 0.17.0 skipped `cli-dev live
   check` when `template.json` existed, and `new` writes one into every CLI, so the WC-REL-17 gate ran nowhere. It now
   skips only where `kit/` exists, which is the template alone. A CLI gets it from `upgrade`.
