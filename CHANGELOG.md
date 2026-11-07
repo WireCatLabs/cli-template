@@ -5,6 +5,14 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **cli-base 0.80.4 and cli-testing 0.6.1.** `repo-check` skips the ruleset of a private repository on GitHub's free
+  plan, which cannot have one, and the contract `deny` check fails instead of passing when it could call no MCP tool
+  or a command's `--dry-run` failed.
+
 ## 0.17.0 — 07.11.2026
 
 ### Added
