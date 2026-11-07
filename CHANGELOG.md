@@ -5,6 +5,24 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **`new` takes `--tagline` as a flag.** It was asked in a terminal but refused as an unknown option.
+- **A CLI made for the CRM category passes `docs:check`.** `new` adds every reference CLI it can name in `AGENTS.md`
+  to the CLI's `cspell.json` words; `bitrix24-cli` was unknown to cspell.
+- **A CLI outside `@wirecat` no longer claims WireCat's names.** `new` writes its MCP Registry name as
+  `io.github.<owner>/<name>` in `server.json` and in `package.json`'s `mcpName`, points `websiteUrl` at its own
+  repository, drops "WireCat" from the server's title, and makes `--owner` the package's author.
+- **A CLI outside `@wirecat` passes `cli-dev repo-check` without WireCat's lists.** `new` writes
+  `config/parity-groups.json` with a group of its own, and sets `monthly.yml`'s cron to a time between 04:01 and
+  05:59 UTC picked from the package name, after the minutes WireCat's repositories hold. It prints only the two
+  setup steps such a CLI still needs.
+- **`release.yml` publishes the skill to ClawHub only for a package under `@wirecat`.** ClawHub's `wirecat` owner is
+  WireCat's; a CLI under another scope tried to publish its skill there. `upgrade` brings the change into a CLI made
+  earlier.
+
 ## 0.19.0 — 08.11.2026
 
 ### Added

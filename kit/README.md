@@ -15,7 +15,7 @@ npx @wirecat/cli-template upgrade --dry-run
 
 `new` copies the files of its own package version into `./<name>`. It renames the placeholders, rewrites
 `package.json`, runs `git init` and writes `template.json`, `docs/dev/DESIGN.md` and the reference CLI into
-`AGENTS.md`. It then prints the four steps that need a person. It does not install packages, commit or push.
+`AGENTS.md`. It then prints the steps that need a person: four for a WireCat CLI, two outside `@wirecat`. It does not install packages, commit or push.
 
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
@@ -60,6 +60,11 @@ WireCat Desktop takes a tool it has not checked only when its data folder names 
 `@example/acme-crm-cli` the identity's `appName`, lower case, is `example-acme-crm-cli` or starts with
 `example-acme-crm-cli-`. `new` writes it this way for every package outside `@wirecat`; keep it when you rename the
 tool.
+
+For such a package `new` also writes what WireCat's own lists would otherwise give: the MCP Registry name
+`io.github.<owner>/<name>` in `server.json` and `package.json`, `--owner` as the author, `config/parity-groups.json`
+with a group of its own, and a monthly run between 04:01 and 05:59 UTC picked from the package name. The release
+publishes no skill to ClawHub, whose `wirecat` owner is WireCat's.
 
 1. **Make the repository public.** npm makes no provenance record for a package built in a private repository, and
    WireCat Desktop checks that record.

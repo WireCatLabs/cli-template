@@ -202,13 +202,16 @@ jobs:
           awk -v v="$VERSION" '$0 ~ "^## "v" " {on=1; next} /^## / && on {exit} on' CHANGELOG.md |
             gh release create "v$VERSION" --title "$VERSION" --notes-file -
 
-  # The template's own release publishes @wirecat/cli-template, which has no skill on ClawHub.
+  # The template's own release publishes @wirecat/cli-template, which has no skill on ClawHub, and ClawHub's wirecat
+  # owner takes only WireCat's own packages: a CLI published under another scope publishes no skill there.
   # The same ClawHub CLI commit as `clawhub`, run here rather than through ClawHub's reusable workflow: that workflow
   # asks for id-token: write, and an OIDC token has no place in a job that runs third-party code outside the npm
   # environment. A dry run needs no ClawHub token either. Bump CLAWHUB_SHA together with `clawhub`'s.
   clawhub-dry-run:
     needs: build
-    if: inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+    if: >-
+      inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+      && startsWith(needs.build.outputs.name, '@wirecat/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -244,8 +247,10 @@ jobs:
   # is not counted as the latest, so the next publish picks it again and gets "already exists" (openclaw/clawhub#4046).
   # That one error warns; any other fails. Bump CLAWHUB_SHA together with clawhub-dry-run's.
   clawhub:
-    needs: tag
-    if: ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template' }}
+    needs: [build, tag]
+    if: >-
+      ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+      && startsWith(needs.build.outputs.name, '@wirecat/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
