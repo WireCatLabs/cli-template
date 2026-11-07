@@ -70,7 +70,7 @@ it("commands info exports the schemas and reasons", async () => {
 it("skill install writes the skill for Claude Code", async () => {
   const { code } = await ran(["skill", "install", "--for", "claude", "--json"])
   expect(code).toBe(0)
-  expect(existsSync(join(homedir(), ".claude", "skills", "clidev-cli", "SKILL.md"))).toBe(true)
+  expect(existsSync(join(homedir(), ".claude", "skills", "clidev-app", "SKILL.md"))).toBe(true)
 })
 
 it("skill status and skill show --for read what skill install wrote", async () => {
@@ -85,7 +85,7 @@ it("skill status and skill show --for read what skill install wrote", async () =
   expect(shown.code).toBe(0)
   expect(JSON.parse(shown.out).item).toMatchObject({
     target: "claude",
-    content: expect.stringContaining("name: clidev-cli"),
+    content: expect.stringContaining("name: clidev-app"),
   })
 })
 

@@ -28,9 +28,11 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Changed — may break callers
 
-- **A new CLI outside `@wirecat` keeps its data in `<scope>-<name>`.** For `@example/acme-crm-cli`, `appName` is
-  `example-acme-crm-cli`, where it was the folder name: WireCat Desktop takes a tool it has not checked only with
-  such a folder, so no package can take another publisher's. A `@wirecat` CLI and every env prefix are unchanged.
+- **A new CLI outside `@wirecat` keeps its data, its skill and its keyring entries under `<scope>-<name>`.** For
+  `@example/acme-crm-cli`, `appName`, the skill's name and `skills/<name>/` are `example-acme-crm-cli`, where they
+  were the folder name: WireCat Desktop takes a tool it has not checked only with such a folder, so no package can
+  take another publisher's, and cli-core installs a skill only into a folder of its own name. A new placeholder,
+  `app` (`clidev-app`), carries the word; a `@wirecat` CLI and every env prefix are unchanged.
 - **The categories come from cli-core's kinds, in their order:** `messenger`, `mail`, `notes`, `files`, `meetings`,
   `calendar`, `crm`. The values are the same; a script that picks a category by its menu number gets `calendar` and
   `meetings` swapped.

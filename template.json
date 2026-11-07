@@ -41,6 +41,7 @@
   "placeholders": {
     "command": "clidev",
     "name": "clidev-cli",
+    "app": "clidev-app",
     "package": "@wirecat/clidev-cli",
     "repository": "WireCatLabs/clidev-cli"
   }

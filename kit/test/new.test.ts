@@ -194,7 +194,7 @@ describe("new", () => {
 
     const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
     expect(design).toContain("## First task")
-    expect(design).toContain("`skills/cal-cli/SKILL.md`")
+    expect(design).toContain("`skills/example-cal-cli/SKILL.md`")
     expect(read(join(cwd, "cal-cli"), "AGENTS.md")).not.toMatch(/first task/i)
   })
 
@@ -269,9 +269,14 @@ describe("new from this repository", () => {
     const app = /appName: "([^"]+)"/.exec(read(join(own, "acme-tools"), "src/identity.ts"))?.[1]?.toLowerCase() ?? ""
     expect(app === "leemour-acme-crm-cli" || app.startsWith("leemour-acme-crm-cli-")).toBe(true)
     expect(read(join(own, "acme-tools"), "src/identity.ts")).toContain('envPrefix: "ACME",')
+    expect(read(join(own, "acme-tools"), "skills/leemour-acme-crm-cli/SKILL.md")).toContain(
+      "name: leemour-acme-crm-cli",
+    )
+    expect(read(join(own, "acme-tools"), "src/testing/harness.ts")).toContain('"leemour-acme-crm-cli:token:personal"')
     const first = read(join(wirecat, "cal-cli"), "src/identity.ts")
     expect(first).toContain('appName: "cal-cli",')
     expect(first).toContain('envPrefix: "CAL",')
+    expect(existsSync(join(wirecat, "cal-cli", "skills/cal-cli/SKILL.md"))).toBe(true)
   })
 
   it("runs cli-dev manifest in the CLI's generate and checks, never in the template's", async () => {

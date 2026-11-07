@@ -90,7 +90,7 @@ try {
   for (const root of ["commands", "doctor", "skill", "mcp", "upgrade", "config"])
     assert.ok(names.includes(root), `${root} is missing from the installed package`)
   assert.equal(JSON.parse(run(["doctor", "--json"])).item.version, version)
-  assert.match(run(["skill", "show"]), /name: clidev-cli/)
+  assert.match(run(["skill", "show"]), /name: clidev-app/)
   console.log(`installed ${name}@${version}: help, version, commands, doctor and skill answer offline`)
 } finally {
   rmSync(temp, { recursive: true, force: true })

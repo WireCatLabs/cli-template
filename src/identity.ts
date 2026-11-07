@@ -6,7 +6,7 @@ export const PACKAGE = "@wirecat/clidev-cli"
 
 export const IDENTITY: AppIdentity = {
   command: "clidev",
-  appName: "clidev-cli",
+  appName: "clidev-app",
   envPrefix: "CLIDEV",
   description: "a new WireCat CLI, started from cli-template",
   version: VERSION,
@@ -26,4 +26,4 @@ export const DESKTOP: ManifestIdentity = {
   },
 }
 
-export const SKILL = new URL("../skills/clidev-cli/SKILL.md", import.meta.url)
+export const SKILL = new URL("../skills/clidev-app/SKILL.md", import.meta.url)

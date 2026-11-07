@@ -213,7 +213,7 @@ jobs:
     permissions:
       contents: read
     env:
-      SKILL_PATH: skills/clidev-cli
+      SKILL_PATH: skills/clidev-app
       CLAWHUB_SLUG: wirecat-clidev
       CLAWHUB_SHA: 52358852d3510f1150756d48e8a72cb8c8e698e0
       CLAWHUB_URL: https://clawhub.ai
@@ -250,7 +250,7 @@ jobs:
     permissions:
       contents: read
     env:
-      SKILL_PATH: skills/clidev-cli
+      SKILL_PATH: skills/clidev-app
       CLAWHUB_SLUG: wirecat-clidev
       CLAWHUB_SHA: 52358852d3510f1150756d48e8a72cb8c8e698e0
       CLAWHUB_URL: https://clawhub.ai

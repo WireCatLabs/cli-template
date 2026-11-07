@@ -11,7 +11,8 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   "files": [".github/", "bin/release", "AGENTS.md", "docs/dev/skills/"],
   "seeds": ["src/", "README.md", "docs/", "config/wirecat/"],
   "placeholders": {
-    "command": "clidev", "name": "clidev-cli", "package": "@wirecat/clidev-cli", "repository": "WireCatLabs/clidev-cli"
+    "command": "clidev", "name": "clidev-cli", "app": "clidev-app", "package": "@wirecat/clidev-cli",
+    "repository": "WireCatLabs/clidev-cli"
   }
 }
 ```
@@ -39,7 +40,10 @@ The lists are in [template.json](../template.json). Their shape, cut short:
 - `placeholders` names the words `new` and `upgrade` replace. The command word is replaced as a whole word, so
   `clidev` changes but `clidevs` and cli-base's `cli-dev` do not. Its upper-case form changes too: `CLIDEV_HOME`
   becomes `CAL_HOME`. Followed by a colon and a space it is a key and stays: `clidev: CLIDEV` becomes `clidev: CAL`.
-  `name` (`clidev-cli`) is the repository name: `skills/clidev-cli/` becomes `skills/cal-cli/`. The word `clidev`
+  `name` (`clidev-cli`) is the repository name. `app` (`clidev-app`) is the data folder and the skill's name:
+  `skills/clidev-app/` becomes `skills/cal-cli/` for `@wirecat/cal-cli` and `skills/example-cal-cli/` for
+  `@example/cal-cli`, since WireCat Desktop takes a tool outside `@wirecat` only with a `<scope>-<name>` folder. A
+  version without `app` used `name` for both. The word `clidev`
   cannot appear in prose for any other meaning. Paths are renamed the same way: `src/bin/clidev.ts` becomes
   `src/bin/cal.ts`.
 - Each template version is renamed with its own `placeholders`, so `upgrade` from 0.1.0 or 0.1.1, which used `app`,

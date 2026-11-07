@@ -15,6 +15,7 @@ import {
   type Question,
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
+import { appNameOf } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -188,7 +189,7 @@ export const designDoc = (names: Names, answers: Answers): string => {
     "3. Ask the further questions in the interview that the reference CLI does not answer, and write the answers here.",
     "   Build only after the owner has read this page.",
     "4. When the first command reaches the service, rewrite `README.md`, `docs/index.md` and the description in",
-    `   \`package.json\` and \`skills/${names.name}/SKILL.md\` to say what the tool does and who it is for. Rewrite`,
+    `   \`package.json\` and \`skills/${appNameOf(names)}/SKILL.md\` to say what the tool does and who it is for. Rewrite`,
     "   `appMcpCommand`'s `name` and `untrusted` in `src/program.ts` too: name the kinds of outside text the CLI",
     "   carries (WC-MCP-11). Rewrite the tagline and the sign-in texts of `DESKTOP` in `src/identity.ts`, then run",
     "   `pnpm generate`: WireCat Desktop shows them before it installs the tool.",
@@ -309,15 +310,6 @@ export const withDesktopTexts = (text: string, command: string, tagline: string,
 }
 const IDENTITY_FILE = "src/identity.ts"
 
-// WireCat Desktop takes a tool outside @wirecat only when its data folder is <scope>-<name>, so no package can take
-// another publisher's folder; WireCat's own CLIs keep the folder name.
-export const withAppName = (text: string, pkg: string): string => {
-  const scoped = /^@([^/]+)\/(.+)$/.exec(pkg)
-  if (!scoped || scoped[1] === "wirecat") return text
-  if (!/^ {2}appName: ".*",$/m.test(text)) throw new Error(`${IDENTITY_FILE}: no appName to rewrite`)
-  return text.replace(/^ {2}appName: ".*",$/m, `  appName: ${JSON.stringify(`${scoped[1]}-${scoped[2]}`)},`)
-}
-
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {
   const match = /export const IDENTITY: AppIdentity = \{\n[\s\S]*?\n\}/.exec(text)
   if (!match) throw new Error(`${IDENTITY_FILE}: no IDENTITY object to add contentLanguages to`)
@@ -406,7 +398,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
     [IDENTITY_FILE]: (text) =>
       withDesktopTexts(
-        withAppName(withMessenger(withContentLanguages(text, answers.contentLang ?? []), category), names.package),
+        withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
         names.command,
         answers.tagline?.[0] ?? "",
         answers.signIn?.[0] ?? "none",
