@@ -434,6 +434,9 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
   if (paths.length) await run("git", ["add", "--chmod=+x", "--", ...paths], { cwd })
 }
 
+const liveStep = (step: number): string =>
+  `${step}. Before each bin/release: replace the sample's reads in scripts/live.sh with your own, run it with a real token on stdin, then pnpm exec cli-dev live record --script scripts/live.sh and commit docs/dev/live-checks.txt (WC-REL-17).`
+
 export const manualSteps = (names: Names): string[] => {
   const shared = [
     `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
@@ -442,6 +445,7 @@ export const manualSteps = (names: Names): string[] => {
   if (!isWireCat(names)) {
     return [
       ...shared,
+      liveStep(3),
       "CI's repo-setup job (cli-dev repo-check) fails until steps 1 and 2 are done; step 2's environment is checked once it exists.",
     ]
   }
@@ -449,6 +453,7 @@ export const manualSteps = (names: Names): string[] => {
     ...shared,
     "3. Give .github/workflows/monthly.yml a free cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9).",
     "4. A pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
+    liveStep(5),
     "CI's repo-setup job (cli-dev repo-check) fails until steps 1 to 4 are done; step 2's environment is checked once it exists.",
   ]
 }

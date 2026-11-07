@@ -15,7 +15,7 @@ npx @wirecat/cli-template upgrade --dry-run
 
 `new` copies the files of its own package version into `./<name>`. It renames the placeholders, rewrites
 `package.json`, runs `git init` and writes `template.json`, `docs/dev/DESIGN.md` and the reference CLI into
-`AGENTS.md`. It then prints the steps that need a person: four for a WireCat CLI, two outside `@wirecat`. It does not install packages, commit or push.
+`AGENTS.md`. It then prints the steps that need a person: five for a WireCat CLI, three outside `@wirecat`. It does not install packages, commit or push.
 
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
@@ -73,7 +73,12 @@ publishes no skill to ClawHub, whose `wirecat` owner is WireCat's.
 3. **Set the trusted publisher** on npmjs.com, as [Trusted publishing](https://docs.npmjs.com/trusted-publishers)
    says: your GitHub owner and repository, the workflow file `release.yml` (case matters), and the environment `npm`,
    which the template's publish job uses. Its first publish must follow within two days of setting it.
-4. **Release with `bin/release`.** It starts `release.yml`, which publishes with no npm token. Trusted publishing
+4. **Record a live check.** `bin/release` refuses a version without one (WC-REL-17). `scripts/live.sh` signs in
+   with a token read from stdin, in temporary folders and out of reach of the keyring, runs the CLI's reads, `doctor`
+   and `--wcat-describe`, and signs out. Replace the sample's reads with your own, run
+   `scripts/live.sh < <file with the token>`, then `pnpm exec cli-dev live record --script scripts/live.sh`, and
+   commit `docs/dev/live-checks.txt` with the version.
+5. **Release with `bin/release`.** It starts `release.yml`, which publishes with no npm token. Trusted publishing
    needs npm 11.5.1 or later and Node 22.14.0 or later.
 
 Planned for a WireCat Desktop release: Desktop adds a tool it has not checked only when its owner turns that on.

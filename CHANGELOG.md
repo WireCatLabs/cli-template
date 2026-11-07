@@ -19,6 +19,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   `config/parity-groups.json` with a group of its own, and sets `monthly.yml`'s cron to a time between 04:01 and
   05:59 UTC picked from the package name, after the minutes WireCat's repositories hold. It prints only the two
   setup steps such a CLI still needs.
+- **A CLI made from the template can make its first release.** `bin/release` needs a recorded live check
+  (WC-REL-17), and nothing said how to make one. The template ships `scripts/live.sh`: in temporary folders and out
+  of reach of the keyring, it signs in with a token from stdin, runs the reads, `doctor` and the `--wcat-describe`
+  check, and signs out. `new` prints the step with `cli-dev live record --script scripts/live.sh`.
 - **`release.yml` publishes the skill to ClawHub only for a package under `@wirecat`.** ClawHub's `wirecat` owner is
   WireCat's; a CLI under another scope tried to publish its skill there. `upgrade` brings the change into a CLI made
   earlier.

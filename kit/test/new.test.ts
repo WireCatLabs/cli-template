@@ -305,7 +305,26 @@ describe("new from this repository", () => {
     const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
 
     expect(out).toContain("fails until steps 1 and 2 are done")
+    expect(out).toContain("3. Before each bin/release:")
     expect(out).not.toContain("PARITY_GROUPS")
+  })
+
+  it("gives the CLI an executable live check to record before its first release", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+    const cwd = tempDir("real")
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: WIRECAT_FLAGS }, io())
+
+    const live = read(dir, "scripts/live.sh")
+    expect(live).toContain(
+      'export CAL_CONFIG_DIR="$work/config" CAL_STATE_DIR="$work/state" CAL_CACHE_DIR="$work/cache"',
+    )
+    expect(live).toContain('cli=(node "$root/dist/bin/cal.js")')
+    expect(live).toContain('DBUS_SESSION_BUS_ADDRESS="disabled:"')
+    expect(execFileSync("git", ["ls-files", "-s", "scripts/live.sh"], { cwd: dir, encoding: "utf8" })).toMatch(
+      /^100755 /,
+    )
+    expect(out).toContain("5. Before each bin/release:")
+    expect(out).toContain("pnpm exec cli-dev live record --script scripts/live.sh")
   })
 
   it("publishes the skill to ClawHub only for a package under @wirecat", () => {
