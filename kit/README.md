@@ -7,7 +7,7 @@ template repository feeds it is in [DEVELOPING.md](DEVELOPING.md).
 ```sh
 npx @wirecat/cli-template new cal-cli --command cal --package @wirecat/cal-cli --owner WireCatLabs \
   --category notes --content-lang en,ru --sign-in token --api official-docs --filters time,person \
-  --never-store tokens --untrusted messages,links
+  --never-store tokens --untrusted names,links
 npx @wirecat/cli-template upgrade --dry-run
 ```
 
@@ -26,20 +26,49 @@ choices. Nothing is guessed.
 | `--command` | the command word |
 | `--package` | the npm package name |
 | `--owner` | the GitHub owner |
-| `--category` | `messenger`, `mail`, `notes`, `files`, `calendar`, `meetings`, `crm` |
+| `--category` | one for each of cli-core's kinds: `messenger`, `mail`, `notes`, `files`, `meetings`, `calendar`, `crm` |
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |
 | `--filters` | several of `time`, `person`, `container`, `text`, `status` |
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |
-| `--untrusted` | several of `messages`, `files`, `links`, `names`, or `none` alone |
+| `--untrusted` | several of `files`, `links`, `names`, and for its category `messages` (messenger, mail), `records` (crm), `invitations` (calendar), `transcripts` (meetings); or `none` alone |
 
-Every question except the names and `--content-lang` also takes `other:<your answer>`.
+Every question except the names and `--content-lang` also takes `other:<your answer>`. In a terminal, `--untrusted`
+offers only the choices of the category; as a flag it takes any of them.
+
+The new CLI's `package.json` names two programs for the same file: the command word, and `wcat-<command>`, which
+`wcat <command>` runs (WC-CMD-29). Its bin calls `wcatStart` from `@wirecat/cli-base/wcat/start` before the program
+loads, and its `files` lists `contracts/wirecat.json`, the manifest WireCat Desktop reads.
 
 `new` writes the content languages into `contentLanguages` in `src/identity.ts`; on the first run, cli-core ticks them
 in advance in the search-language question, and the person confirms. `DESIGN.md` records them too, with the
 speech-model order a messenger definition should use and the warnings for languages that have no stemmer or speech
 model in cli-core. `new` writes no search or model setting.
+
+## Publishing outside WireCat
+
+A CLI made by someone outside WireCatLabs publishes under its own npm scope, such as `@example/acme-cli`. The
+`@wirecat` scope and the name "WireCat" stay WireCat's, and so do the names `cli-dev lint` warns about (WC-CMD-29).
+
+1. **Make the repository public.** npm makes no provenance record for a package built in a private repository, and
+   WireCat Desktop checks that record.
+2. **Publish the first version by hand**, `npm publish --access public` from your own computer: npm sets a trusted
+   publisher in the settings of a package that already exists.
+3. **Set the trusted publisher** on npmjs.com, as [Trusted publishing](https://docs.npmjs.com/trusted-publishers)
+   says: your GitHub owner and repository, the workflow file `release.yml` (case matters), and the environment `npm`,
+   which the template's publish job uses. Its first publish must follow within two days of setting it.
+4. **Release with `bin/release`.** It starts `release.yml`, which publishes with no npm token. Trusted publishing
+   needs npm 11.5.1 or later and Node 22.14.0 or later.
+
+WireCat Desktop adds a tool it has not checked only when its owner turns that on. Before it installs anything, it
+reads the package's npm details, its provenance record and its `contracts/wirecat.json` out of the tarball, and shows
+the publisher, the repository, the version, where npm built it and the access the tool asks for. This arrives with a
+Desktop release; `contracts/wirecat.json` comes from `cli-dev manifest` in a later cli-base release.
+
+To list the tool on wirecat.dev and in WireCat Desktop for everyone who turns community tools on, follow cli-docs'
+[Community tools](https://github.com/WireCatLabs/cli-docs/blob/main/docs/REVIEWING.md#community-tools) review, and the
+guide for makers in [cli-docs pull request 564](https://github.com/WireCatLabs/cli-docs/pull/564).
 
 ## `upgrade`
 

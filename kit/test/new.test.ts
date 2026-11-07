@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process"
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
+import { KINDS } from "@wirecat/cli-core"
 import { afterAll, describe, expect, it } from "vitest"
+import { INTERVIEW } from "../src/interview.js"
 import { languageWarnings, runNew, speechModels, withContentLanguages } from "../src/new.js"
 import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
@@ -24,12 +26,12 @@ const makeNew = async (flags: Record<string, string>, name = "cal-cli") => {
 describe("new", () => {
   it.each([
     ["messenger", "whatsapp-cli", "messenger"],
-    ["mail", "No reference CLI", "mail"],
+    ["mail", "mail-cli", "mail"],
     ["notes", "cli-memo", "notes"],
     ["files", "drive-cli", "files and documents"],
     ["calendar", "gcal-cli", "calendar"],
     ["meetings", "zoom-cli", "meetings"],
-    ["crm", "No reference CLI", "CRM (sales: deals, contacts, companies)"],
+    ["crm", "bitrix24-cli", "CRM (sales: deals, contacts, companies)"],
     ["other:issue tracker", "No reference CLI", "other: issue tracker"],
   ])("copies the template for the %s category", async (category, reference, label) => {
     const { dir, out } = await makeNew({ ...NOTES_FLAGS, category })
@@ -74,8 +76,8 @@ describe("new", () => {
     expect(pkg.name).toBe("@example/cal-cli")
     expect(pkg.version).toBe("0.0.0")
     expect(pkg.description).toBe("A new WireCat CLI, started from cli-template")
-    expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js" })
-    expect(pkg.files).toEqual(["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"])
+    expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js", "wcat-cal": "dist/bin/cal.js" })
+    expect(pkg.files).toEqual(["dist", "skills", "contracts/wirecat.json", "/README.md", "CHANGELOG.md", "LICENSE"])
     expect(pkg.scripts).toEqual({ build: "tsc --build", prepack: "pnpm build" })
     expect(pkg.repository.url).toBe("git+https://github.com/example/cal-cli.git")
   })
@@ -143,6 +145,33 @@ describe("new", () => {
     expect(JSON.parse(read(join(cwd, "cal-cli"), "template.json")).names.owner).toBe("Example-Org")
   })
 
+  it("offers one category for each of cli-core's kinds", () => {
+    expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(KINDS.length)
+  })
+
+  it("offers the untrusted input of the category in the menu, and takes any choice as a flag", async () => {
+    const cwd = tempDir("ask-untrusted")
+    const source = await loadSource(fixture("0.1.0", V1))
+    const { untrusted: _, ...flags } = NOTES_FLAGS
+    const terminal = io(["1"], true)
+
+    await runNew(cwd, source, { name: "cal-cli", flags: { ...flags, category: "crm" } }, terminal)
+
+    expect(terminal.text()).toContain("1. deals, contacts and comments others entered")
+    expect(terminal.text()).not.toContain("messages from other people")
+    expect(read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")).toContain(
+      "**Untrusted input:** deals, contacts and comments others entered",
+    )
+    await expect(makeNew({ ...NOTES_FLAGS, category: "crm", untrusted: "messages" })).resolves.toBeDefined()
+  })
+
+  it("without a terminal, lists the untrusted input of the category given", async () => {
+    const { untrusted: _, ...flags } = NOTES_FLAGS
+    const error = await makeNew({ ...flags, category: "calendar" }).catch((caught: Error) => caught.message)
+
+    expect(error).toContain("--untrusted: invitations, files, links, names, none, or other:<your answer>")
+  })
+
   it("puts the one-time first task into DESIGN.md, not into the template-owned AGENTS.md", async () => {
     const cwd = tempDir("first-task")
 
@@ -185,6 +214,16 @@ describe("new from this repository", () => {
     expect(read(join(cwd, "cal-cli"), "README.md")).toContain("https://github.com/WireCatLabs/cli-template)")
     expect(read(join(cwd, "cal-cli"), "AGENTS.md")).toContain("https://github.com/WireCatLabs/cli-template)")
     expect(existsSync(join(cwd, "cal-cli", "config/parity-groups.json"))).toBe(false)
+  })
+
+  it("answers --wcat-describe from the bin before the program loads", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const bin = read(join(cwd, "cal-cli"), "src/bin/cal.ts")
+    expect(bin).toContain('docs: "https://github.com/example/cal-cli#readme"')
+    expect(bin.indexOf("await wcatStart(")).toBeLessThan(bin.indexOf('import("../program.js")'))
   })
 
   it("keeps the docs checks, CHANGELOG.md included, and drops only the kit's", async () => {

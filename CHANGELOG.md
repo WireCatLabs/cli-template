@@ -3,7 +3,36 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-<!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
+<!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
+
+## Unreleased
+
+### Added
+
+- **The skeleton's bin answers `--wcat-describe` (WC-CMD-29).** It calls `wcatStart` from
+  `@wirecat/cli-base/wcat/start` before the program loads, as mail-cli does, so `wcat --help` lists the tool and
+  `wcat <command>` runs it. `new` names the bin twice in `package.json`, the command word and `wcat-<command>`, and
+  lists `contracts/wirecat.json` in `files`, so the manifest WireCat Desktop reads ships once `cli-dev manifest`
+  writes it; `pnpm smoke` lets that one file through WC-REL-16. A CLI gets the bin by hand: it is a seed.
+- **`new` has reference CLIs for mail and CRM:** mail-cli and bitrix24-cli.
+- **`--untrusted` offers what the category carries.** In a terminal, a messenger or mail offers messages from other
+  people, a CRM `records`, a calendar `invitations`, meetings `transcripts`, beside files, links and names. A flag
+  still takes any choice.
+- **Publishing outside WireCat**, in `kit/README.md`: your own npm scope, a public repository, the first publish by
+  hand, then npm trusted publishing, and how to get listed in cli-docs.
+
+### Changed — may break callers
+
+- **The categories come from cli-core's kinds, in their order:** `messenger`, `mail`, `notes`, `files`, `meetings`,
+  `calendar`, `crm`. The values are the same; a script that picks a category by its menu number gets `calendar` and
+  `meetings` swapped.
+
+### Fixed
+
+- **The docs no longer assume a message source.** Reference CLIs says how deals and contacts reach the store
+  (cli-core's `./crm` port, `CrmSource` and `syncCrm`) and other structured records (the records envelope, `ingest`),
+  never through SQL of the CLI's own, and names a provider's `kind` as one of cli-core's `KINDS`. The README no longer
+  says the skeleton has no commands of its own.
 
 ## 0.18.0 — 07.11.2026
 

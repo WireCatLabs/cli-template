@@ -4,7 +4,16 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
-import { ask, choiceList, INTERVIEW, labelOf, NAME_QUESTIONS, parseAnswer, type Question } from "./interview.js"
+import {
+  ask,
+  choiceList,
+  forCategory,
+  INTERVIEW,
+  labelOf,
+  NAME_QUESTIONS,
+  parseAnswer,
+  type Question,
+} from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 
@@ -18,10 +27,12 @@ export type Answers = Record<string, string[]>
 
 const REFERENCES: Record<string, string[]> = {
   messenger: ["whatsapp-cli", "tg-cli", "max-cli"],
+  mail: ["mail-cli"],
   files: ["drive-cli"],
   calendar: ["gcal-cli"],
   meetings: ["zoom-cli"],
   notes: ["cli-memo"],
+  crm: ["bitrix24-cli"],
 }
 
 const STEMMED = ["en", "ru", "es"]
@@ -72,14 +83,18 @@ const collect = async (args: NewArgs, io: Io): Promise<{ names: Names; answers: 
   }
   if (missing.length > 0 && !io.interactive) {
     const lines = missing.map((question) =>
-      question === NAME_QUESTION ? "  <name>: the folder to create" : `  --${question.flag}: ${choiceList(question)}`,
+      question === NAME_QUESTION
+        ? "  <name>: the folder to create"
+        : `  --${question.flag}: ${choiceList(forCategory(question, answers.category?.[0]))}`,
     )
     throw new Error(`no terminal to ask in, and these answers are missing:\n${lines.join("\n")}`)
   }
   if (missing.length > 0) {
     const rl = createInterface({ input: io.input, output: io.output, terminal: false })
     try {
-      for (const question of missing) answers[question.key] = await ask(rl, io.output, question)
+      for (const question of missing) {
+        answers[question.key] = await ask(rl, io.output, forCategory(question, answers.category?.[0]))
+      }
     } finally {
       rl.close()
     }
@@ -180,7 +195,8 @@ const removeKit = (command: string): string =>
     .filter((part) => !/\bkit[:/]/.test(part))
     .join(" && ")
 
-const CLI_FILES = ["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"]
+// contracts/wirecat.json is what WireCat Desktop reads out of the tarball before it installs the CLI (WC-CMD-29).
+const CLI_FILES = ["dist", "skills", "contracts/wirecat.json", "/README.md", "CHANGELOG.md", "LICENSE"]
 
 export const cliPackageJson = (text: string, names: Names): string => {
   const pkg: unknown = JSON.parse(text)
@@ -197,6 +213,7 @@ export const cliPackageJson = (text: string, names: Names): string => {
   next.bin = {
     ...Object.fromEntries(Object.entries(bin).filter(([, value]) => !isKit(value))),
     [names.command]: `dist/bin/${names.command}.js`,
+    [`wcat-${names.command}`]: `dist/bin/${names.command}.js`,
   }
   // The template's own list ships the skeleton's sources for `new` to copy; a CLI ships what runs (WC-REL-16).
   if (Array.isArray(pkg.files)) next.files = CLI_FILES

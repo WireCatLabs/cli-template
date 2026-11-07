@@ -38,7 +38,11 @@ const FORBIDDEN = [
 ]
 const overlaps = (entry: string, path: string) =>
   entry === path || entry.startsWith(`${path}/`) || path.startsWith(`${entry}/`)
-const forbidden = shipped.flatMap((entry) => FORBIDDEN.filter((path) => overlaps(entry.replace(/\/$/, ""), path)))
+// WireCat Desktop reads the manifest out of the tarball before it installs anything (WC-CMD-29).
+const MANIFEST = "contracts/wirecat.json"
+const forbidden = shipped
+  .filter((entry) => entry !== MANIFEST)
+  .flatMap((entry) => FORBIDDEN.filter((path) => overlaps(entry.replace(/\/$/, ""), path)))
 if (name !== "@wirecat/cli-template")
   assert.deepEqual(forbidden, [], "package.json's files ships paths WC-REL-16 forbids")
 const temp = mkdtempSync(join(tmpdir(), "clidev-package-"))
