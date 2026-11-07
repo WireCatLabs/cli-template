@@ -14,6 +14,8 @@ export type Question = {
   multiple?: boolean
   exclusive?: string
   check?: (value: string) => string | undefined
+  // Taken when the answer is missing, in a terminal on an empty line; only for text that is safe to edit later.
+  fallback?: string
 }
 
 const npmName = /^(@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9][a-z0-9._~-]*$/
@@ -199,8 +201,9 @@ export const ask = async (rl: Interface, output: Writable, question: Question): 
   for (;;) {
     const prompt = question.choices
       ? `${question.text}\n${menu(question)}\n${question.multiple ? "Numbers, comma-separated: " : "Number: "}`
-      : `${question.text}: `
+      : `${question.text}${question.fallback ? ` [${question.fallback}]` : ""}: `
     const line = (await rl.question(prompt)).trim()
+    if (line === "" && question.fallback) return [question.fallback]
     const raw = question.choices && /^[\d,\s]+$/.test(line) ? await fromMenu(rl, question, line) : line
     const { value, error } = parseAnswer(question, raw)
     if (value) return value

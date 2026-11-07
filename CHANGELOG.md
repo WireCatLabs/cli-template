@@ -9,11 +9,16 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ### Added
 
-- **The skeleton's bin answers `--wcat-describe` (WC-CMD-29).** It calls `wcatStart` from
-  `@wirecat/cli-base/wcat/start` before the program loads, as mail-cli does, so `wcat --help` lists the tool and
-  `wcat <command>` runs it. `new` names the bin twice in `package.json`, the command word and `wcat-<command>`, and
-  lists `contracts/wirecat.json` in `files`, so the manifest WireCat Desktop reads ships once `cli-dev manifest`
-  writes it; `pnpm smoke` lets that one file through WC-REL-16. A CLI gets the bin by hand: it is a seed.
+- **A CLI made from the template describes itself to WireCat Desktop (WC-CMD-29), cli-base 0.81.0.** The bin calls
+  `wcatStart` with `DESKTOP` from `src/identity.ts` before the program loads, so `wcat --help` lists the tool and
+  `wcat <command>` runs it. `DESKTOP` holds the docs link, the tagline and the sign-in texts; `src/wcat.ts` adds the
+  permission keys as `WCAT`. `new` asks one more question, `--tagline` (at most 55 characters, made from the
+  description when left out), writes sign-in texts from the `--sign-in` answer, names the bin twice (the command
+  word and `wcat-<command>`), and adds `cli-dev manifest` to the CLI's `generate`, `generate:check` and
+  `contracts:check`. The CLI's first `pnpm generate` writes the committed `contracts/wirecat.json`, the one file of
+  `contracts/` its `files` ships; `pnpm smoke` lets it through. The template has no manifest of its own: its
+  `package.json` installs no program to name. A CLI made earlier adds the bin, `DESKTOP`, `src/wcat.ts` and the
+  three script steps by hand: `src/` and `package.json` are seeds.
 - **`new` has reference CLIs for mail and CRM:** mail-cli and bitrix24-cli.
 - **`--untrusted` offers what the category carries.** In a terminal, a messenger or mail offers messages from other
   people, a CRM `records`, a calendar `invitations`, meetings `transcripts`, beside files, links and names. A flag

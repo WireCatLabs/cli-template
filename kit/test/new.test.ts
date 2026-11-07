@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { KINDS } from "@wirecat/cli-core"
 import { afterAll, describe, expect, it } from "vitest"
 import { INTERVIEW } from "../src/interview.js"
-import { languageWarnings, runNew, speechModels, withContentLanguages } from "../src/new.js"
+import { languageWarnings, runNew, speechModels, taglineOf, withContentLanguages } from "../src/new.js"
 import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
@@ -59,7 +59,9 @@ describe("new", () => {
   it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {
     const { out } = await makeNew(NOTES_FLAGS)
 
-    expect(out).toContain("\n  cd cal-cli\n  pnpm install\n  pnpm lint:fix\n  pnpm ci:quick\n  git add -A\n")
+    expect(out).toContain(
+      "\n  cd cal-cli\n  pnpm install\n  pnpm lint:fix\n  pnpm generate\n  pnpm ci:quick\n  git add -A\n",
+    )
     expect(out).not.toContain("&&")
   })
 
@@ -134,7 +136,7 @@ describe("new", () => {
     const cwd = tempDir("ask")
     const source = await loadSource(fixture("0.1.0", V1))
     const { category: _, filters: __, owner: ___, ...flags } = NOTES_FLAGS
-    const terminal = io(["Example-Org", "9", "1", "2,6", "by location"], true)
+    const terminal = io(["Example-Org", "", "9", "1", "2,6", "by location"], true)
 
     await runNew(cwd, source, { name: "cal-cli", flags }, terminal)
 
@@ -153,7 +155,7 @@ describe("new", () => {
     const cwd = tempDir("ask-untrusted")
     const source = await loadSource(fixture("0.1.0", V1))
     const { untrusted: _, ...flags } = NOTES_FLAGS
-    const terminal = io(["1"], true)
+    const terminal = io(["", "1"], true)
 
     await runNew(cwd, source, { name: "cal-cli", flags: { ...flags, category: "crm" } }, terminal)
 
@@ -163,6 +165,19 @@ describe("new", () => {
       "**Untrusted input:** deals, contacts and comments others entered",
     )
     await expect(makeNew({ ...NOTES_FLAGS, category: "crm", untrusted: "messages" })).resolves.toBeDefined()
+  })
+
+  it("derives the tagline from a description, cut on a word at 55 characters", () => {
+    expect(taglineOf("a new tool.")).toBe("A new tool")
+    const long = taglineOf("Contacts, deals and invoices from Acme, searchable offline with every other source")
+    expect(long).toBe("Contacts, deals and invoices from Acme, searchable")
+    expect(long.length).toBeLessThanOrEqual(55)
+  })
+
+  it("refuses a tagline longer than Desktop shows", async () => {
+    await expect(makeNew({ ...NOTES_FLAGS, tagline: "x".repeat(56) })).rejects.toThrow(
+      /--tagline: one line of at most 55/,
+    )
   })
 
   it("without a terminal, lists the untrusted input of the category given", async () => {
@@ -222,8 +237,37 @@ describe("new from this repository", () => {
     await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
 
     const bin = read(join(cwd, "cal-cli"), "src/bin/cal.ts")
-    expect(bin).toContain('docs: "https://github.com/example/cal-cli#readme"')
-    expect(bin.indexOf("await wcatStart(")).toBeLessThan(bin.indexOf('import("../program.js")'))
+    expect(bin.indexOf("await wcatStart(DESKTOP)")).toBeLessThan(bin.indexOf('import("../program.js")'))
+    expect(read(join(cwd, "cal-cli"), "src/identity.ts")).toContain('docs: "https://github.com/example/cal-cli#readme"')
+  })
+
+  it("writes the tagline and the sign-in texts Desktop shows into src/identity.ts", async () => {
+    const token = tempDir("real")
+    const none = tempDir("real")
+    const source = await loadSource(root)
+
+    await runNew(token, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, "sign-in": "token" } }, io())
+    await runNew(none, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, tagline: "Cal events, offline" } }, io())
+
+    const withToken = read(join(token, "cal-cli"), "src/identity.ts")
+    expect(withToken).toContain('  tagline: "A new WireCat CLI, started from cli-template",\n')
+    expect(withToken).toContain('    asks: "An API token or key from the service.",\n')
+    const withNone = read(join(none, "cal-cli"), "src/identity.ts")
+    expect(withNone).toContain('  tagline: "Cal events, offline",\n')
+    expect(withNone).not.toContain("signIn")
+  })
+
+  it("runs cli-dev manifest in the CLI's generate and checks, never in the template's", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const { scripts } = JSON.parse(read(join(cwd, "cal-cli"), "package.json"))
+    const step = "cli-dev manifest --program dist/program.js --identity dist/wcat.js"
+    expect(scripts.generate).toMatch(new RegExp(`&& ${step}$`))
+    expect(scripts["generate:check"]).toMatch(new RegExp(`&& ${step} --check$`))
+    expect(scripts["contracts:check"]).toMatch(new RegExp(`&& ${step} --check$`))
+    expect(JSON.parse(read(root, "package.json")).scripts.generate).not.toContain("cli-dev manifest")
   })
 
   it("keeps the docs checks, CHANGELOG.md included, and drops only the kit's", async () => {

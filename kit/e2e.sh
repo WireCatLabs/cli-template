@@ -26,10 +26,12 @@ build() {
   pnpm install
   # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
   pnpm lint:fix
+  pnpm generate
   pnpm lint
   pnpm ci:quick
+  pnpm contracts:check
   pnpm test:coverage
-  echo "kit e2e: new $1 ($2) passed lint, ci:quick and test:coverage"
+  echo "kit e2e: new $1 ($2) passed lint, generate, ci:quick, contracts:check and test:coverage"
 }
 
 build demo-cli demo
@@ -38,6 +40,14 @@ build acme-workspace-cli acme-workspace
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')
 node "$bin" --version
+node "$bin" --wcat-describe | grep -q '"wcat_describe":2'
+node --input-type=module -e '
+import { readFileSync } from "node:fs"
+import { manifestSchema } from "@wirecat/cli-base/wcat/manifest"
+import * as v from "valibot"
+const { issues } = v.safeParse(manifestSchema, JSON.parse(readFileSync("contracts/wirecat.json", "utf8")))
+if (issues) throw new Error(JSON.stringify(issues))
+'
 # A run record must not land in the real home folder, and no run may reach the owner's keyring.
 demo() { env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" DBUS_SESSION_BUS_ADDRESS=disabled: node "$bin" "$@"; }
 demo personal skill show "weekly report" >/dev/null 2>&1 || true
@@ -54,6 +64,7 @@ preview=$(demo personal comments create --text "kit e2e" --dry-run --json | grep
 unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"code":"authentication_error"' || true)
 [ -n "$unsigned" ]
 echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
+echo "kit e2e: demo answers --wcat-describe in format 2, and its contracts/wirecat.json passes manifestSchema"
 echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"

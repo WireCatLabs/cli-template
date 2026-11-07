@@ -26,6 +26,7 @@ choices. Nothing is guessed.
 | `--command` | the command word |
 | `--package` | the npm package name |
 | `--owner` | the GitHub owner |
+| `--tagline` | the line WireCat Desktop shows, at most 55 characters; left out, it is made from the description |
 | `--category` | one for each of cli-core's kinds: `messenger`, `mail`, `notes`, `files`, `meetings`, `calendar`, `crm` |
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
@@ -34,13 +35,16 @@ choices. Nothing is guessed.
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |
 | `--untrusted` | several of `files`, `links`, `names`, and for its category `messages` (messenger, mail), `records` (crm), `invitations` (calendar), `transcripts` (meetings); or `none` alone |
 
-Every question except the names and `--content-lang` also takes `other:<your answer>`. In a terminal, `--untrusted`
-offers only the choices of the category; as a flag it takes any of them.
+Every question except the names, `--tagline` and `--content-lang` also takes `other:<your answer>`. `--tagline` is the
+one answer with a default: left out, it is the description cut on a word at 55 characters, and in a terminal an empty
+line takes it. In a terminal, `--untrusted` offers only the choices of the category; as a flag it takes any of them.
 
 The new CLI's `package.json` names two programs for the same file: the command word, and `wcat-<command>`, which
 `wcat <command>` runs (WC-CMD-29). Its bin calls `wcatStart` from `@wirecat/cli-base/wcat/start` before the program
-loads, and its `files` lists `contracts/wirecat.json`, the manifest WireCat Desktop reads, which ships once
-`cli-dev manifest` writes it.
+loads, with `DESKTOP` from `src/identity.ts`: the tagline, and sign-in texts made from `--sign-in` (none for `none`),
+both meant to be rewritten. `pnpm generate` writes `contracts/wirecat.json`, the manifest WireCat Desktop reads, with
+`cli-dev manifest`; the CLI commits it, `files` ships it, and `pnpm contracts:check` fails when it is stale. The
+template itself has none: its `package.json` installs no program for the manifest to name.
 
 `new` writes the content languages into `contentLanguages` in `src/identity.ts`; on the first run, cli-core ticks them
 in advance in the search-language question, and the person confirms. `DESIGN.md` records them too, with the
@@ -65,8 +69,7 @@ A CLI made by someone outside WireCatLabs publishes under its own npm scope, suc
 Planned for a WireCat Desktop release: Desktop adds a tool it has not checked only when its owner turns that on.
 Before it installs anything, it reads the package's npm details, its provenance record and its
 `contracts/wirecat.json` out of the tarball, and shows the publisher, the repository, the version, where npm built
-it and the access the tool asks for. `contracts/wirecat.json` comes from `cli-dev manifest` in a later cli-base
-release.
+it and the access the tool asks for.
 
 To list the tool on wirecat.dev and in WireCat Desktop for everyone who turns community tools on, follow cli-docs'
 [Community tools](https://github.com/WireCatLabs/cli-docs/blob/main/docs/REVIEWING.md#community-tools) review, and the
