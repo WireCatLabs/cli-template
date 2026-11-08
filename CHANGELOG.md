@@ -5,6 +5,16 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Changed — may break callers
+
+- **The skeleton keeps its token in cli-core's `ProfileTokenStore`** (cli-core 0.608.0) in place of its own
+  `src/token.ts`, as bitrix24-cli and beeline-cli do. The token is read and kept where it was: `<PREFIX>_TOKEN`,
+  then the keyring entry `token:<profile>`, then a private file. A command on a profile with no token is refused
+  with reason `session.missing`, and `--credential-storage file` also forgets the keyring copy. A CLI made from an
+  earlier template can delete its `src/token.ts` the same way.
+
 ## 0.21.0 — 08.11.2026
 
 ### Fixed
