@@ -11,7 +11,8 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   "files": [".github/", "bin/release", "AGENTS.md", "docs/dev/skills/"],
   "seeds": ["src/", "README.md", "docs/", "config/wirecat/"],
   "placeholders": {
-    "command": "clidev", "name": "clidev-cli", "package": "@wirecat/clidev-cli", "repository": "WireCatLabs/clidev-cli"
+    "command": "clidev", "name": "clidev-cli", "app": "clidev-app", "package": "@wirecat/clidev-cli",
+    "repository": "WireCatLabs/clidev-cli"
   }
 }
 ```
@@ -27,8 +28,9 @@ The lists are in [template.json](../template.json). Their shape, cut short:
 - `README.md` and `CHANGELOG.md` describe the template, so `new` writes short ones for the new CLI.
 - `config/parity-groups.json` puts the template in parity groups with the published CLIs, so `scripts/audit.sh`
   compares its `commands`, `upgrade`, `config` and `skill` paths with theirs. It is in neither list, so a new CLI does
-  not get it: the file replaces cli-base's `PARITY_GROUPS`, and a new CLI joins those groups instead (step 4 of
-  `new`'s output).
+  not get it: the file replaces cli-base's `PARITY_GROUPS`, and a WireCat CLI joins those groups instead (step 4 of
+  `new`'s output). A CLI outside `@wirecat` cannot join them, so `new` writes it a file with one group of its own:
+  the CLI and the published CLIs, on `commands` and `upgrade`.
 - `docs/dev/DESIGN.md` is always a seed: it holds the CLI's interview answers and the one-time first task, which
   the CLI deletes when it is done. `AGENTS.md` is template-owned, so it holds only what is true for every CLI.
 - `package.json` is always a seed. `new` rewrites it: `name` becomes `--package`, `version` becomes `0.0.0`, and
@@ -39,7 +41,10 @@ The lists are in [template.json](../template.json). Their shape, cut short:
 - `placeholders` names the words `new` and `upgrade` replace. The command word is replaced as a whole word, so
   `clidev` changes but `clidevs` and cli-base's `cli-dev` do not. Its upper-case form changes too: `CLIDEV_HOME`
   becomes `CAL_HOME`. Followed by a colon and a space it is a key and stays: `clidev: CLIDEV` becomes `clidev: CAL`.
-  `name` (`clidev-cli`) is the repository name: `skills/clidev-cli/` becomes `skills/cal-cli/`. The word `clidev`
+  `name` (`clidev-cli`) is the repository name. `app` (`clidev-app`) is the data folder and the skill's name:
+  `skills/clidev-app/` becomes `skills/cal-cli/` for `@wirecat/cal-cli` and `skills/example-cal-cli/` for
+  `@example/cal-cli`, since WireCat Desktop takes a tool outside `@wirecat` only with a `<scope>-<name>` folder. A
+  version without `app` used `name` for both. The word `clidev`
   cannot appear in prose for any other meaning. Paths are renamed the same way: `src/bin/clidev.ts` becomes
   `src/bin/cal.ts`.
 - Each template version is renamed with its own `placeholders`, so `upgrade` from 0.1.0 or 0.1.1, which used `app`,
@@ -66,9 +71,9 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   bin from a tarball installed with `npm install` to catch that.
 - `kit:build` (`tsc -p kit`, then the copy to `gitignore`) run by `build`, because `bin/release` and CI pack with
   `--ignore-scripts`. Node does not strip types under `node_modules`, so the bin must be JavaScript.
-- `pnpm kit:e2e` packs this repository, installs the tarball with npm, runs `new` for a short and a long name, and
-  then, in each new CLI, the steps `new` prints (`pnpm install`, `pnpm lint:fix`, `pnpm ci:quick`), `pnpm lint` and
-  `pnpm test:coverage`. Against `demo` it also runs the sample: `--dry-run` names `comments.create`, and a list
+- `pnpm kit:e2e` packs this repository, installs the tarball with npm, runs `new` with every flag for a short name
+  (notes) and a long one (CRM), both under `@example`, and then, in each new CLI, the steps `new` prints
+  (`pnpm install`, `pnpm lint:fix`, `pnpm ci:quick`), `pnpm lint`, `pnpm test:coverage` and `pnpm docs:check`. Against `demo` it also runs the sample: `--dry-run` names `comments.create`, and a list
   without a sign-in stops with `authentication_error`. It needs the network and takes a few minutes, so it is not part
   of `pnpm test`; the `kit-e2e` job in `.github/workflows/ci.yml` runs it on every pull request and merge, in this
   repository only.

@@ -1,7 +1,9 @@
 import type { Interface } from "node:readline/promises"
 import type { Writable } from "node:stream"
+import type { Kind } from "@wirecat/cli-core"
 
-export type Choice = { value: string; label: string }
+// Offered only for these categories; without it, for every category.
+export type Choice = { value: string; label: string; categories?: string[] }
 
 export type Question = {
   key: string
@@ -12,6 +14,8 @@ export type Question = {
   multiple?: boolean
   exclusive?: string
   check?: (value: string) => string | undefined
+  // Taken when the answer is missing, in a terminal on an empty line; only for text that is safe to edit later.
+  fallback?: string
 }
 
 const npmName = /^(@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9][a-z0-9._~-]*$/
@@ -41,21 +45,25 @@ export const NAME_QUESTIONS: Question[] = [
   },
 ]
 
+// Keyed by cli-core's kinds, so a kind cli-core adds fails the typecheck until it has a category here; a type import,
+// so the kit still runs on Node alone. The values predate the kinds and stay, since scripts pass them to --category.
+const CATEGORIES: Record<Kind, Choice> = {
+  messages: { value: "messenger", label: "messenger" },
+  mail: { value: "mail", label: "mail" },
+  notes: { value: "notes", label: "notes" },
+  documents: { value: "files", label: "files and documents" },
+  meetings: { value: "meetings", label: "meetings" },
+  events: { value: "calendar", label: "calendar" },
+  crm: { value: "crm", label: "CRM (sales: deals, contacts, companies)" },
+}
+
 export const INTERVIEW: Question[] = [
   {
     key: "category",
     title: "Category",
     flag: "category",
     text: "What kind of tool is it?",
-    choices: [
-      { value: "messenger", label: "messenger" },
-      { value: "mail", label: "mail" },
-      { value: "notes", label: "notes" },
-      { value: "files", label: "files and documents" },
-      { value: "calendar", label: "calendar" },
-      { value: "meetings", label: "meetings" },
-      { value: "crm", label: "CRM (sales: deals, contacts, companies)" },
-    ],
+    choices: Object.values(CATEGORIES),
   },
   {
     key: "contentLang",
@@ -123,7 +131,10 @@ export const INTERVIEW: Question[] = [
     multiple: true,
     exclusive: "none",
     choices: [
-      { value: "messages", label: "messages from other people" },
+      { value: "messages", label: "messages from other people", categories: ["messenger", "mail"] },
+      { value: "records", label: "deals, contacts and comments others entered", categories: ["crm"] },
+      { value: "invitations", label: "invitations and event descriptions from others", categories: ["calendar"] },
+      { value: "transcripts", label: "what other attendees said or wrote", categories: ["meetings"] },
       { value: "files", label: "files and attachments" },
       { value: "links", label: "links" },
       { value: "names", label: "names and titles set by others" },
@@ -133,6 +144,12 @@ export const INTERVIEW: Question[] = [
 ]
 
 const OTHER = "other:"
+
+// A flag still takes any choice, so a script written for one category keeps working; menus offer the category's own.
+export const forCategory = (question: Question, category: string | undefined): Question =>
+  category === undefined || !question.choices?.some((choice) => choice.categories)
+    ? question
+    : { ...question, choices: question.choices.filter((choice) => choice.categories?.includes(category) ?? true) }
 
 export const choiceList = (question: Question): string =>
   question.choices
@@ -184,8 +201,9 @@ export const ask = async (rl: Interface, output: Writable, question: Question): 
   for (;;) {
     const prompt = question.choices
       ? `${question.text}\n${menu(question)}\n${question.multiple ? "Numbers, comma-separated: " : "Number: "}`
-      : `${question.text}: `
+      : `${question.text}${question.fallback ? ` [${question.fallback}]` : ""}: `
     const line = (await rl.question(prompt)).trim()
+    if (line === "" && question.fallback) return [question.fallback]
     const raw = question.choices && /^[\d,\s]+$/.test(line) ? await fromMenu(rl, question, line) : line
     const { value, error } = parseAnswer(question, raw)
     if (value) return value

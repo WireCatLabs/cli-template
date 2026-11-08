@@ -1,6 +1,6 @@
 {
   "name": "@wirecat/cli-template",
-  "version": "0.18.0",
+  "version": "0.21.0",
   "description": "Start a new WireCat CLI: a working skeleton on cli-base and cli-core, copied by new and kept current by upgrade",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
@@ -86,8 +86,8 @@
     "kit:docs": "cspell lint --config cspell.json --no-progress --no-summary kit/*.md && rumdl check --config config/wirecat/rumdl.toml kit/*.md"
   },
   "dependencies": {
-    "@wirecat/cli-base": "0.80.8",
-    "@wirecat/cli-core": "0.598.0",
+    "@wirecat/cli-base": "0.82.0",
+    "@wirecat/cli-core": "0.608.0",
     "commander": "15.0.0",
     "valibot": "1.5.0"
   },

@@ -6,7 +6,7 @@ import { run } from "../program.js"
 import { FAKE_TOKEN, fakeComments } from "./fake-comments.js"
 
 /** A keyring where profile `personal` is already signed in to the fake service; never the real one (WC-TEST-2). */
-export const signedIn = (): KeyringStore => memoryKeyring({ "clidev-cli:token:personal": FAKE_TOKEN })
+export const signedIn = (): KeyringStore => memoryKeyring({ "clidev-app:token:personal": FAKE_TOKEN })
 
 export interface Ran {
   code: number

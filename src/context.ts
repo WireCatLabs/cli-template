@@ -5,6 +5,7 @@ import {
   type EventSink,
   environmentOf,
   type GlobalFlags,
+  ProfileTokenStore,
 } from "@wirecat/cli-core/cli"
 import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
@@ -12,7 +13,6 @@ import { configuration } from "./config.js"
 import { IDENTITY } from "./identity.js"
 import { type CommentsService, commentsService } from "./sample/comments.js"
 import { SERVICE, transport } from "./sample/transport.js"
-import { tokenStore } from "./token.js"
 
 /** What a test hands `run()` beside cli-core's own: the fake service in place of the network (WC-ARCH-10). */
 export interface ServiceEnvironment extends BaseEnvironment {
@@ -33,11 +33,14 @@ export const contextOf = (command: Command) => {
     environment: environmentOf<ServiceEnvironment>(command),
     flags: command.optsWithGlobals<GlobalFlags>(),
     profile: base.settings.profile,
-    tokens: tokenStore(base.env, base.keyring, base.renderer.warn),
+    tokens: new ProfileTokenStore({
+      app: IDENTITY,
+      env: base.env,
+      ...(base.keyring ? { keyring: base.keyring } : {}),
+      warn: base.renderer.warn,
+    }),
   }
 }
-
-export const signInWords = (profile: string) => `\`${IDENTITY.command} ${profile} session start\``
 
 export const refuseOffline = (flags: GlobalFlags) => {
   if (flags.offline)
@@ -62,10 +65,7 @@ export const serviceFor = (command: Command, token: string, events: EventSink) =
 export const tokenOf = (command: Command): string => {
   const { flags, profile, tokens } = contextOf(command)
   refuseOffline(flags)
-  const saved = tokens.read(profile)
-  if (!saved)
-    throw new CliError("authentication_error", `profile ${profile} is not signed in — run ${signInWords(profile)}`)
-  return saved.secret
+  return tokens.need(profile)
 }
 
 /**

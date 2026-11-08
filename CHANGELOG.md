@@ -3,7 +3,94 @@
 Notable changes to `@wirecat/cli-template`. One section per version, newest first; versions follow
 [semantic versioning](https://semver.org), so before `1.0.0` the skeleton may still change.
 
-<!-- cspell:words clawhub gcal katex openclaw smol whatsapp -->
+<!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
+
+## Unreleased
+
+### Changed — may break callers
+
+- **The skeleton keeps its token in cli-core's `ProfileTokenStore`** (cli-core 0.608.0) in place of its own
+  `src/token.ts`, as bitrix24-cli and beeline-cli do. The token is read and kept where it was: `<PREFIX>_TOKEN`,
+  then the keyring entry `token:<profile>`, then a private file. A command on a profile with no token is refused
+  with reason `session.missing`, and `--credential-storage file` also forgets the keyring copy. A CLI made from an
+  earlier template can delete its `src/token.ts` the same way.
+
+## 0.21.0 — 08.11.2026
+
+### Fixed
+
+- **`upgrade` says what a CLI outside `@wirecat` must change by hand for the MCP Registry.** A CLI made before
+  0.20.0 has no `mcpName` in `package.json` and WireCat's name in `server.json`; upgrade never edits either file,
+  so its last lines now name the exact `io.github.<owner>/<name>` value to put in each.
+- **`release.yml` stops a GitHub-sign-in registry release with one sentence** when `package.json`'s `mcpName` or
+  `server.json`'s `name` is not `io.github.<owner>/<name>`, naming the field and the value, instead of failing
+  inside `mcp-publisher`.
+- **The README's link to `kit/README.md` works on npm.** It points at GitHub, since the package does not ship that
+  file.
+
+## 0.20.0 — 08.11.2026
+
+### Fixed
+
+- **`new` takes `--tagline` as a flag.** It was asked in a terminal but refused as an unknown option.
+- **A CLI made for the CRM category passes `docs:check`.** `new` adds every reference CLI it can name in `AGENTS.md`
+  to the CLI's `cspell.json` words; `bitrix24-cli` was unknown to cspell.
+- **A CLI outside `@wirecat` no longer claims WireCat's names.** `new` writes its MCP Registry name as
+  `io.github.<owner>/<name>` in `server.json` and in `package.json`'s `mcpName`, points `websiteUrl` at its own
+  repository, drops "WireCat" from the server's title, and makes `--owner` the package's author and the
+  copyright holder in `LICENSE`, with the current year. `release.yml` publishes such a server to the MCP Registry
+  with a GitHub OIDC sign-in (`mcp-publisher login github-oidc`), which grants `io.github.<owner>/`; a `@wirecat`
+  package keeps the wirecat.dev DNS sign-in.
+- **A CLI outside `@wirecat` passes `cli-dev repo-check` without WireCat's lists.** `new` writes
+  `config/parity-groups.json` with a group of its own, and sets `monthly.yml`'s cron to a time between 04:01 and
+  05:59 UTC picked from the package name, after the minutes WireCat's repositories hold. It prints only the two
+  setup steps such a CLI still needs.
+- **A CLI made from the template can make its first release.** `bin/release` needs a recorded live check
+  (WC-REL-17), and nothing said how to make one. The template ships `scripts/live.sh`: in temporary folders and out
+  of reach of the keyring, it signs in with a token from stdin, runs the reads, `doctor` and the `--wcat-describe`
+  check, and signs out. `new` prints the step with `cli-dev live record --script scripts/live.sh`.
+- **`release.yml` publishes the skill to ClawHub only for a package under `@wirecat`.** ClawHub's `wirecat` owner is
+  WireCat's; a CLI under another scope tried to publish its skill there. `upgrade` brings the change into a CLI made
+  earlier.
+
+## 0.19.0 — 08.11.2026
+
+### Added
+
+- **A CLI made from the template describes itself to WireCat Desktop (WC-CMD-29), cli-base 0.82.0 and cli-core 0.605.0.** The bin calls
+  `wcatStart` with `DESKTOP` from `src/identity.ts` before the program loads, so `wcat --help` lists the tool and
+  `wcat <command>` runs it. `DESKTOP` holds the docs link, the tagline and the sign-in texts; `src/wcat.ts` adds the
+  permission keys as `WCAT`. `new` asks one more question, `--tagline` (at most 55 characters, made from the
+  description when left out), writes sign-in texts from the `--sign-in` answer, names the bin twice (the command
+  word and `wcat-<command>`), and adds `cli-dev manifest` to the CLI's `generate`, `generate:check` and
+  `contracts:check`. The CLI's first `pnpm generate` writes the committed `contracts/wirecat.json`, the one file of
+  `contracts/` its `files` ships; `pnpm smoke` lets it through. The template has no manifest of its own: its
+  `package.json` installs no program to name. A CLI made earlier adds the bin, `DESKTOP`, `src/wcat.ts` and the
+  three script steps by hand: `src/` and `package.json` are seeds.
+- **`new` has reference CLIs for mail and CRM:** mail-cli and bitrix24-cli.
+- **`--untrusted` offers what the category carries.** In a terminal, a messenger or mail offers messages from other
+  people, a CRM `records`, a calendar `invitations`, meetings `transcripts`, beside files, links and names. A flag
+  still takes any choice.
+- **Publishing outside WireCat**, in `kit/README.md`: your own npm scope, a public repository, the first publish by
+  hand, then npm trusted publishing, and how to get listed in cli-docs.
+
+### Changed — may break callers
+
+- **A new CLI outside `@wirecat` keeps its data, its skill and its keyring entries under `<scope>-<name>`.** For
+  `@example/acme-crm-cli`, `appName`, the skill's name and `skills/<name>/` are `example-acme-crm-cli`, where they
+  were the folder name: WireCat Desktop takes a tool it has not checked only with such a folder, so no package can
+  take another publisher's, and cli-core installs a skill only into a folder of its own name. A new placeholder,
+  `app` (`clidev-app`), carries the word; a `@wirecat` CLI and every env prefix are unchanged.
+- **The categories come from cli-core's kinds, in their order:** `messenger`, `mail`, `notes`, `files`, `meetings`,
+  `calendar`, `crm`. The values are the same; a script that picks a category by its menu number gets `calendar` and
+  `meetings` swapped.
+
+### Fixed
+
+- **The docs no longer assume a message source.** Reference CLIs says how deals and contacts reach the store
+  (cli-core's `./crm` port, `CrmSource` and `syncCrm`) and other structured records (the records envelope, `ingest`),
+  never through SQL of the CLI's own, and names a provider's `kind` as one of cli-core's `KINDS`. The README no longer
+  says the skeleton has no commands of its own.
 
 ## Unreleased
 

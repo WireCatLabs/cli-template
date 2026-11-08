@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util"
 import { INTERVIEW, NAME_QUESTIONS } from "./interview.js"
-import { type Io, runNew } from "./new.js"
+import { type Io, runNew, TAGLINE_QUESTION } from "./new.js"
 import { fetchPublished, loadSource, ownRoot } from "./source.js"
 import { parseMode, runUpgrade } from "./upgrade.js"
 
@@ -13,6 +13,7 @@ new asks for every missing answer in a terminal; without one, a missing answer i
   --command <word>      the command word people type
   --package <name>      the npm package name
   --owner <owner>       the GitHub owner of the repository
+  --tagline <line>      ${TAGLINE_QUESTION.text}; left out, it is made from the description
 ${INTERVIEW.map((question) => `  --${question.flag.padEnd(20)}${question.title ?? question.text}`).join("\n")}
 Any interview answer also takes "other:<your answer>"; several answers are comma-separated.
 
@@ -24,7 +25,7 @@ upgrade brings template changes into a CLI made from it; it needs a clean git wo
 `
 
 const answerFlags = Object.fromEntries(
-  [...NAME_QUESTIONS, ...INTERVIEW].map((question) => [question.flag, { type: "string" as const }]),
+  [...NAME_QUESTIONS, TAGLINE_QUESTION, ...INTERVIEW].map((question) => [question.flag, { type: "string" as const }]),
 )
 
 const main = async (argv: string[], io: Io): Promise<string> => {

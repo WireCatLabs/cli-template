@@ -4,7 +4,8 @@ import { join } from "node:path"
 
 export const MANIFEST = "template.json"
 
-export type Placeholders = { command: string; name: string; package: string; repository: string }
+// `app` is the data folder and the skill's name; before 0.19.0 it was the same word as `name`.
+export type Placeholders = { command: string; name: string; app: string; package: string; repository: string }
 
 export type TemplateManifest = {
   files: string[]
@@ -28,6 +29,7 @@ export type CliManifest = {
 export const DEFAULT_PLACEHOLDERS: Placeholders = {
   command: "app",
   name: "app-cli",
+  app: "app-cli",
   package: "@wirecat/app-cli",
   repository: "WireCatLabs/app-cli",
 }

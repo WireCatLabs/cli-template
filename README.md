@@ -66,7 +66,7 @@ keeps the shared files in step later, so a CLI made today does not drift from on
 - **Every check is wired in:** lint, types, tests with a coverage floor, command contracts, the docs checks and the
   release script.
 
-The copy tool is described in [kit/README.md](kit/README.md).
+The copy tool is described in [kit/README.md](https://github.com/WireCatLabs/cli-template/blob/main/kit/README.md).
 
 ## Profiles
 
@@ -83,7 +83,8 @@ may do: `allow`, `ask`, `readonly` or `deny`. `CLIDEV_READ_ONLY=1` refuses every
 
 ## Limits
 
-The skeleton connects to no service, keeps no messages and has no commands of its own beyond the shared ones above.
+The skeleton reaches only the sample's service, Example Comments, whose address never resolves, and stores none of
+its data.
 
 ## Security
 

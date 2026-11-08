@@ -120,7 +120,7 @@ it("config show names the profile it was given", async () => {
 it("skill show prints the packaged skill", async () => {
   const { code, out } = await ran(["skill", "show"])
   expect(code).toBe(0)
-  expect(out).toContain(readFileSync(new URL("../skills/clidev-cli/SKILL.md", import.meta.url), "utf8").split("\n")[0])
+  expect(out).toContain(readFileSync(new URL("../skills/clidev-app/SKILL.md", import.meta.url), "utf8").split("\n")[0])
 })
 
 it("mcp serve without a profile stops and says so", async () => {

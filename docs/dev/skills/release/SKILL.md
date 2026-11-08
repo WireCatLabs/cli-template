@@ -15,7 +15,7 @@ The rules are the handbook's [Releases page](../../../../node_modules/@wirecat/c
    left; report anything else and fix it in the release pull request.
 3. **The changelog.** Write `## Unreleased` under the handbook's headings, each at most once: `Added`,
    `Changed — may break callers`, `Fixed`, `Security`, `Removed` (`WC-DOC-14` to `WC-DOC-18`). No internal ids.
-4. **The docs.** `README.md`, `docs/*.md` and `skills/clidev-cli/SKILL.md` state what the code does now (`WC-DOC-3`).
+4. **The docs.** `README.md`, `docs/*.md` and `skills/clidev-app/SKILL.md` state what the code does now (`WC-DOC-3`).
    `pnpm generate` and `pnpm test:matrix` rewrite the generated pages (`WC-DOC-4`).
 5. **The comparison page.** Re-prove each ✅, 🟡 and ❌ this CLI has on its comparison page against the release build
    (`WC-CMP-11`): the site copy in cli-docs, `translations/pages/clidev/compare.en.md` and its `.ru.md` and `.es.md`,

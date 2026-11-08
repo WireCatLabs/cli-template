@@ -1,8 +1,11 @@
-import { execFileSync } from "node:child_process"
-import { existsSync, readdirSync } from "node:fs"
+import { execFileSync, spawnSync } from "node:child_process"
+import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { defineParityGroups } from "@wirecat/cli-base/standards/tables"
+import { KINDS } from "@wirecat/cli-core"
 import { afterAll, describe, expect, it } from "vitest"
-import { languageWarnings, runNew, speechModels, withContentLanguages } from "../src/new.js"
+import { INTERVIEW } from "../src/interview.js"
+import { languageWarnings, monthlyTime, runNew, speechModels, taglineOf, withContentLanguages } from "../src/new.js"
 import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
@@ -24,12 +27,12 @@ const makeNew = async (flags: Record<string, string>, name = "cal-cli") => {
 describe("new", () => {
   it.each([
     ["messenger", "whatsapp-cli", "messenger"],
-    ["mail", "No reference CLI", "mail"],
+    ["mail", "mail-cli", "mail"],
     ["notes", "cli-memo", "notes"],
     ["files", "drive-cli", "files and documents"],
     ["calendar", "gcal-cli", "calendar"],
     ["meetings", "zoom-cli", "meetings"],
-    ["crm", "No reference CLI", "CRM (sales: deals, contacts, companies)"],
+    ["crm", "bitrix24-cli", "CRM (sales: deals, contacts, companies)"],
     ["other:issue tracker", "No reference CLI", "other: issue tracker"],
   ])("copies the template for the %s category", async (category, reference, label) => {
     const { dir, out } = await makeNew({ ...NOTES_FLAGS, category })
@@ -57,12 +60,14 @@ describe("new", () => {
   it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {
     const { out } = await makeNew(NOTES_FLAGS)
 
-    expect(out).toContain("\n  cd cal-cli\n  pnpm install\n  pnpm lint:fix\n  pnpm ci:quick\n  git add -A\n")
+    expect(out).toContain(
+      "\n  cd cal-cli\n  pnpm install\n  pnpm lint:fix\n  pnpm generate\n  pnpm ci:quick\n  git add -A\n",
+    )
     expect(out).not.toContain("&&")
   })
 
   it("sends the person to the handbook's list of taken monthly cron minutes", async () => {
-    const { out } = await makeNew(NOTES_FLAGS)
+    const { out } = await makeNew({ ...NOTES_FLAGS, package: "@wirecat/cal-cli" })
 
     expect(out).toContain("cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9)")
   })
@@ -74,17 +79,17 @@ describe("new", () => {
     expect(pkg.name).toBe("@example/cal-cli")
     expect(pkg.version).toBe("0.0.0")
     expect(pkg.description).toBe("A new WireCat CLI, started from cli-template")
-    expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js" })
-    expect(pkg.files).toEqual(["dist", "skills", "/README.md", "CHANGELOG.md", "LICENSE"])
+    expect(pkg.bin).toEqual({ cal: "dist/bin/cal.js", "wcat-cal": "dist/bin/cal.js" })
+    expect(pkg.files).toEqual(["dist", "skills", "contracts/wirecat.json", "/README.md", "CHANGELOG.md", "LICENSE"])
     expect(pkg.scripts).toEqual({ build: "tsc --build", prepack: "pnpm build" })
     expect(pkg.repository.url).toBe("git+https://github.com/example/cal-cli.git")
   })
 
-  it("names the MCP Registry server only for a WireCatLabs CLI", async () => {
-    const { dir } = await makeNew(NOTES_FLAGS)
-    const { dir: wirecat } = await makeNew({ ...NOTES_FLAGS, owner: "WireCatLabs" })
+  it("names the MCP Registry server under wirecat.dev only for a @wirecat package", async () => {
+    const { dir } = await makeNew({ ...NOTES_FLAGS, owner: "WireCatLabs" })
+    const { dir: wirecat } = await makeNew({ ...NOTES_FLAGS, package: "@wirecat/cal-cli", owner: "WireCatLabs" })
 
-    expect(JSON.parse(read(dir, "package.json"))).not.toHaveProperty("mcpName")
+    expect(JSON.parse(read(dir, "package.json")).mcpName).toBe("io.github.WireCatLabs/cal-cli")
     expect(JSON.parse(read(wirecat, "package.json")).mcpName).toBe("dev.wirecat/cal-cli")
   })
 
@@ -132,7 +137,7 @@ describe("new", () => {
     const cwd = tempDir("ask")
     const source = await loadSource(fixture("0.1.0", V1))
     const { category: _, filters: __, owner: ___, ...flags } = NOTES_FLAGS
-    const terminal = io(["Example-Org", "9", "1", "2,6", "by location"], true)
+    const terminal = io(["Example-Org", "", "9", "1", "2,6", "by location"], true)
 
     await runNew(cwd, source, { name: "cal-cli", flags }, terminal)
 
@@ -143,6 +148,46 @@ describe("new", () => {
     expect(JSON.parse(read(join(cwd, "cal-cli"), "template.json")).names.owner).toBe("Example-Org")
   })
 
+  it("offers one category for each of cli-core's kinds", () => {
+    expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(KINDS.length)
+  })
+
+  it("offers the untrusted input of the category in the menu, and takes any choice as a flag", async () => {
+    const cwd = tempDir("ask-untrusted")
+    const source = await loadSource(fixture("0.1.0", V1))
+    const { untrusted: _, ...flags } = NOTES_FLAGS
+    const terminal = io(["", "1"], true)
+
+    await runNew(cwd, source, { name: "cal-cli", flags: { ...flags, category: "crm" } }, terminal)
+
+    expect(terminal.text()).toContain("1. deals, contacts and comments others entered")
+    expect(terminal.text()).not.toContain("messages from other people")
+    expect(read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")).toContain(
+      "**Untrusted input:** deals, contacts and comments others entered",
+    )
+    await expect(makeNew({ ...NOTES_FLAGS, category: "crm", untrusted: "messages" })).resolves.toBeDefined()
+  })
+
+  it("derives the tagline from a description, cut on a word at 55 characters", () => {
+    expect(taglineOf("a new tool.")).toBe("A new tool")
+    const long = taglineOf("Contacts, deals and invoices from Acme, searchable offline with every other source")
+    expect(long).toBe("Contacts, deals and invoices from Acme, searchable")
+    expect(long.length).toBeLessThanOrEqual(55)
+  })
+
+  it("refuses a tagline longer than Desktop shows", async () => {
+    await expect(makeNew({ ...NOTES_FLAGS, tagline: "x".repeat(56) })).rejects.toThrow(
+      /--tagline: one line of at most 55/,
+    )
+  })
+
+  it("without a terminal, lists the untrusted input of the category given", async () => {
+    const { untrusted: _, ...flags } = NOTES_FLAGS
+    const error = await makeNew({ ...flags, category: "calendar" }).catch((caught: Error) => caught.message)
+
+    expect(error).toContain("--untrusted: invitations, files, links, names, none, or other:<your answer>")
+  })
+
   it("puts the one-time first task into DESIGN.md, not into the template-owned AGENTS.md", async () => {
     const cwd = tempDir("first-task")
 
@@ -150,7 +195,7 @@ describe("new", () => {
 
     const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
     expect(design).toContain("## First task")
-    expect(design).toContain("`skills/cal-cli/SKILL.md`")
+    expect(design).toContain("`skills/example-cal-cli/SKILL.md`")
     expect(read(join(cwd, "cal-cli"), "AGENTS.md")).not.toMatch(/first task/i)
   })
 
@@ -184,7 +229,218 @@ describe("new from this repository", () => {
     )
     expect(read(join(cwd, "cal-cli"), "README.md")).toContain("https://github.com/WireCatLabs/cli-template)")
     expect(read(join(cwd, "cal-cli"), "AGENTS.md")).toContain("https://github.com/WireCatLabs/cli-template)")
-    expect(existsSync(join(cwd, "cal-cli", "config/parity-groups.json"))).toBe(false)
+    expect(read(join(cwd, "cal-cli"), "config/parity-groups.json")).not.toContain("template")
+  })
+
+  const makeReal = async (flags: Record<string, string>) => {
+    const cwd = tempDir("real")
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags }, io())
+    return join(cwd, "cal-cli")
+  }
+  const WIRECAT_FLAGS = { ...NOTES_FLAGS, package: "@wirecat/cal-cli", owner: "WireCatLabs" }
+
+  it("lets cspell know every reference CLI new can name in AGENTS.md", async () => {
+    const dir = await makeReal({ ...NOTES_FLAGS, category: "crm" })
+
+    const { words } = JSON.parse(read(dir, "cspell.json"))
+    expect(words).toEqual(expect.arrayContaining(["cal", "bitrix24-cli", "whatsapp-cli", "gcal-cli"]))
+    expect(read(dir, "AGENTS.md")).toContain("bitrix24-cli")
+  })
+
+  it("names an outside package's MCP server under its GitHub owner, not wirecat.dev", async () => {
+    const outside = await makeReal(NOTES_FLAGS)
+    const wirecat = await makeReal(WIRECAT_FLAGS)
+
+    const server = JSON.parse(read(outside, "server.json"))
+    expect(server).toMatchObject({
+      name: "io.github.example/cal-cli",
+      title: "cal",
+      websiteUrl: "https://github.com/example/cal-cli#readme",
+      repository: { url: "https://github.com/example/cal-cli" },
+    })
+    expect(read(outside, "server.json")).not.toMatch(/wirecat/i)
+    expect(JSON.parse(read(outside, "package.json")).mcpName).toBe("io.github.example/cal-cli")
+    expect(JSON.parse(read(wirecat, "server.json"))).toMatchObject({
+      name: "dev.wirecat/cal-cli",
+      websiteUrl: "https://wirecat.dev/en/docs/cal",
+    })
+    expect(JSON.parse(read(wirecat, "package.json")).mcpName).toBe("dev.wirecat/cal-cli")
+  })
+
+  it("makes the owner the author of an outside package, and keeps WireCat's own", async () => {
+    const template = JSON.parse(read(root, "package.json"))
+
+    expect(JSON.parse(read(await makeReal(NOTES_FLAGS), "package.json")).author).toBe("example")
+    expect(JSON.parse(read(await makeReal(WIRECAT_FLAGS), "package.json")).author).toBe(template.author)
+  })
+
+  it("puts an outside CLI in a parity group of its own that cli-base accepts", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+
+    const groups = defineParityGroups(JSON.parse(read(dir, "config/parity-groups.json")))
+    expect(groups.map((group) => group.name)).toEqual(["cal"])
+    expect(groups[0]?.members).toContain("cal")
+    expect(existsSync(join(await makeReal(WIRECAT_FLAGS), "config/parity-groups.json"))).toBe(false)
+  })
+
+  it("gives an outside CLI a monthly minute from its package name, after WireCat's window", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+    const { hour, minute } = monthlyTime("@example/cal-cli")
+
+    expect(read(dir, ".github/workflows/monthly.yml")).toContain(`cron: "${minute} ${hour} 1 * *"`)
+    expect(read(await makeReal(WIRECAT_FLAGS), ".github/workflows/monthly.yml")).toBe(
+      read(root, ".github/workflows/monthly.yml"),
+    )
+    const times = ["@a/x-cli", "@b/x-cli", "@a/y-cli", "x-cli"].map((pkg) => monthlyTime(pkg))
+    for (const time of times) {
+      expect(time.hour * 60 + time.minute).toBeGreaterThan(4 * 60)
+      expect(time.hour * 60 + time.minute).toBeLessThan(6 * 60)
+      expect(time.minute).not.toBe(0)
+    }
+    expect(new Set(times.map(({ hour: h, minute: m }) => `${h}:${m}`)).size).toBe(times.length)
+  })
+
+  it("prints only the steps an outside CLI needs, since new did the parity group and the minute", async () => {
+    const cwd = tempDir("real")
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    expect(out).toContain("fails until steps 1 and 2 are done")
+    expect(out).toContain("3. Before each bin/release:")
+    expect(out).not.toContain("PARITY_GROUPS")
+  })
+
+  it("gives the CLI an executable live check to record before its first release", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+    const cwd = tempDir("real")
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: WIRECAT_FLAGS }, io())
+
+    const live = read(dir, "scripts/live.sh")
+    expect(live).toContain(
+      'export CAL_CONFIG_DIR="$work/config" CAL_STATE_DIR="$work/state" CAL_CACHE_DIR="$work/cache"',
+    )
+    expect(live).toContain('cli=(node "$root/dist/bin/cal.js")')
+    expect(live).toContain('DBUS_SESSION_BUS_ADDRESS="disabled:"')
+    expect(execFileSync("git", ["ls-files", "-s", "scripts/live.sh"], { cwd: dir, encoding: "utf8" })).toMatch(
+      /^100755 /,
+    )
+    expect(out).toContain("5. Before each bin/release:")
+    expect(out).toContain("pnpm exec cli-dev live record --script scripts/live.sh")
+  })
+
+  it("makes the owner the copyright holder of an outside package, under the same Apache-2.0 text", async () => {
+    const template = read(root, "LICENSE")
+    const outside = read(await makeReal(NOTES_FLAGS), "LICENSE")
+
+    expect(outside.split("\n")[0]).toBe(`Copyright (c) ${new Date().getFullYear()} example`)
+    expect(outside.split("\n").slice(1)).toEqual(template.split("\n").slice(1))
+    expect(read(await makeReal(WIRECAT_FLAGS), "LICENSE")).toBe(template)
+  })
+
+  it("signs in to the MCP Registry with wirecat.dev's key for @wirecat, and with GitHub OIDC otherwise", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+    const job = (name: string) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n {2}\S/)[0] ?? ""
+
+    expect(job("mcp-registry")).toContain("&& startsWith(needs.build.outputs.name, '@wirecat/')")
+    expect(job("mcp-registry")).toContain("login dns --domain wirecat.dev")
+    expect(job("mcp-registry")).not.toContain("id-token")
+    expect(job("mcp-registry-github")).toContain("&& !startsWith(needs.build.outputs.name, '@wirecat/')")
+    expect(job("mcp-registry-github")).toContain("./mcp-publisher login github-oidc")
+    expect(job("mcp-registry-github")).toContain("id-token: write")
+  })
+
+  it("stops the GitHub registry release before mcp-publisher, naming the mcpName to add", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+    const job = workflow.split("\n  mcp-registry-github:\n")[1]?.split(/\n {2}\S/)[0] ?? ""
+    const script = (job.split("run: |\n")[1]?.split("\n          curl ")[0] ?? "").replaceAll(/^ {10}/gm, "")
+    const cwd = tempDir("release")
+    writeFileSync(join(cwd, "server.json"), '{ "name": "io.github.example/cal-cli" }\n')
+    const check = (pkg: object) => {
+      writeFileSync(join(cwd, "package.json"), JSON.stringify(pkg))
+      return spawnSync("bash", ["-e", "-c", script], {
+        cwd,
+        encoding: "utf8",
+        env: { ...process.env, GITHUB_REPOSITORY: "example/cal-cli", VERSION: "1.0.0" },
+      })
+    }
+
+    const missing = check({ name: "@example/cal-cli" })
+
+    expect(missing.status).toBe(1)
+    expect(missing.stdout).toBe(
+      '::error::package.json needs "mcpName": "io.github.example/cal-cli" for the MCP Registry; add it, then release again\n',
+    )
+    expect(check({ mcpName: "io.github.example/cal-cli" })).toMatchObject({ status: 0, stdout: "" })
+  })
+
+  it("publishes the skill to ClawHub only for a package under @wirecat", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+
+    for (const job of ["clawhub-dry-run", "clawhub"]) {
+      const block = workflow.split(`\n  ${job}:\n`)[1]?.split(/\n {2}\S/)[0] ?? ""
+      expect(block, job).toMatch(/needs: (build|\[build, tag\])\n/)
+      expect(block, job).toContain("startsWith(needs.build.outputs.name, '@wirecat/')")
+    }
+  })
+
+  it("answers --wcat-describe from the bin before the program loads", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const bin = read(join(cwd, "cal-cli"), "src/bin/cal.ts")
+    expect(bin.indexOf("await wcatStart(DESKTOP)")).toBeLessThan(bin.indexOf('import("../program.js")'))
+    expect(read(join(cwd, "cal-cli"), "src/identity.ts")).toContain('docs: "https://github.com/example/cal-cli#readme"')
+  })
+
+  it("writes the tagline and the sign-in texts Desktop shows into src/identity.ts", async () => {
+    const token = tempDir("real")
+    const none = tempDir("real")
+    const source = await loadSource(root)
+
+    await runNew(token, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, "sign-in": "token" } }, io())
+    await runNew(none, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, tagline: "Cal events, offline" } }, io())
+
+    const withToken = read(join(token, "cal-cli"), "src/identity.ts")
+    expect(withToken).toContain('  tagline: "A new WireCat CLI, started from cli-template",\n')
+    expect(withToken).toContain('    asks: "An API token or key from the service.",\n')
+    const withNone = read(join(none, "cal-cli"), "src/identity.ts")
+    expect(withNone).toContain('  tagline: "Cal events, offline",\n')
+    expect(withNone).not.toContain("signIn")
+  })
+
+  it("names the data folder <scope>-<name> outside @wirecat, as WireCat Desktop requires of its own tools", async () => {
+    const source = await loadSource(root)
+    const own = tempDir("real")
+    const wirecat = tempDir("real")
+    const flags = { ...NOTES_FLAGS, command: "acme", package: "@leemour/acme-crm-cli" }
+
+    await runNew(own, source, { name: "acme-tools", flags }, io())
+    await runNew(wirecat, source, { name: "cal-cli", flags: { ...NOTES_FLAGS, package: "@wirecat/cal-cli" } }, io())
+
+    const app = /appName: "([^"]+)"/.exec(read(join(own, "acme-tools"), "src/identity.ts"))?.[1]?.toLowerCase() ?? ""
+    expect(app === "leemour-acme-crm-cli" || app.startsWith("leemour-acme-crm-cli-")).toBe(true)
+    expect(read(join(own, "acme-tools"), "src/identity.ts")).toContain('envPrefix: "ACME",')
+    expect(read(join(own, "acme-tools"), "skills/leemour-acme-crm-cli/SKILL.md")).toContain(
+      "name: leemour-acme-crm-cli",
+    )
+    expect(read(join(own, "acme-tools"), "src/testing/harness.ts")).toContain('"leemour-acme-crm-cli:token:personal"')
+    const first = read(join(wirecat, "cal-cli"), "src/identity.ts")
+    expect(first).toContain('appName: "cal-cli",')
+    expect(first).toContain('envPrefix: "CAL",')
+    expect(existsSync(join(wirecat, "cal-cli", "skills/cal-cli/SKILL.md"))).toBe(true)
+  })
+
+  it("runs cli-dev manifest in the CLI's generate and checks, never in the template's", async () => {
+    const cwd = tempDir("real")
+
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    const { scripts } = JSON.parse(read(join(cwd, "cal-cli"), "package.json"))
+    const step = "cli-dev manifest --program dist/program.js --identity dist/wcat.js"
+    expect(scripts.generate).toMatch(new RegExp(`&& ${step}$`))
+    expect(scripts["generate:check"]).toMatch(new RegExp(`&& ${step} --check$`))
+    expect(scripts["contracts:check"]).toMatch(new RegExp(`&& ${step} --check$`))
+    expect(JSON.parse(read(root, "package.json")).scripts.generate).not.toContain("cli-dev manifest")
   })
 
   it("keeps the docs checks, CHANGELOG.md included, and drops only the kit's", async () => {

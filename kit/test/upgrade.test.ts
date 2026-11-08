@@ -177,6 +177,26 @@ describe("upgrade", () => {
     expect(manifest(dir).version).toBe("0.2.0")
   })
 
+  it("names the mcpName and server.json name a CLI made before 0.20.0 must add by hand", async () => {
+    const { dir, upgrade } = await setup()
+    expect(await upgrade({ dryRun: true, mode: "skip" })).not.toContain("mcpName")
+    const { mcpName: _, ...pkg } = JSON.parse(read(dir, "package.json"))
+    writeFileSync(join(dir, "package.json"), `${JSON.stringify(pkg, null, 2)}\n`)
+    writeFileSync(join(dir, "server.json"), '{ "name": "dev.wirecat/cal-cli" }\n')
+    commitAll(dir)
+
+    const out = await upgrade({ dryRun: false, mode: "skip" })
+
+    expect(out).toContain(
+      [
+        "Upgrade never edits package.json or server.json; the MCP Registry release needs you to:",
+        '  add "mcpName": "io.github.example/cal-cli" in package.json',
+        '  set "name": "io.github.example/cal-cli" in server.json',
+      ].join("\n"),
+    )
+    expect(read(dir, "package.json")).not.toContain("mcpName")
+  })
+
   it("needs a clean working tree", async () => {
     const { dir, upgrade } = await setup()
     writeFileSync(join(dir, "scratch.txt"), "x")

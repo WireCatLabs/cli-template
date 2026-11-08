@@ -6,11 +6,20 @@ const word = (text: string): string => `(?<![A-Za-z0-9_])${escapeRegex(text)}(?!
 
 export const upperCommand = (command: string): string => command.toUpperCase().replaceAll("-", "_")
 
+// WireCat Desktop takes a tool outside @wirecat only when its data folder, and so its skill, is <scope>-<name>: no
+// package can then take another publisher's folder. WireCat's own CLIs keep the repository name.
+export const appNameOf = (names: Names): string => {
+  const scoped = /^@([^/]+)\/(.+)$/.exec(names.package)
+  return scoped && scoped[1] !== "wirecat" ? `${scoped[1]}-${scoped[2]}` : names.name
+}
+
 // The command word followed by ": " is a key and stays: 0.1.x used `app`, which is also cli-core's key in
 // `app: IDENTITY`. One pass, so a replacement that itself contains the command placeholder (a package named
 // "@x/clidev-tools") is never renamed a second time.
 export const renamer = (placeholders: Placeholders, names: Names): ((text: string) => string) => {
+  // `app` first, so a version whose `app` and `name` are one word renders it as `name`, as it did.
   const table = new Map<string, string>([
+    [placeholders.app, appNameOf(names)],
     [placeholders.package, names.package],
     [placeholders.repository, `${names.owner}/${names.name}`],
     [placeholders.name, names.name],
@@ -18,7 +27,12 @@ export const renamer = (placeholders: Placeholders, names: Names): ((text: strin
     [upperCommand(placeholders.command), upperCommand(names.command)],
   ])
   const pattern = new RegExp(
-    [escapeRegex(placeholders.package), escapeRegex(placeholders.repository), word(placeholders.name)]
+    [
+      escapeRegex(placeholders.package),
+      escapeRegex(placeholders.repository),
+      word(placeholders.app),
+      word(placeholders.name),
+    ]
       .concat(`${word(placeholders.command)}(?!:\\s)`)
       .concat(word(upperCommand(placeholders.command)))
       .join("|"),
