@@ -62,7 +62,8 @@ WireCat Desktop takes a tool it has not checked only when its data folder names 
 tool.
 
 For such a package `new` also writes what WireCat's own lists would otherwise give: the MCP Registry name
-`io.github.<owner>/<name>` in `server.json` and `package.json`, `--owner` as the author, `config/parity-groups.json`
+`io.github.<owner>/<name>` in `server.json` and `package.json` (the release publishes it with a GitHub OIDC
+sign-in), `--owner` as the author and the copyright holder in `LICENSE`, `config/parity-groups.json`
 with a group of its own, and a monthly run between 04:01 and 05:59 UTC picked from the package name. The release
 publishes no skill to ClawHub, whose `wirecat` owner is WireCat's.
 

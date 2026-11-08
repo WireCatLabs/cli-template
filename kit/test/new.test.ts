@@ -327,6 +327,27 @@ describe("new from this repository", () => {
     expect(out).toContain("pnpm exec cli-dev live record --script scripts/live.sh")
   })
 
+  it("makes the owner the copyright holder of an outside package, under the same Apache-2.0 text", async () => {
+    const template = read(root, "LICENSE")
+    const outside = read(await makeReal(NOTES_FLAGS), "LICENSE")
+
+    expect(outside.split("\n")[0]).toBe(`Copyright (c) ${new Date().getFullYear()} example`)
+    expect(outside.split("\n").slice(1)).toEqual(template.split("\n").slice(1))
+    expect(read(await makeReal(WIRECAT_FLAGS), "LICENSE")).toBe(template)
+  })
+
+  it("signs in to the MCP Registry with wirecat.dev's key for @wirecat, and with GitHub OIDC otherwise", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+    const job = (name: string) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n {2}\S/)[0] ?? ""
+
+    expect(job("mcp-registry")).toContain("&& startsWith(needs.build.outputs.name, '@wirecat/')")
+    expect(job("mcp-registry")).toContain("login dns --domain wirecat.dev")
+    expect(job("mcp-registry")).not.toContain("id-token")
+    expect(job("mcp-registry-github")).toContain("&& !startsWith(needs.build.outputs.name, '@wirecat/')")
+    expect(job("mcp-registry-github")).toContain("./mcp-publisher login github-oidc")
+    expect(job("mcp-registry-github")).toContain("id-token: write")
+  })
+
   it("publishes the skill to ClawHub only for a package under @wirecat", () => {
     const workflow = read(root, ".github/workflows/release.yml")
 

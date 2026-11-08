@@ -14,7 +14,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   to the CLI's `cspell.json` words; `bitrix24-cli` was unknown to cspell.
 - **A CLI outside `@wirecat` no longer claims WireCat's names.** `new` writes its MCP Registry name as
   `io.github.<owner>/<name>` in `server.json` and in `package.json`'s `mcpName`, points `websiteUrl` at its own
-  repository, drops "WireCat" from the server's title, and makes `--owner` the package's author.
+  repository, drops "WireCat" from the server's title, and makes `--owner` the package's author and the
+  copyright holder in `LICENSE`, with the current year. `release.yml` publishes such a server to the MCP Registry
+  with a GitHub OIDC sign-in (`mcp-publisher login github-oidc`), which grants `io.github.<owner>/`; a `@wirecat`
+  package keeps the wirecat.dev DNS sign-in.
 - **A CLI outside `@wirecat` passes `cli-dev repo-check` without WireCat's lists.** `new` writes
   `config/parity-groups.json` with a group of its own, and sets `monthly.yml`'s cron to a time between 04:01 and
   05:59 UTC picked from the package name, after the minutes WireCat's repositories hold. It prints only the two

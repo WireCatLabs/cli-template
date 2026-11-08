@@ -343,6 +343,12 @@ const withManifestSteps = (scripts: Record<string, unknown>): Record<string, unk
 
 const VERSION_FILE = "src/version.ts"
 
+export const withCopyrightHolder = (text: string, holder: string, year: number): string => {
+  const line = /^Copyright \(c\) \d{4} .+$/m
+  if (!line.test(text)) throw new Error("LICENSE: no copyright line to rewrite")
+  return text.replace(line, `Copyright (c) ${year} ${holder}`)
+}
+
 const signInTexts = (command: string, signIn: string): { gives: string; asks: string } | undefined => {
   if (signIn === "none") return undefined
   const asks: Record<string, string> = {
@@ -480,6 +486,9 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
       ),
     "AGENTS.md": (text) => withReference(text, category),
     "cspell.json": withReferenceWords,
+    ...(isWireCat(names)
+      ? {}
+      : { LICENSE: (text: string) => withCopyrightHolder(text, names.owner, new Date().getFullYear()) }),
     "server.json": (text) => cliServerJson(text, names),
     ...(isWireCat(names) ? {} : { [MONTHLY_FILE]: (text: string) => withMonthlyTime(text, names.package) }),
   }
