@@ -5,7 +5,7 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
-## Unreleased
+## 0.22.0 — 08.11.2026
 
 ### Added
 
