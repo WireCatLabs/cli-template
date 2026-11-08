@@ -389,6 +389,8 @@ describe("new from this repository", () => {
 
     const bin = read(join(cwd, "cal-cli"), "src/bin/cal.ts")
     expect(bin.indexOf("await wcatStart(DESKTOP)")).toBeLessThan(bin.indexOf('import("../program.js")'))
+    expect(bin.indexOf("catchCrashes(")).toBeLessThan(bin.indexOf("await wcatStart(DESKTOP)"))
+    expect(bin).not.toMatch(/finally \{/)
     expect(read(join(cwd, "cal-cli"), "src/identity.ts")).toContain('docs: "https://github.com/example/cal-cli#readme"')
   })
 

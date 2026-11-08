@@ -19,6 +19,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   (mcp-publisher) fetched each tool from GitHub releases once, with no time limit: a 504 from GitHub failed the job,
   and a stalled download held it until its timeout. Each download now retries up to five times, gives one attempt 60
   seconds and stops retrying after two minutes. The sha256 checks are unchanged.
+- **The bin catches a crash from the start of the run.** `src/bin/clidev.ts`, and the bin `kit/new.ts` writes,
+  installed the crash handler only after `wcatStart` and removed it in a `finally`, which ran before a thrown
+  top-level await reached the handler: a throw printed a raw Node stack instead of the JSON error. The handler now
+  goes in first and is removed only after a run that did not throw.
 
 ## 0.22.0 — 08.11.2026
 
