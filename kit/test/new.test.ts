@@ -1,10 +1,11 @@
 import { execFileSync } from "node:child_process"
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
+import { defineParityGroups } from "@wirecat/cli-base/standards/tables"
 import { KINDS } from "@wirecat/cli-core"
 import { afterAll, describe, expect, it } from "vitest"
 import { INTERVIEW } from "../src/interview.js"
-import { languageWarnings, runNew, speechModels, taglineOf, withContentLanguages } from "../src/new.js"
+import { languageWarnings, monthlyTime, runNew, speechModels, taglineOf, withContentLanguages } from "../src/new.js"
 import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
@@ -66,7 +67,7 @@ describe("new", () => {
   })
 
   it("sends the person to the handbook's list of taken monthly cron minutes", async () => {
-    const { out } = await makeNew(NOTES_FLAGS)
+    const { out } = await makeNew({ ...NOTES_FLAGS, package: "@wirecat/cal-cli" })
 
     expect(out).toContain("cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9)")
   })
@@ -84,11 +85,11 @@ describe("new", () => {
     expect(pkg.repository.url).toBe("git+https://github.com/example/cal-cli.git")
   })
 
-  it("names the MCP Registry server only for a WireCatLabs CLI", async () => {
-    const { dir } = await makeNew(NOTES_FLAGS)
-    const { dir: wirecat } = await makeNew({ ...NOTES_FLAGS, owner: "WireCatLabs" })
+  it("names the MCP Registry server under wirecat.dev only for a @wirecat package", async () => {
+    const { dir } = await makeNew({ ...NOTES_FLAGS, owner: "WireCatLabs" })
+    const { dir: wirecat } = await makeNew({ ...NOTES_FLAGS, package: "@wirecat/cal-cli", owner: "WireCatLabs" })
 
-    expect(JSON.parse(read(dir, "package.json"))).not.toHaveProperty("mcpName")
+    expect(JSON.parse(read(dir, "package.json")).mcpName).toBe("io.github.WireCatLabs/cal-cli")
     expect(JSON.parse(read(wirecat, "package.json")).mcpName).toBe("dev.wirecat/cal-cli")
   })
 
@@ -228,7 +229,133 @@ describe("new from this repository", () => {
     )
     expect(read(join(cwd, "cal-cli"), "README.md")).toContain("https://github.com/WireCatLabs/cli-template)")
     expect(read(join(cwd, "cal-cli"), "AGENTS.md")).toContain("https://github.com/WireCatLabs/cli-template)")
-    expect(existsSync(join(cwd, "cal-cli", "config/parity-groups.json"))).toBe(false)
+    expect(read(join(cwd, "cal-cli"), "config/parity-groups.json")).not.toContain("template")
+  })
+
+  const makeReal = async (flags: Record<string, string>) => {
+    const cwd = tempDir("real")
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags }, io())
+    return join(cwd, "cal-cli")
+  }
+  const WIRECAT_FLAGS = { ...NOTES_FLAGS, package: "@wirecat/cal-cli", owner: "WireCatLabs" }
+
+  it("lets cspell know every reference CLI new can name in AGENTS.md", async () => {
+    const dir = await makeReal({ ...NOTES_FLAGS, category: "crm" })
+
+    const { words } = JSON.parse(read(dir, "cspell.json"))
+    expect(words).toEqual(expect.arrayContaining(["cal", "bitrix24-cli", "whatsapp-cli", "gcal-cli"]))
+    expect(read(dir, "AGENTS.md")).toContain("bitrix24-cli")
+  })
+
+  it("names an outside package's MCP server under its GitHub owner, not wirecat.dev", async () => {
+    const outside = await makeReal(NOTES_FLAGS)
+    const wirecat = await makeReal(WIRECAT_FLAGS)
+
+    const server = JSON.parse(read(outside, "server.json"))
+    expect(server).toMatchObject({
+      name: "io.github.example/cal-cli",
+      title: "cal",
+      websiteUrl: "https://github.com/example/cal-cli#readme",
+      repository: { url: "https://github.com/example/cal-cli" },
+    })
+    expect(read(outside, "server.json")).not.toMatch(/wirecat/i)
+    expect(JSON.parse(read(outside, "package.json")).mcpName).toBe("io.github.example/cal-cli")
+    expect(JSON.parse(read(wirecat, "server.json"))).toMatchObject({
+      name: "dev.wirecat/cal-cli",
+      websiteUrl: "https://wirecat.dev/en/docs/cal",
+    })
+    expect(JSON.parse(read(wirecat, "package.json")).mcpName).toBe("dev.wirecat/cal-cli")
+  })
+
+  it("makes the owner the author of an outside package, and keeps WireCat's own", async () => {
+    const template = JSON.parse(read(root, "package.json"))
+
+    expect(JSON.parse(read(await makeReal(NOTES_FLAGS), "package.json")).author).toBe("example")
+    expect(JSON.parse(read(await makeReal(WIRECAT_FLAGS), "package.json")).author).toBe(template.author)
+  })
+
+  it("puts an outside CLI in a parity group of its own that cli-base accepts", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+
+    const groups = defineParityGroups(JSON.parse(read(dir, "config/parity-groups.json")))
+    expect(groups.map((group) => group.name)).toEqual(["cal"])
+    expect(groups[0]?.members).toContain("cal")
+    expect(existsSync(join(await makeReal(WIRECAT_FLAGS), "config/parity-groups.json"))).toBe(false)
+  })
+
+  it("gives an outside CLI a monthly minute from its package name, after WireCat's window", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+    const { hour, minute } = monthlyTime("@example/cal-cli")
+
+    expect(read(dir, ".github/workflows/monthly.yml")).toContain(`cron: "${minute} ${hour} 1 * *"`)
+    expect(read(await makeReal(WIRECAT_FLAGS), ".github/workflows/monthly.yml")).toBe(
+      read(root, ".github/workflows/monthly.yml"),
+    )
+    const times = ["@a/x-cli", "@b/x-cli", "@a/y-cli", "x-cli"].map((pkg) => monthlyTime(pkg))
+    for (const time of times) {
+      expect(time.hour * 60 + time.minute).toBeGreaterThan(4 * 60)
+      expect(time.hour * 60 + time.minute).toBeLessThan(6 * 60)
+      expect(time.minute).not.toBe(0)
+    }
+    expect(new Set(times.map(({ hour: h, minute: m }) => `${h}:${m}`)).size).toBe(times.length)
+  })
+
+  it("prints only the steps an outside CLI needs, since new did the parity group and the minute", async () => {
+    const cwd = tempDir("real")
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    expect(out).toContain("fails until steps 1 and 2 are done")
+    expect(out).toContain("3. Before each bin/release:")
+    expect(out).not.toContain("PARITY_GROUPS")
+  })
+
+  it("gives the CLI an executable live check to record before its first release", async () => {
+    const dir = await makeReal(NOTES_FLAGS)
+    const cwd = tempDir("real")
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: WIRECAT_FLAGS }, io())
+
+    const live = read(dir, "scripts/live.sh")
+    expect(live).toContain(
+      'export CAL_CONFIG_DIR="$work/config" CAL_STATE_DIR="$work/state" CAL_CACHE_DIR="$work/cache"',
+    )
+    expect(live).toContain('cli=(node "$root/dist/bin/cal.js")')
+    expect(live).toContain('DBUS_SESSION_BUS_ADDRESS="disabled:"')
+    expect(execFileSync("git", ["ls-files", "-s", "scripts/live.sh"], { cwd: dir, encoding: "utf8" })).toMatch(
+      /^100755 /,
+    )
+    expect(out).toContain("5. Before each bin/release:")
+    expect(out).toContain("pnpm exec cli-dev live record --script scripts/live.sh")
+  })
+
+  it("makes the owner the copyright holder of an outside package, under the same Apache-2.0 text", async () => {
+    const template = read(root, "LICENSE")
+    const outside = read(await makeReal(NOTES_FLAGS), "LICENSE")
+
+    expect(outside.split("\n")[0]).toBe(`Copyright (c) ${new Date().getFullYear()} example`)
+    expect(outside.split("\n").slice(1)).toEqual(template.split("\n").slice(1))
+    expect(read(await makeReal(WIRECAT_FLAGS), "LICENSE")).toBe(template)
+  })
+
+  it("signs in to the MCP Registry with wirecat.dev's key for @wirecat, and with GitHub OIDC otherwise", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+    const job = (name: string) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n {2}\S/)[0] ?? ""
+
+    expect(job("mcp-registry")).toContain("&& startsWith(needs.build.outputs.name, '@wirecat/')")
+    expect(job("mcp-registry")).toContain("login dns --domain wirecat.dev")
+    expect(job("mcp-registry")).not.toContain("id-token")
+    expect(job("mcp-registry-github")).toContain("&& !startsWith(needs.build.outputs.name, '@wirecat/')")
+    expect(job("mcp-registry-github")).toContain("./mcp-publisher login github-oidc")
+    expect(job("mcp-registry-github")).toContain("id-token: write")
+  })
+
+  it("publishes the skill to ClawHub only for a package under @wirecat", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+
+    for (const job of ["clawhub-dry-run", "clawhub"]) {
+      const block = workflow.split(`\n  ${job}:\n`)[1]?.split(/\n {2}\S/)[0] ?? ""
+      expect(block, job).toMatch(/needs: (build|\[build, tag\])\n/)
+      expect(block, job).toContain("startsWith(needs.build.outputs.name, '@wirecat/')")
+    }
   })
 
   it("answers --wcat-describe from the bin before the program loads", async () => {

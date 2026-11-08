@@ -14,13 +14,13 @@ pnpm build >/dev/null
 tarball=$(npm pack --silent --ignore-scripts --pack-destination "$work" | tail -n 1)
 npm install --silent --no-save --prefix "$work/install" "$work/$tarball"
 
-# build <name> <command>
+# build <name> <command> <category>; outside @wirecat, as a third party makes one, and with every flag new takes.
 build() {
   mkdir "$work/new-$2"
   cd "$work/new-$2"
   "$work/install/node_modules/.bin/cli-template" new "$1" --command "$2" --package "@example/$1" \
-    --owner example --category notes --content-lang en --sign-in none --api official-docs --filters time \
-    --never-store tokens --untrusted none >/dev/null
+    --owner example --tagline "Made by kit e2e" --category "$3" --content-lang en --sign-in none \
+    --api official-docs --filters time --never-store tokens --untrusted none >/dev/null
   cmp "$root/.gitignore" "$1/.gitignore"
   cd "$1"
   pnpm install
@@ -31,11 +31,12 @@ build() {
   pnpm ci:quick
   pnpm contracts:check
   pnpm test:coverage
-  echo "kit e2e: new $1 ($2) passed lint, generate, ci:quick, contracts:check and test:coverage"
+  pnpm docs:check
+  echo "kit e2e: new $1 ($2, $3) passed lint, generate, ci:quick, contracts:check, test:coverage and docs:check"
 }
 
-build demo-cli demo
-build acme-workspace-cli acme-workspace
+build demo-cli demo notes
+build acme-workspace-cli acme-workspace crm
 
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')

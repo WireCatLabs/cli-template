@@ -65,13 +65,14 @@ const flags = (values: Record<string, string>) => Object.entries(values).flatMap
 const cli = (cwd: string, args: string[]) => spawnSync(process.execPath, [bin, ...args], { cwd, encoding: "utf8" })
 
 describe("the packed bin", () => {
-  it("runs new without a terminal from flags alone", () => {
+  it("runs new without a terminal from flags alone, --tagline included", () => {
     const cwd = tempDir("packed-new")
 
     const result = cli(cwd, [
       "new",
       "demo",
       ...flags({
+        tagline: "Demo records, offline",
         command: "demo",
         package: "@example/demo-cli",
         owner: "example",
@@ -91,6 +92,10 @@ describe("the packed bin", () => {
     expect(existsSync(join(cwd, "demo/src/bin/demo.ts"))).toBe(true)
     expect(existsSync(join(cwd, "demo/kit"))).toBe(false)
     expect(JSON.parse(read(cwd, "demo/package.json")).files).not.toContain("gitignore")
+  })
+
+  it("lists --tagline in its usage", () => {
+    expect(cli(tempDir("packed-help"), ["--help"]).stdout).toContain("--tagline <line>")
   })
 
   it("exits 1 and lists the missing answers", () => {

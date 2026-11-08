@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process"
+import { createHash } from "node:crypto"
 import { chmod, mkdir, readdir, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
@@ -35,6 +36,63 @@ const REFERENCES: Record<string, string[]> = {
   notes: ["cli-memo"],
   crm: ["bitrix24-cli"],
 }
+
+const REFERENCE_NAMES = [...new Set(Object.values(REFERENCES).flat())]
+
+// The reference CLIs' names are not English words, and AGENTS.md names one of them.
+export const withReferenceWords = (text: string): string => {
+  const config: unknown = JSON.parse(text)
+  if (!isRecord(config)) throw new Error("cspell.json must be a JSON object")
+  const words = Array.isArray(config.words) ? config.words : []
+  return `${JSON.stringify({ ...config, words: [...new Set([...words, ...REFERENCE_NAMES])] }, null, 2)}\n`
+}
+
+const isWireCat = (names: Names): boolean => names.package.startsWith("@wirecat/")
+
+// The MCP Registry takes dev.wirecat/ names only from wirecat.dev's DNS key, which only WireCatLabs holds; anyone
+// else signs in with GitHub, which grants io.github.<owner>/.
+export const mcpNameOf = (names: Names): string =>
+  isWireCat(names) ? `dev.wirecat/${names.name}` : `io.github.${names.owner}/${names.name}`
+
+export const cliServerJson = (text: string, names: Names): string => {
+  if (isWireCat(names)) return text
+  const server: unknown = JSON.parse(text)
+  if (!isRecord(server)) throw new Error("server.json must be a JSON object")
+  const next = {
+    ...server,
+    name: mcpNameOf(names),
+    title: names.command,
+    websiteUrl: `https://github.com/${names.owner}/${names.name}#readme`,
+  }
+  return `${JSON.stringify(next, null, 2)}\n`
+}
+
+// 04:01 to 05:59 UTC: after WC-CI-9's window, so it never takes a WireCat repository's minute, and off the hour,
+// when GitHub delays scheduled runs most.
+export const monthlyTime = (pkg: string): { hour: number; minute: number } => {
+  const slot = createHash("sha256").update(pkg).digest().readUInt32BE(0) % 118
+  return { hour: 4 + Math.floor(slot / 59), minute: 1 + (slot % 59) }
+}
+
+const MONTHLY_FILE = ".github/workflows/monthly.yml"
+
+export const withMonthlyTime = (text: string, pkg: string): string => {
+  const cron = /cron: "\d+ \d+ 1 \* \*"/
+  if (!cron.test(text)) throw new Error(`${MONTHLY_FILE}: no monthly cron to rewrite`)
+  const { hour, minute } = monthlyTime(pkg)
+  return text.replace(cron, `cron: "${minute} ${hour} 1 * *"`)
+}
+
+// cli-base's PARITY_GROUPS lists WireCat's CLIs only, and repo-check fails a CLI in no group; this is the template's
+// own group, which every CLI made from it passes.
+export const parityGroups = (command: string): unknown[] => [
+  {
+    name: command,
+    members: [command, "tg", "max", "memo", "drive", "zm", "wa"],
+    covers: ["commands", "upgrade"],
+    differences: [],
+  },
+]
 
 const STEMMED = ["en", "ru", "es"]
 // Parakeet v3's languages, from cli-core's speech model list.
@@ -79,7 +137,7 @@ export const taglineOf = (description: string): string => {
   return cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:—-]+$/, "")
 }
 
-const TAGLINE_QUESTION: Question = {
+export const TAGLINE_QUESTION: Question = {
   key: "tagline",
   flag: "tagline",
   text: `The line WireCat Desktop shows for the tool, at most ${TAGLINE_MAX} characters`,
@@ -261,8 +319,9 @@ export const cliPackageJson = (text: string, names: Names): string => {
   if (pkg.repository) next.repository = { type: "git", url: repoUrl }
   if (pkg.homepage) next.homepage = `https://github.com/${names.owner}/${names.name}#readme`
   if (pkg.bugs) next.bugs = { url: `https://github.com/${names.owner}/${names.name}/issues` }
-  // The MCP Registry takes dev.wirecat/ names only from wirecat.dev's DNS key, which only WireCatLabs holds.
-  if (names.owner === "WireCatLabs") next.mcpName = `dev.wirecat/${names.name}`
+  if (pkg.author && !isWireCat(names)) next.author = names.owner
+  // The registry checks that the npm package names the server.json it is published with.
+  next.mcpName = mcpNameOf(names)
   return `${JSON.stringify(next, null, 2)}\n`
 }
 
@@ -283,6 +342,12 @@ const withManifestSteps = (scripts: Record<string, unknown>): Record<string, unk
   )
 
 const VERSION_FILE = "src/version.ts"
+
+export const withCopyrightHolder = (text: string, holder: string, year: number): string => {
+  const line = /^Copyright \(c\) \d{4} .+$/m
+  if (!line.test(text)) throw new Error("LICENSE: no copyright line to rewrite")
+  return text.replace(line, `Copyright (c) ${year} ${holder}`)
+}
 
 const signInTexts = (command: string, signIn: string): { gives: string; asks: string } | undefined => {
   if (signIn === "none") return undefined
@@ -375,13 +440,29 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
   if (paths.length) await run("git", ["add", "--chmod=+x", "--", ...paths], { cwd })
 }
 
-export const manualSteps = (names: Names): string[] => [
-  `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
-  `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), limit the GitHub npm environment's deployment branches to main, and add any secrets.`,
-  "3. Give .github/workflows/monthly.yml a free cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9).",
-  "4. WireCat CLIs only: a pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
-  "CI's repo-setup job (cli-dev repo-check) fails until steps 1 to 4 are done; step 2's environment is checked once it exists.",
-]
+const liveStep = (step: number): string =>
+  `${step}. Before each bin/release: replace the sample's reads in scripts/live.sh with your own, run it with a real token on stdin, then pnpm exec cli-dev live record --script scripts/live.sh and commit docs/dev/live-checks.txt (WC-REL-17).`
+
+export const manualSteps = (names: Names): string[] => {
+  const shared = [
+    `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
+    `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), limit the GitHub npm environment's deployment branches to main, and add any secrets.`,
+  ]
+  if (!isWireCat(names)) {
+    return [
+      ...shared,
+      liveStep(3),
+      "CI's repo-setup job (cli-dev repo-check) fails until steps 1 and 2 are done; step 2's environment is checked once it exists.",
+    ]
+  }
+  return [
+    ...shared,
+    "3. Give .github/workflows/monthly.yml a free cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9).",
+    "4. A pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
+    liveStep(5),
+    "CI's repo-setup job (cli-dev repo-check) fails until steps 1 to 4 are done; step 2's environment is checked once it exists.",
+  ]
+}
 
 export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs, io: Io): Promise<string> => {
   const { names, answers } = await collect(args, io)
@@ -404,6 +485,12 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
         answers.signIn?.[0] ?? "none",
       ),
     "AGENTS.md": (text) => withReference(text, category),
+    "cspell.json": withReferenceWords,
+    ...(isWireCat(names)
+      ? {}
+      : { LICENSE: (text: string) => withCopyrightHolder(text, names.owner, new Date().getFullYear()) }),
+    "server.json": (text) => cliServerJson(text, names),
+    ...(isWireCat(names) ? {} : { [MONTHLY_FILE]: (text: string) => withMonthlyTime(text, names.package) }),
   }
   const hashes: Record<string, string> = {}
   for (const [path, file] of rendered) {
@@ -414,6 +501,9 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
+  if (!isWireCat(names)) {
+    await writeOut(target, "config/parity-groups.json", `${JSON.stringify(parityGroups(names.command), null, 2)}\n`)
+  }
   const manifest: CliManifest = {
     template: source.name,
     version: source.version,
@@ -442,7 +532,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     '  git commit -m "chore: start from @wirecat/cli-template"',
     `  then give the agent docs/dev/DESIGN.md; every account command passes a profile, e.g. ${names.command} personal config show`,
     "",
-    "Four steps need a person:",
+    "Steps that need a person:",
     ...manualSteps(names).map((step) => `  ${step}`),
     "",
   ].join("\n")

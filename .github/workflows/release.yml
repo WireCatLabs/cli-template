@@ -202,13 +202,16 @@ jobs:
           awk -v v="$VERSION" '$0 ~ "^## "v" " {on=1; next} /^## / && on {exit} on' CHANGELOG.md |
             gh release create "v$VERSION" --title "$VERSION" --notes-file -
 
-  # The template's own release publishes @wirecat/cli-template, which has no skill on ClawHub.
+  # The template's own release publishes @wirecat/cli-template, which has no skill on ClawHub, and ClawHub's wirecat
+  # owner takes only WireCat's own packages: a CLI published under another scope publishes no skill there.
   # The same ClawHub CLI commit as `clawhub`, run here rather than through ClawHub's reusable workflow: that workflow
   # asks for id-token: write, and an OIDC token has no place in a job that runs third-party code outside the npm
   # environment. A dry run needs no ClawHub token either. Bump CLAWHUB_SHA together with `clawhub`'s.
   clawhub-dry-run:
     needs: build
-    if: inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+    if: >-
+      inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+      && startsWith(needs.build.outputs.name, '@wirecat/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -244,8 +247,10 @@ jobs:
   # is not counted as the latest, so the next publish picks it again and gets "already exists" (openclaw/clawhub#4046).
   # That one error warns; any other fails. Bump CLAWHUB_SHA together with clawhub-dry-run's.
   clawhub:
-    needs: tag
-    if: ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template' }}
+    needs: [build, tag]
+    if: >-
+      ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+      && startsWith(needs.build.outputs.name, '@wirecat/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -318,7 +323,9 @@ jobs:
   # wirecat-desktop), and the registry checks package.json's mcpName in the version npm already has.
   mcp-registry:
     needs: [build, tag]
-    if: ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template' }}
+    if: >-
+      ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+      && startsWith(needs.build.outputs.name, '@wirecat/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -347,4 +354,36 @@ jobs:
           tar -xzf mcp-publisher.tar.gz mcp-publisher
           jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp && mv server.tmp server.json
           ./mcp-publisher login dns --domain wirecat.dev --private-key "$MCP_REGISTRY_PRIVATE_KEY"
+          ./mcp-publisher publish
+
+  # A package outside @wirecat is named io.github.<owner>/<name>, a namespace the registry grants to this repository's
+  # GitHub OIDC token; its own job, so WireCat's DNS login above never holds an OIDC token.
+  mcp-registry-github:
+    needs: [build, tag]
+    if: >-
+      ${{ !inputs.dry_run && github.repository != 'WireCatLabs/cli-template'
+      && !startsWith(needs.build.outputs.name, '@wirecat/') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      MCP_PUBLISHER_VERSION: 1.8.5
+      MCP_PUBLISHER_SHA256: 2d151ac57275c9a6684d9d22b1cba81058bab195ea0a162e8fce3c6a5ec32812
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: publish to the MCP Registry
+        run: |
+          if [ ! -f server.json ]; then
+            echo "::notice::no server.json — $VERSION is not published to the MCP Registry"
+            exit 0
+          fi
+          curl -sSfLo mcp-publisher.tar.gz "https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${MCP_PUBLISHER_SHA256}  mcp-publisher.tar.gz" | sha256sum -c -
+          tar -xzf mcp-publisher.tar.gz mcp-publisher
+          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp && mv server.tmp server.json
+          ./mcp-publisher login github-oidc
           ./mcp-publisher publish
