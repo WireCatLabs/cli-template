@@ -42,6 +42,13 @@ cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')
 node "$bin" --version
 node "$bin" --wcat-describe | grep -q '"wcat_describe":2'
+# cli-dev release-pr fails a CLI's first release, from new's 0.0.0, when package.json installs no wcat-<name>.
+git add -A
+git -c user.name="kit e2e" -c user.email=kit-e2e@example.invalid commit -q --no-verify -m "chore: start"
+npm pkg set version=0.1.0
+printf '## Conformance\n\nkit e2e\n' >"$work/release-pr.md"
+first=$(pnpm exec cli-dev release-pr --base HEAD --body "$work/release-pr.md")
+git checkout -q package.json
 node --input-type=module -e '
 import { readFileSync } from "node:fs"
 import { manifestSchema } from "@wirecat/cli-base/wcat/manifest"
@@ -68,6 +75,7 @@ unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"code":
 [ -n "$unsigned" ]
 echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
 echo "kit e2e: demo answers --wcat-describe in format 2, and its contracts/wirecat.json passes manifestSchema"
+echo "kit e2e: demo's first release from 0.0.0 to 0.1.0 passes cli-dev release-pr: $first"
 echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"

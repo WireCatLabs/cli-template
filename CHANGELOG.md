@@ -7,6 +7,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Changed — may break callers
+
+- **The skeleton runs on `@wirecat/cli-base` 0.87.0 and `@wirecat/cli-core` 0.615.0**, the first cli-core whose peer
+  range takes cli-base past 0.85. cli-base 0.87.0 makes `cli-dev release-pr` fail a CLI's first release, the pull
+  request that raises its version from `new`'s 0.0.0, when `package.json` installs no `wcat-<name>` command. A CLI
+  made by `new` already has one, and `kit/e2e.sh` now runs that check on the CLI it makes. A CLI that upgrades also
+  gets cli-base 0.85.0's `raw-network` and `undeclared-host` lint rules, which find nothing in the skeleton.
+  `config set` and `config unset` take cli-core's `owner_languages`.
+
 ### Fixed
 
 - **The workflows retry their tool downloads.** `standards.yml` (gitleaks), `ci.yml` (Vale) and `release.yml`
