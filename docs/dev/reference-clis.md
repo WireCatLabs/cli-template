@@ -38,6 +38,13 @@ its records to cli-core:
   `@wirecat/cli-core/schemas/records-envelope.v1.schema.json`. `invoice`, `payment`, `person`, `organization` and
   `project` have [tables of their own](https://github.com/WireCatLabs/cli-core/blob/9386f17657656b59911417ff39327f1e6a7fcede/src/domain/records.ts#L7); any other type is `custom:<name>` and stays
   a record.
+- **A large export streams as JSONL**: the header line (`schema_version`, `source`), then one record per line.
+  [`ingestLines`](https://github.com/WireCatLabs/cli-core/blob/ab65db1c89d0b3e065f12e57fc075c03da292aec/src/services/ingest.ts#L144)
+  writes it per chunk of 1000 records as the lines arrive, and
+  [`jsonlLines`](https://github.com/WireCatLabs/cli-core/blob/ab65db1c89d0b3e065f12e57fc075c03da292aec/src/services/ingest.ts#L136)
+  reads a file or stdin one line at a time (cli-core 0.612.0). The sample's `src/sample/records.ts` writes its comments
+  as such lines and takes a file of them into the store; `src/records.test.ts` runs it twice on a temporary store, and
+  the second run changes nothing.
 
 ## The provider registry
 
@@ -53,5 +60,5 @@ the others' providers, from its
 and, for Drive, its
 [document providers](https://github.com/WireCatLabs/cli-core/blob/185718d3212cda9bb026e09809760979fe31a1e6/src/domain/providers.ts#L50).
 [gcal-cli](https://github.com/WireCatLabs/gcal-cli/blob/14e27c45e6dc204cde8adcd9e4fa6aa069745335/src/store.ts) registers
-its own. The skeleton opens no store and
-has no provider, so it registers nothing; the call comes with the CLI's first store code.
+its own. The skeleton's commands open no store, and its records sample is handed one, so it registers nothing; the
+call comes with the CLI's first command that opens the store.
