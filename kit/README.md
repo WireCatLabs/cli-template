@@ -104,7 +104,9 @@ template changed since the recorded version, it asks one of four things:
 - **diff** shows the template's change.
 
 Without a terminal, `--apply`, `--replace` or `--skip` sets the answer for every file. `--dry-run` lists what each
-file would get and writes nothing. Seeds and `package.json` are never touched.
+file would get and writes nothing. Seeds and `package.json` are never touched; when the MCP Registry release needs
+a change in `package.json` or `server.json` (the `mcpName` and `name` a CLI outside `@wirecat` made before 0.20.0
+lacks), upgrade prints it as a step for you.
 
 A conflict leaves git markers, and `template.json` keeps the new state under `pending`. Resolve the markers and run
 `upgrade` again: it checks that the markers are gone and then moves to the new version.

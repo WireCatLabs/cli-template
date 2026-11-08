@@ -5,6 +5,19 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **`upgrade` says what a CLI outside `@wirecat` must change by hand for the MCP Registry.** A CLI made before
+  0.20.0 has no `mcpName` in `package.json` and WireCat's name in `server.json`; upgrade never edits either file,
+  so its last lines now name the exact `io.github.<owner>/<name>` value to put in each.
+- **`release.yml` stops a GitHub-sign-in registry release with one sentence** when `package.json`'s `mcpName` or
+  `server.json`'s `name` is not `io.github.<owner>/<name>`, naming the field and the value, instead of failing
+  inside `mcp-publisher`.
+- **The README's link to `kit/README.md` works on npm.** It points at GitHub, since the package does not ship that
+  file.
+
 ## 0.20.0 — 08.11.2026
 
 ### Fixed
