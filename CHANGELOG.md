@@ -7,6 +7,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **A Start release workflow starts a release from GitHub.** `.github/workflows/release-start.yml` calls cli-base's
+  shared `release-start.yml`: it folds the changelog, raises a version npm already has through one pull request,
+  merges it once the required checks pass, and starts `release.yml`. It needs the `RELEASE_APP_CLIENT_ID` variable and
+  `RELEASE_APP_PRIVATE_KEY` secret of a GitHub App; `bin/release` stays until it has run once.
+
 ### Changed — may break callers
 
 - **The skeleton keeps its token in cli-core's `ProfileTokenStore`** (cli-core 0.608.0) in place of its own
@@ -91,15 +98,6 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   (cli-core's `./crm` port, `CrmSource` and `syncCrm`) and other structured records (the records envelope, `ingest`),
   never through SQL of the CLI's own, and names a provider's `kind` as one of cli-core's `KINDS`. The README no longer
   says the skeleton has no commands of its own.
-
-## Unreleased
-
-### Added
-
-- **A Start release workflow starts a release from GitHub.** `.github/workflows/release-start.yml` calls cli-base's
-  shared `release-start.yml`: it folds the changelog, raises a version npm already has through one pull request,
-  merges it once the required checks pass, and starts `release.yml`. It needs the `RELEASE_APP_CLIENT_ID` variable and
-  `RELEASE_APP_PRIVATE_KEY` secret of a GitHub App; `bin/release` stays until it has run once.
 
 ## 0.18.0 — 07.11.2026
 
