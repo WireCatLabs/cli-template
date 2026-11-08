@@ -11,6 +11,7 @@ import {
   listOf,
   logsInOrOut,
   outputFor,
+  ProfileTokenStore,
   profileFree,
   profilesHere,
   REMOTE_READ,
@@ -20,13 +21,13 @@ import {
   renderAnswer,
   rootOf,
   secretInputOf,
+  type TokenStorage,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { configuration } from "../config.js"
 import { contextOf, refuseOffline, serviceFor, withService } from "../context.js"
 import { IDENTITY } from "../identity.js"
 import { SERVICE } from "../sample/transport.js"
-import { TOKEN_VARIABLE, type TokenStorage, tokenStore } from "../token.js"
 
 // `session start | status | end | list` is every provider CLI's sign-in (WC-ACCT-12). Keep it; replace the token
 // prompt and the `me` check with your service's. A service with OAuth signs in through cli-core's oauth module
@@ -81,7 +82,7 @@ const statusCommand = () =>
   })
     .summary("show where this profile's token comes from; never the token")
     .description(
-      `show where this profile's token comes from: ${TOKEN_VARIABLE}, the keyring or a file, never the token; ` +
+      `show where this profile's token comes from: ${IDENTITY.envPrefix}_TOKEN, the keyring or a file, never the token; ` +
         `--check asks ${SERVICE} whose token it is`,
     )
     .option("--check", `ask ${SERVICE} whether the token still works, and whose it is`)
@@ -123,7 +124,12 @@ const listCommand = () =>
       const env = environment.env ?? process.env
       // biome-ignore lint/plugin/no-own-settings: baseContext needs a profile, and this local read names none
       const { configuredProfiles } = configuration.resolveSettings({}, { env, needsProfile: false })
-      const tokens = tokenStore(env, environment.keyring, outputFor(this).renderer.warn)
+      const tokens = new ProfileTokenStore({
+        app: IDENTITY,
+        env,
+        ...(environment.keyring ? { keyring: environment.keyring } : {}),
+        warn: outputFor(this).renderer.warn,
+      })
       const items = profilesHere(IDENTITY, configuredProfiles, env).map((profile) => {
         const saved = tokens.read(profile)
         return { profile, signed_in: saved !== undefined, token_from: saved?.source ?? null }

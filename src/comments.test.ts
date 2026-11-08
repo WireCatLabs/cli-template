@@ -2,14 +2,14 @@ import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync }
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { brokenKeyring, memoryKeyring } from "@wirecat/cli-base"
-import type { RunOptions } from "@wirecat/cli-core/cli"
+import { ProfileTokenStore, type RunOptions } from "@wirecat/cli-core/cli"
 import { mcpOverStdio } from "@wirecat/cli-core/testing"
 import { afterEach, expect, it } from "vitest"
 import type { ServiceEnvironment } from "./context.js"
+import { IDENTITY } from "./identity.js"
 import { run } from "./program.js"
 import { FAKE_TOKEN, fakeComments } from "./testing/fake-comments.js"
 import { runCli, signedIn } from "./testing/harness.js"
-import { holdsToken } from "./token.js"
 
 const configFile = join(process.env.CLIDEV_CONFIG_DIR ?? "", "config.json")
 const withPermissions = (permissions: Record<string, string>) => {
@@ -155,7 +155,7 @@ it("a server failure is outcome_unknown for a write and retryable for a read", a
 it("without a sign-in a command says how to sign in and sends nothing", async () => {
   const service = fakeComments()
   const { json } = await runCli(["personal", "comments", "list", "--json"], { service, keyring: memoryKeyring() })
-  expect(json()).toMatchObject({ error: { code: "authentication_error" } })
+  expect(json()).toMatchObject({ error: { code: "authentication_error", reason: "session.missing" } })
   expect(JSON.stringify(json())).toContain("session start")
   expect(service.calls).toEqual([])
 })
@@ -208,9 +208,9 @@ it("session start without a working keyring keeps the token in a private file, a
   const started = await runCli(["personal", "session", "start", "--json"], { keyring, stdin: FAKE_TOKEN })
   expect(started.json().item).toMatchObject({ stored_in: "file" })
   expect(started.err).toContain("keyring")
-  expect(holdsToken(process.env, "personal", keyring)).toBe(true)
+  expect(new ProfileTokenStore({ app: IDENTITY, keyring }).signedIn("personal")).toBe(true)
   expect((await runCli(["personal", "session", "end", "--json"], { keyring })).code).toBe(0)
-  expect(holdsToken(process.env, "personal", keyring)).toBe(false)
+  expect(new ProfileTokenStore({ app: IDENTITY, keyring }).signedIn("personal")).toBe(false)
 })
 
 it("session start refuses a storage it does not know, before asking for the token", async () => {
