@@ -5,6 +5,15 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## Unreleased
+
+### Fixed
+
+- **The workflows retry their tool downloads.** `standards.yml` (gitleaks), `ci.yml` (Vale) and `release.yml`
+  (mcp-publisher) fetched each tool from GitHub releases once, with no time limit: a 504 from GitHub failed the job,
+  and a stalled download held it until its timeout. Each download now retries up to five times, gives one attempt 60
+  seconds and stops retrying after two minutes. The sha256 checks are unchanged.
+
 ## 0.22.0 — 08.11.2026
 
 ### Added
