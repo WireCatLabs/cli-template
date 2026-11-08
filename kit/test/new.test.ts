@@ -1,5 +1,5 @@
-import { execFileSync } from "node:child_process"
-import { existsSync, readdirSync } from "node:fs"
+import { execFileSync, spawnSync } from "node:child_process"
+import { existsSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { defineParityGroups } from "@wirecat/cli-base/standards/tables"
 import { KINDS } from "@wirecat/cli-core"
@@ -346,6 +346,30 @@ describe("new from this repository", () => {
     expect(job("mcp-registry-github")).toContain("&& !startsWith(needs.build.outputs.name, '@wirecat/')")
     expect(job("mcp-registry-github")).toContain("./mcp-publisher login github-oidc")
     expect(job("mcp-registry-github")).toContain("id-token: write")
+  })
+
+  it("stops the GitHub registry release before mcp-publisher, naming the mcpName to add", () => {
+    const workflow = read(root, ".github/workflows/release.yml")
+    const job = workflow.split("\n  mcp-registry-github:\n")[1]?.split(/\n {2}\S/)[0] ?? ""
+    const script = (job.split("run: |\n")[1]?.split("\n          curl ")[0] ?? "").replaceAll(/^ {10}/gm, "")
+    const cwd = tempDir("release")
+    writeFileSync(join(cwd, "server.json"), '{ "name": "io.github.example/cal-cli" }\n')
+    const check = (pkg: object) => {
+      writeFileSync(join(cwd, "package.json"), JSON.stringify(pkg))
+      return spawnSync("bash", ["-e", "-c", script], {
+        cwd,
+        encoding: "utf8",
+        env: { ...process.env, GITHUB_REPOSITORY: "example/cal-cli", VERSION: "1.0.0" },
+      })
+    }
+
+    const missing = check({ name: "@example/cal-cli" })
+
+    expect(missing.status).toBe(1)
+    expect(missing.stdout).toBe(
+      '::error::package.json needs "mcpName": "io.github.example/cal-cli" for the MCP Registry; add it, then release again\n',
+    )
+    expect(check({ mcpName: "io.github.example/cal-cli" })).toMatchObject({ status: 0, stdout: "" })
   })
 
   it("publishes the skill to ClawHub only for a package under @wirecat", () => {

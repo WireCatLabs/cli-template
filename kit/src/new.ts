@@ -47,7 +47,7 @@ export const withReferenceWords = (text: string): string => {
   return `${JSON.stringify({ ...config, words: [...new Set([...words, ...REFERENCE_NAMES])] }, null, 2)}\n`
 }
 
-const isWireCat = (names: Names): boolean => names.package.startsWith("@wirecat/")
+export const isWireCat = (names: Names): boolean => names.package.startsWith("@wirecat/")
 
 // The MCP Registry takes dev.wirecat/ names only from wirecat.dev's DNS key, which only WireCatLabs holds; anyone
 // else signs in with GitHub, which grants io.github.<owner>/.

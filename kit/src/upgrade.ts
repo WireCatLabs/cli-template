@@ -4,8 +4,8 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import { promisify } from "node:util"
-import { type CliManifest, classify, MANIFEST, readCliManifest, sha256 } from "./manifest.js"
-import { type Io, markExecutable } from "./new.js"
+import { type CliManifest, classify, MANIFEST, type Names, readCliManifest, sha256 } from "./manifest.js"
+import { type Io, isWireCat, markExecutable, mcpNameOf } from "./new.js"
 import { withLf } from "./rename.js"
 import { type FetchVersion, type RenderedFile, renderTemplate, type TemplateSource } from "./source.js"
 
@@ -86,6 +86,32 @@ const diffText = async (before: Buffer, after: Buffer): Promise<string> => {
 }
 
 const hasMarkers = (content: Buffer): boolean => /^(<{7} |={7}$|>{7} )/m.test(content.toString("utf8"))
+
+const readJson = (path: string): Promise<Record<string, unknown> | undefined> =>
+  readFile(path, "utf8").then(
+    (text) => JSON.parse(text),
+    () => undefined,
+  )
+
+// package.json and server.json are seeds, so a CLI made before 0.20.0 outside @wirecat keeps WireCat's registry name
+// and no mcpName, and its GitHub sign-in to the MCP Registry fails until a person fixes both.
+const manualSteps = async (cwd: string, names: Names): Promise<string[]> => {
+  if (isWireCat(names)) return []
+  const server = await readJson(join(cwd, "server.json"))
+  if (!server) return []
+  const want = mcpNameOf(names)
+  const pkg = await readJson(join(cwd, "package.json"))
+  const steps = [
+    ...(pkg?.mcpName === want ? [] : [`${pkg?.mcpName ? "set" : "add"} "mcpName": "${want}" in package.json`]),
+    ...(server.name === want ? [] : [`set "name": "${want}" in server.json`]),
+  ]
+  return steps.length
+    ? [
+        "Upgrade never edits package.json or server.json; the MCP Registry release needs you to:",
+        ...steps.map((step) => `  ${step}`),
+      ]
+    : []
+}
 
 const writeManifest = (cwd: string, manifest: CliManifest): Promise<void> =>
   writeFile(join(cwd, MANIFEST), `${JSON.stringify(manifest, null, 2)}\n`)
@@ -175,6 +201,8 @@ export const runUpgrade = async (
     return { outcome: merged.conflicts ? "conflict" : "applied", content: merged.content }
   }
 
+  const manual = await manualSteps(cwd, manifest.names)
+
   if (options.dryRun) {
     const rows = await Promise.all(
       changes.map(async (change) => {
@@ -188,6 +216,7 @@ export const runUpgrade = async (
       ...header,
       changes.length ? "Would change:" : "No template-owned file changed.",
       ...rows,
+      ...manual,
       "Dry run: nothing written.",
     ].join("\n")
   }
@@ -238,7 +267,10 @@ export const runUpgrade = async (
   }
   await markExecutable(cwd, executable)
 
-  const footer = ["Then re-run community's adopt-standards.py for config/wirecat/, which upgrade never touches."]
+  const footer = [
+    ...manual,
+    "Then re-run community's adopt-standards.py for config/wirecat/, which upgrade never touches.",
+  ]
   const files = Object.fromEntries([...owned].map(([path, file]) => [path, sha256(file.content)]))
   if (conflicts.length) {
     await writeManifest(cwd, { ...manifest, seeds, pending: { version: target.version, files, conflicts } })
