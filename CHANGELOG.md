@@ -7,6 +7,12 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **The sample streams records into the store as JSONL** (cli-core 0.612.0). `src/sample/records.ts` writes comments as records envelope
+  v1 lines and takes a file or stdin of them into the shared store with cli-core's `ingestLines` and `jsonlLines`, one
+  line at a time; [Reference CLIs](docs/dev/reference-clis.md#what-the-store-keeps) says when to use it.
+
 ### Fixed
 
 - **The workflows retry their tool downloads.** `standards.yml` (gitleaks), `ci.yml` (Vale) and `release.yml`
