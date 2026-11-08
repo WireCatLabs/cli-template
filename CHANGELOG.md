@@ -7,6 +7,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 ## Unreleased
 
+### Added
+
+- **A Start release workflow starts a release from GitHub.** `.github/workflows/release-start.yml` calls cli-base's
+  shared `release-start.yml`: it folds the changelog, raises a version npm already has through one pull request,
+  merges it once the required checks pass, and starts `release.yml`. It needs the `RELEASE_APP_CLIENT_ID` variable and
+  `RELEASE_APP_PRIVATE_KEY` secret of a GitHub App; `bin/release` stays until it has run once.
+
 ### Changed — may break callers
 
 - **The skeleton keeps its token in cli-core's `ProfileTokenStore`** (cli-core 0.608.0) in place of its own
