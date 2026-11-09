@@ -1,8 +1,9 @@
 import { CliError, isCliError, realSleep, type SleepLike, wallClock } from "@wirecat/cli-base"
-import { providerWaitMs, readJsonResponse, statusToCode } from "@wirecat/cli-base/http"
+import { hostFetch, providerWaitMs, readJsonResponse, statusToCode } from "@wirecat/cli-base/http"
 import { type EventSink, providerRequest } from "@wirecat/cli-core/cli"
 import type { Pacer } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
+import { DESKTOP } from "../identity.js"
 
 // SAMPLE: the Example Comments service does not exist; `.invalid` never resolves, so a real run reaches nothing.
 // Replace the address, the paths and the answer shapes with your service's, each from its docs or a captured answer.
@@ -86,7 +87,7 @@ export const failureOf = (status: number, writes: boolean, retryAfterMs?: number
  * first may have landed (WC-OUT-20).
  */
 export const transport = (options: TransportOptions) => {
-  const fetchOf = options.fetch ?? fetch
+  const fetchOf = hostFetch({ hosts: DESKTOP.hosts ?? [], ...(options.fetch ? { fetch: options.fetch } : {}) })
   const sleep = options.sleep ?? realSleep
   const now = options.now ?? Date.now
 

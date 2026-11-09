@@ -7,7 +7,8 @@ import { failureOf, transport } from "./transport.js"
 
 const anything = v.unknown()
 const failing = (error: unknown) => async () => Promise.reject(error)
-const timedOut = () => new DOMException("timed out", "TimeoutError")
+const silent = async (_url: unknown, init?: RequestInit) =>
+  new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(init.signal?.reason)))
 
 it("maps the wire shape to the answer's own", () => {
   expect(commentOf({ id: "c1", body: "Hi", authorName: "Test Person", createdAt: "2026-01-02T03:04:05Z" })).toEqual({
@@ -59,11 +60,11 @@ it('refuses an id of "." or ".." before any request, since it would reach anothe
 })
 
 it("a read that got no answer is a retryable timeout or network error; a write is outcome_unknown", async () => {
-  const send = (error: unknown, method: "GET" | "POST") =>
-    transport({ token: FAKE_TOKEN, fetch: failing(error) }).send({ method, path: "comments", body: {} }, anything)
-  await expect(send(timedOut(), "GET")).rejects.toMatchObject({ code: "timeout", details: { retryable: true } })
-  await expect(send(new TypeError("fetch failed"), "GET")).rejects.toMatchObject({ code: "network_error" })
-  await expect(send(timedOut(), "POST")).rejects.toMatchObject({
+  const send = (fetch: typeof globalThis.fetch, method: "GET" | "POST") =>
+    transport({ token: FAKE_TOKEN, fetch, timeoutMs: 5 }).send({ method, path: "comments", body: {} }, anything)
+  await expect(send(silent, "GET")).rejects.toMatchObject({ code: "timeout", details: { retryable: true } })
+  await expect(send(failing(new TypeError("fetch failed")), "GET")).rejects.toMatchObject({ code: "network_error" })
+  await expect(send(silent, "POST")).rejects.toMatchObject({
     code: "outcome_unknown",
     details: { retryable: false },
   })
