@@ -19,6 +19,8 @@ export const IDENTITY: AppIdentity = {
 export const DESKTOP: ManifestIdentity = {
   ...IDENTITY,
   docs: "https://github.com/WireCatLabs/clidev-cli#readme",
+  // SAMPLE: every host the CLI contacts (WC-CMD-32); src/sample/transport.ts reaches only these.
+  hosts: ["comments.example.invalid"],
   tagline: "A new WireCat CLI, started from cli-template",
   signIn: {
     gives: "Lets your agent read and change your account through clidev.",
