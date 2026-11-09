@@ -13,6 +13,7 @@
     "docs/dev/TESTING.md",
     "lefthook.yml",
     "scripts/audit.sh",
+    "scripts/changelog-fragments.ts",
     "tsconfig.json",
     "tsconfig.scripts.json",
     "tsconfig.test.json"
