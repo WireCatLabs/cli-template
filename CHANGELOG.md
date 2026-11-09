@@ -5,13 +5,21 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
-## Unreleased
+## 0.23.0 — 09.11.2026
 
 ### Added
 
 - **The sample streams records into the store as JSONL** (cli-core 0.612.0). `src/sample/records.ts` writes comments as records envelope
   v1 lines and takes a file or stdin of them into the shared store with cli-core's `ingestLines` and `jsonlLines`, one
   line at a time; [Reference CLIs](docs/dev/reference-clis.md#what-the-store-keeps) says when to use it.
+- **A pull request adds its changelog entries as a fragment, `changes/<branch>.md`.** Open pull requests no longer
+  conflict under `## Unreleased`. `pnpm docs:check` checks each fragment, and `bin/release` collects them into the
+  version's section. An entry under `## Unreleased` still works during the move.
+
+### Changed — may break callers
+
+- **Built on cli-core 0.623.0** (was 0.615.0). The store moves to version 61 on first open (people ties, additive).
+  What changed in between is in [cli-core's changelog](https://github.com/WireCatLabs/cli-core/blob/main/CHANGELOG.md).
 
 ### Fixed
 
@@ -23,6 +31,13 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   installed the crash handler only after `wcatStart` and removed it in a `finally`, which ran before a thrown
   top-level await reached the handler: a throw printed a raw Node stack instead of the JSON error. The handler now
   goes in first and is removed only after a run that did not throw.
+- **`AGENTS.md` no longer reads as if every path in its keep list exists in your CLI.** The paths are the template's;
+  a CLI may keep a part elsewhere, have deleted the sample, or predate a file. It reads that file in cli-template and
+  keeps its role.
+- **The sample transport reaches only the hosts it declares.** It fell back to the global `fetch`, which reaches any
+  host and which cli-base's `raw-network` lint now reports. It now sends through `hostFetch` from
+  `@wirecat/cli-base/http` with the identity's `hosts`, `["comments.example.invalid"]` in the sample; an injected
+  `fetch` in tests still works. Replace the host with your service's.
 
 ## 0.22.0 — 08.11.2026
 
