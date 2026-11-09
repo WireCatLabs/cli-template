@@ -24,8 +24,9 @@ The reference CLI is not chosen yet; see [Reference CLIs](docs/dev/reference-cli
 The template ships one working command group, `comments`, against a made-up service, Example Comments, whose address
 never resolves. It shows every pattern a command that reaches a service needs, each tested against a strict fake of
 the service. Build your first command on it: keep the patterns, replace the service. Delete the rest of the sample
-once your own commands cover every pattern below; until then `pnpm test` keeps it working. A CLI made before the
-sample has no `src/sample/`; read it in [cli-template](https://github.com/WireCatLabs/cli-template/tree/main/src).
+once your own commands cover every pattern below; until then `pnpm test` keeps it working. The paths below are where
+the template puts each part. A CLI made from it may keep a part elsewhere, have deleted the sample, or predate a file;
+read that file in [cli-template](https://github.com/WireCatLabs/cli-template/tree/main/src) and keep its role.
 Comments marked `SAMPLE:` in the code say what to replace.
 
 Keep, the same for every service:
