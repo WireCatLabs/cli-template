@@ -1,6 +1,7 @@
 const SHARED_MCP =
   "cli-core's appMcpCommand; its app-mcp-command and mcp-server-command tests drive it, and src/mcp.test.ts runs " +
   "this CLI's own server, config, revoke and refusals"
+const SHARED_REPORTS = "cli-core's appDoctorCommand; its app-mcp-command test creates and shows a report"
 const LONG_RUNNING = `starts an HTTP server or a background process that runs until stopped; ${SHARED_MCP}`
 
 export const UNTESTED: { command: string; option?: string; reason: string }[] = [
@@ -37,6 +38,10 @@ export const UNTESTED: { command: string; option?: string; reason: string }[] = 
       "stops the detached server that `mcp server start` wrote a pid file for; cli-core tests mcpServerCommand, and no live scenario starts a server to stop",
   },
   ...["--http", "--port", "--public-url"].map((option) => ({ command: "mcp serve", option, reason: LONG_RUNNING })),
+  { command: "doctor reports show", reason: SHARED_REPORTS },
+  { command: "doctor reports create", reason: SHARED_REPORTS },
+  { command: "doctor reports create", option: "--run", reason: SHARED_REPORTS },
+  { command: "doctor reports create", option: "--output", reason: SHARED_REPORTS },
   { command: "mcp server status", reason: LONG_RUNNING },
   { command: "mcp server status", option: "--profiles", reason: LONG_RUNNING },
   { command: "mcp revoke", option: "--profiles", reason: SHARED_MCP },

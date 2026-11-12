@@ -36,7 +36,7 @@ export const commentsService = (api: Transport) => ({
   me: () => api.send({ method: "GET", path: "me" }, wireUser),
   list: async ({ limit, offset, author }: { limit: number; offset: number; author?: string | undefined }) => {
     const page = await api.send({ method: "GET", path: "comments", query: { limit, offset, by: author } }, wirePage)
-    return { items: page.comments.map(commentOf), has_more: page.hasMore }
+    return { items: page.comments.map(commentOf), hasMore: page.hasMore }
   },
   show: async (id: string) =>
     commentOf(await api.send({ method: "GET", path: "comments/{id}", ids: { id } }, wireComment)),
