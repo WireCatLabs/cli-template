@@ -211,9 +211,40 @@ clidev doctor [options]
 |---|---|
 | `--online` | also connect once and read the account; sends nothing. |
 
-**Returns:** the state this installation is in, without connecting unless --online
+### `clidev doctor reports`
 
-**Example:** `clidev doctor`, `clidev doctor --json`
+problem reports
+
+#### `clidev doctor reports show`
+
+what a problem report holds; writes nothing
+
+```sh
+clidev doctor reports show
+```
+
+**Returns:** what a problem report holds; writes nothing
+
+**Example:** `clidev doctor reports show`
+
+#### `clidev doctor reports create`
+
+write a problem report to a file, and say where to send it
+
+**Changes something on this computer only.**
+
+```sh
+clidev doctor reports create [options]
+```
+
+| Option | What it does |
+|---|---|
+| `--run <id>` | the run the report is about; the newest failed one if not given. |
+| `--output <file>` | where to write it; a new file in this directory if not given. |
+
+**Returns:** write a problem report to a file, and say where to send it
+
+**Example:** `clidev doctor reports create --output ./problem-report.json`
 
 ## `clidev skill`
 
