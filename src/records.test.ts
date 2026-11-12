@@ -48,5 +48,5 @@ it("refuses every record when the header names another account", async () => {
 
   const receipt = await importRecords(store, createReadStream(file), "work")
   expect(receipt.errors).toEqual([expect.objectContaining({ code: "envelope.account-mismatch" })])
-  expect(await store.records.list({ provider: SOURCE.provider, account: SOURCE.account })).toEqual([])
+  expect((await store.records.list({ provider: SOURCE.provider, account: SOURCE.account })).items).toEqual([])
 })

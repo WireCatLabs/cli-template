@@ -45,9 +45,9 @@ const listAll = async (service: CommentsService, author: string | undefined) => 
   for (let page = 0; page < ALL_PAGES; page++) {
     const found = await service.list({ limit: ALL_PAGE_SIZE, offset: page * ALL_PAGE_SIZE, author })
     for (const item of found.items) items.push(item)
-    if (!found.has_more) return { items, has_more: false }
+    if (!found.hasMore) return { items, hasMore: false }
   }
-  return { items, has_more: true }
+  return { items, hasMore: true }
 }
 
 const listCommand = () =>
