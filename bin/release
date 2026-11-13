@@ -122,7 +122,7 @@ fragments=$(find changes -maxdepth 1 -type f -name '*.md' ! -name README.md 2>/d
 if [ "$next" != "$version" ]; then
   taken=""
   if published; then taken=1; why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
-  next=$(node --experimental-strip-types scripts/version-level.ts --next "$next")
+  next=$(pnpm exec cli-dev changelog level --next "$next")
   echo "$why — publishing $next instead"
   # A version npm already has keeps its changelog section; the unreleased one becomes the new version.
   node -e 'const fs = require("fs"); const [o, n, taken] = process.argv.slice(1)
@@ -139,7 +139,7 @@ if [ "$next" != "$version" ]; then
     if (taken && log.includes("\n## Unreleased\n")) swap("CHANGELOG.md", "\n## Unreleased\n", `\n## ${n} — ${today}\n`)
     else if (taken) swap("CHANGELOG.md", "\n## ", `\n## ${n} — ${today}\n\n## `)
     else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
-  node --experimental-strip-types scripts/changelog-fragments.ts --rules scripts/docs-rules.ts "$next"
+  pnpm exec cli-dev changelog fragments --collect "$next"
   body="bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading, and the
 changes/ fragments collected under it.
 
@@ -151,7 +151,7 @@ The release pull request of $version recorded the checks; this one changes only 
   version=$next
 elif [ "$fragments" -gt 0 ]; then
   # The version was dated by hand; fragments merged since then still belong to it.
-  node --experimental-strip-types scripts/changelog-fragments.ts --rules scripts/docs-rules.ts "$version"
+  pnpm exec cli-dev changelog fragments --collect "$version"
   land "release/$version-changes" "chore(changelog): collect changes/ into $version" \
     "bin/release: the changes/ fragments merged since $version was dated, collected into its section."
   rerun_if_changed "$@"

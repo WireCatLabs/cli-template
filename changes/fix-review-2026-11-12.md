@@ -26,3 +26,9 @@
 - **The testing page says how to write an upgrade contract**: `"previous": {}`, so `cli-contract` finds the previous
   release, and a seed made with public commands only.
 - **`ci:quick` builds once.** It ran `pnpm build` and then `lint:commands`, which builds again.
+
+### Removed
+
+- **`scripts/changelog-fragments.ts` and `scripts/version-level.ts`, with their tests.** `pnpm docs:check`,
+  `pnpm version:check` and `bin/release` run cli-base's `cli-dev changelog fragments` and `cli-dev changelog level`,
+  the same checks shared by every CLI. `upgrade` leaves your copy of `scripts/changelog-fragments.ts` in place and lists it, so you can delete it.
