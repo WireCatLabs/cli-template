@@ -4,6 +4,9 @@ The copy tool behind `npx @wirecat/cli-template`. It is the package's `cli-templ
 (`kit/dist/main.js`, built from `kit/src` by `tsc -p kit`). It is never copied into a new CLI. How the
 template repository feeds it is in [DEVELOPING.md](DEVELOPING.md).
 
+To have an agent build a whole CLI with it, from research to the first release, use the
+[new-cli skill](skills/new-cli/SKILL.md); its last section is the prompt to fill in.
+
 ```sh
 npx @wirecat/cli-template new cal-cli --command cal --package @wirecat/cal-cli --owner WireCatLabs \
   --category notes --content-lang en,ru --sign-in token --api official-docs --filters time,person \
