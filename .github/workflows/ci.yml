@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ci:
-    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@34a442be7352a59598b0bdcccc03186ae1f6a728 # v0.85.1
+    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@92f177f38b68ad8fa5eda46f72815648e211c795 # v0.98.0
     with:
       pack: ${{ inputs.pack || false }}
       bun-run: pnpm build && pnpm smoke:bun
@@ -46,16 +46,38 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 2
           persist-credentials: false
+      # A pull request that changes only Markdown or the version number skips the steps below: nothing they check
+      # changed. A skipped step leaves the job green, so its required check still passes.
+      - id: scope
+        if: github.event_name == 'pull_request'
+        run: |
+          quick=true
+          for file in $(git diff --name-only HEAD^1 HEAD); do
+            case "$file" in
+              *.md) ;;
+              package.json | server.json | src/version.ts)
+                [ -z "$(git diff -U0 HEAD^1 HEAD -- "$file" | grep -E '^[+-][^+-]' | grep -iv version)" ] || quick=false ;;
+              *) quick=false ;;
+            esac
+          done
+          echo "quick=$quick" >> "$GITHUB_OUTPUT"
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        if: steps.scope.outputs.quick != 'true'
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.scope.outputs.quick != 'true'
         with:
           node-version: 22.16.0
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm build
-      - run: pnpm test
-      - run: pnpm smoke:node
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm build
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm test
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm smoke:node
 
   # The template's own check: a CLI made from it has no kit/. Needs the network for npm and pnpm installs.
   kit-e2e:
@@ -65,14 +87,33 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 2
           persist-credentials: false
+      # As in node-22.
+      - id: scope
+        if: github.event_name == 'pull_request'
+        run: |
+          quick=true
+          for file in $(git diff --name-only HEAD^1 HEAD); do
+            case "$file" in
+              *.md) ;;
+              package.json | server.json | src/version.ts)
+                [ -z "$(git diff -U0 HEAD^1 HEAD -- "$file" | grep -E '^[+-][^+-]' | grep -iv version)" ] || quick=false ;;
+              *) quick=false ;;
+            esac
+          done
+          echo "quick=$quick" >> "$GITHUB_OUTPUT"
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        if: steps.scope.outputs.quick != 'true'
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.scope.outputs.quick != 'true'
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm kit:e2e
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm kit:e2e
 
   # main's ruleset, the monthly minute and a parity group: the setup steps `new` prints, checked (cli-base new-cli.md).
   repo-setup:

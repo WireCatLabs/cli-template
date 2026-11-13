@@ -55,6 +55,7 @@ describe("new", () => {
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${label}\n`)
     expect(read(dir, "src/version.ts")).toBe('export const VERSION = "0.0.0"\n')
     expect(out).toContain("Create the repository example/cal-cli")
+    expect(out).toContain("gh repo edit example/cal-cli --delete-branch-on-merge")
   })
 
   it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {

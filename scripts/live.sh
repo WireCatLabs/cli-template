@@ -16,6 +16,11 @@ unset CLIDEV_TOKEN
 cli=(node "$root/dist/bin/clidev.js")
 
 pnpm --dir "$root" -s build >/dev/null
+# Set after the build, which needs the owner's pnpm store: a CLI that moves its folders on start must not see the
+# owner's home.
+export HOME="$work/home" XDG_CONFIG_HOME="$work/xdg/config" XDG_DATA_HOME="$work/xdg/data"
+export XDG_STATE_HOME="$work/xdg/state" XDG_CACHE_HOME="$work/xdg/cache"
+mkdir -p "$HOME"
 
 "${cli[@]}" --wcat-describe | node -e '
   const answer = JSON.parse(require("fs").readFileSync(0, "utf8"))
