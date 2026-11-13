@@ -12,7 +12,6 @@
     "docs/dev/skills/",
     "docs/dev/TESTING.md",
     "lefthook.yml",
-    "scripts/audit.sh",
     "scripts/sandboxed.ts",
     "tsconfig.json",
     "tsconfig.scripts.json",
