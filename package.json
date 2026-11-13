@@ -1,6 +1,6 @@
 {
   "name": "@wirecat/cli-template",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "Start a new WireCat CLI: a working skeleton on cli-base and cli-core, copied by new and kept current by upgrade",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
@@ -87,7 +87,7 @@
   },
   "dependencies": {
     "@wirecat/cli-base": "0.98.0",
-    "@wirecat/cli-core": "0.648.0",
+    "@wirecat/cli-core": "0.650.0",
     "commander": "15.0.0",
     "valibot": "1.5.0"
   },
