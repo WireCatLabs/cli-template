@@ -49,8 +49,6 @@ clidev commands info [path]
 |---|---|---|
 | `path` | optional | one command path; without one, export schemas, error reasons and explicit overrides. |
 
-**Returns:** one command contract, or all schemas, error reasons and explicit overrides
-
 **Example:** `clidev commands info commands`
 
 ## `clidev session`
@@ -71,8 +69,6 @@ clidev session start [options]
 |---|---|
 | `--credential-storage <storage>` | where the token is kept: keyring, which falls back to a private file by itself, or file. Default: `keyring`. |
 
-**Returns:** sign in to Example Comments with an API token
-
 **Example:** `clidev personal session start`, `clidev personal session start --credential-storage file`
 
 ### `clidev session status`
@@ -87,8 +83,6 @@ clidev session status [options]
 |---|---|
 | `--check` | ask Example Comments whether the token still works, and whose it is. |
 
-**Returns:** show where this profile's token comes from; never the token
-
 **Example:** `clidev personal session status`, `clidev personal session status --check --json`
 
 ### `clidev session end`
@@ -101,8 +95,6 @@ forget this profile's token on this computer; the token itself stays valid in Ex
 clidev session end
 ```
 
-**Returns:** forget this profile's token on this computer
-
 **Example:** `clidev personal session end`
 
 ### `clidev session list`
@@ -112,8 +104,6 @@ list the profiles on this computer and whether each has a token; picks none
 ```sh
 clidev session list
 ```
-
-**Returns:** list the profiles here and whether each is signed in
 
 **Example:** `clidev session list`, `clidev session list --json`
 
@@ -173,8 +163,6 @@ clidev comments create [options]
 |---|---|
 | `--text <text>` | the comment's text. |
 
-**Returns:** post a comment in Example Comments
-
 **Example:** `clidev personal comments create --text "Looks good to me"`, `clidev personal comments create --text "Looks good to me" --dry-run`
 
 ### `clidev comments update`
@@ -195,8 +183,6 @@ clidev comments update <id> [options]
 |---|---|
 | `--text <text>` | the new text. |
 
-**Returns:** change the text of your comment in Example Comments
-
 **Example:** `clidev personal comments update c1 --text "Looks good now"`
 
 ## `clidev doctor`
@@ -211,8 +197,6 @@ clidev doctor [options]
 |---|---|
 | `--online` | also connect once and read the account; sends nothing. |
 
-**Returns:** the state this installation is in, without connecting unless --online
-
 **Example:** `clidev doctor`, `clidev doctor --json`
 
 ### `clidev doctor reports`
@@ -226,8 +210,6 @@ what a problem report holds; writes nothing
 ```sh
 clidev doctor reports show
 ```
-
-**Returns:** what a report holds and never holds, and where to send it; writes nothing
 
 **Example:** `clidev doctor reports show`
 
@@ -245,8 +227,6 @@ clidev doctor reports create [options]
 |---|---|
 | `--run <id>` | the run the report is about; the newest failed one if not given. |
 | `--output <file>` | where to write it; a new file in this directory if not given. |
-
-**Returns:** the report file written: its path, the run it is about, and where to send it
 
 **Example:** `clidev doctor reports create --output ./problem-report.json`
 
@@ -266,8 +246,6 @@ clidev skill show [options]
 |---|---|
 | `--for <agents>` | print the copy installed for these agents instead of this version's. One of: `claude`, `agents`. |
 
-**Returns:** print the tool's instructions for AI agents
-
 **Example:** `clidev skill show`
 
 ### `clidev skill install`
@@ -284,8 +262,6 @@ clidev skill install [options]
 |---|---|
 | `--for <agents>` | which agents to install for. One of: `claude`, `agents`, `hermes`, `all`. Default: `all`. |
 
-**Returns:** install the tool's instructions for AI agents
-
 **Example:** `clidev skill install --for agents`
 
 ### `clidev skill status`
@@ -295,8 +271,6 @@ for each place `clidev skill install` writes to, and for the copy Hermes reads: 
 ```sh
 clidev skill status
 ```
-
-**Returns:** whether the installed instructions for AI agents match this version
 
 **Example:** `clidev skill status`, `clidev skill status --json`
 
@@ -322,8 +296,6 @@ clidev mcp serve [options]
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 
-**Returns:** serve this profile's commands to an AI agent
-
 **Example:** `clidev personal mcp serve`, `clidev mcp serve --profiles work,personal`, `clidev personal mcp serve --http --public-url https://laptop.example.ts.net`
 
 ### `clidev mcp revoke`
@@ -339,8 +311,6 @@ clidev mcp revoke [options]
 | Option | What it does |
 |---|---|
 | `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
-
-**Returns:** forget every login given to a browser app
 
 **Example:** `clidev personal mcp revoke`, `clidev mcp revoke --profiles all`
 
@@ -365,8 +335,6 @@ clidev mcp server start [options]
 | `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
 | `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
-**Returns:** start the HTTP MCP server in the background
-
 **Example:** `clidev personal mcp server start --public-url https://laptop.example.ts.net`
 
 #### `clidev mcp server stop`
@@ -383,8 +351,6 @@ clidev mcp server stop [options]
 |---|---|
 | `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
-**Returns:** stop the background HTTP MCP server
-
 **Example:** `clidev personal mcp server stop`
 
 #### `clidev mcp server status`
@@ -398,8 +364,6 @@ clidev mcp server status [options]
 | Option | What it does |
 |---|---|
 | `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
-
-**Returns:** whether the HTTP MCP server runs, its login code and the apps logged in
 
 **Example:** `clidev personal mcp server status --json`
 
@@ -415,8 +379,6 @@ clidev mcp config [options]
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
 | `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
-
-**Returns:** print the local MCP configuration of this profile, or of those --profiles names
 
 **Example:** `clidev personal mcp config`, `clidev mcp config --profiles all`
 
@@ -439,8 +401,6 @@ clidev mcp add <client> [options]
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
 | `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
 
-**Returns:** add this profile's local MCP server to Codex or Claude Code
-
 **Example:** `clidev personal mcp add codex --allow-writes`
 
 ### `clidev mcp check`
@@ -454,8 +414,6 @@ clidev mcp check [options]
 | Option | What it does |
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like comments.create=deny; it never loosens the profile; repeat for more keys. |
-
-**Returns:** check this profile's local MCP handshake and tool list
 
 **Example:** `clidev personal mcp check`
 
@@ -473,8 +431,6 @@ clidev upgrade [options]
 |---|---|
 | `--check` | say whether a newer version exists, and install nothing. |
 
-**Returns:** upgrade clidev with the package manager that installed it; --check only looks
-
 **Example:** `clidev upgrade --check`
 
 ## `clidev config`
@@ -488,8 +444,6 @@ the profile, the profiles that exist, and each setting with where it came from
 ```sh
 clidev config show
 ```
-
-**Returns:** the profile, the profiles that exist, and each setting with where it came from
 
 **Example:** `clidev personal config show`
 
@@ -512,8 +466,6 @@ clidev config set <setting> <value> [options]
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile. |
 
-**Returns:** save a setting to the configuration file
-
 **Example:** `clidev personal config set limit 20`
 
 ### `clidev config unset`
@@ -534,8 +486,6 @@ clidev config unset <setting> [options]
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile. |
 
-**Returns:** remove a setting from the configuration file
-
 **Example:** `clidev personal config unset limit`
 
 ### `clidev config migrate`
@@ -547,8 +497,6 @@ write each setting the file lacks at its default, keeping yours
 ```sh
 clidev config migrate
 ```
-
-**Returns:** write each setting the file lacks at its default, keeping yours
 
 **Example:** `clidev config migrate`
 
@@ -565,8 +513,6 @@ clidev config repair [options]
 | Option | What it does |
 |---|---|
 | `--dry-run` | say what it would fix, and change nothing. |
-
-**Returns:** fix the settings file's JSON syntax, keeping every value
 
 **Example:** `clidev config repair`, `clidev config repair --dry-run`
 

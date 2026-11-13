@@ -445,7 +445,7 @@ const liveStep = (step: number): string =>
 
 export const manualSteps = (names: Names): string[] => {
   const shared = [
-    `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md).`,
+    `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md), and delete merged branches: gh repo edit ${names.owner}/${names.name} --delete-branch-on-merge.`,
     `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), limit the GitHub npm environment's deployment branches to main, and add any secrets.`,
   ]
   if (!isWireCat(names)) {

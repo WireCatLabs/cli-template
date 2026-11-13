@@ -68,7 +68,8 @@ with a group of its own, and a monthly run between 04:01 and 05:59 UTC picked fr
 publishes no skill to ClawHub, whose `wirecat` owner is WireCat's.
 
 1. **Make the repository public.** npm makes no provenance record for a package built in a private repository, and
-   WireCat Desktop checks that record.
+   WireCat Desktop checks that record. Let GitHub delete a branch once its pull request is merged,
+   `gh repo edit <owner>/<name> --delete-branch-on-merge`, so merged branches do not pile up.
 2. **Publish the first version by hand**, `npm publish --access public` from your own computer: npm sets a trusted
    publisher in the settings of a package that already exists.
 3. **Set the trusted publisher** on npmjs.com, as [Trusted publishing](https://docs.npmjs.com/trusted-publishers)

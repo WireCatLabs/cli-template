@@ -5,9 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# A newer push replaces a pull request's run; each merge to main keeps its own (WC-CI-7).
 concurrency:
   group: fast-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

@@ -63,8 +63,9 @@ token=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","s
 demo personal skill show "password tulip42" >/dev/null 2>&1 || true
 named=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","password \[redacted\]"\]')
 # The sample: a preview names the write's key and sends nothing; without a sign-in a read stops before any request.
+# No config names the profile, so the refusal is cli-core's profile.unknown, which keeps the sign-in hint.
 preview=$(demo personal comments create --text "kit e2e" --dry-run --json | grep -o '"key":"comments.create"')
-unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"code":"authentication_error"' || true)
+unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"reason":"profile.unknown"' || true)
 [ -n "$unsigned" ]
 echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
 echo "kit e2e: demo answers --wcat-describe in format 2, and its contracts/wirecat.json passes manifestSchema"
@@ -72,4 +73,4 @@ echo "kit e2e: a failed run keeps what was typed: $kept"
 echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"
 echo "kit e2e: a password typed after its name is hidden: $named"
-echo "kit e2e: the sample's --dry-run names $preview, and without a sign-in it says $unsigned"
+echo "kit e2e: the sample's --dry-run names $preview, and a profile never signed in says $unsigned"

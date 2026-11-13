@@ -13,6 +13,7 @@ npm_cache=$(npm config get cache)
 # Moved folders do not hide the keyring: it is reached over D-Bus.
 export HOME="$scratch/home" MESSAGING_STORE="$scratch/store" WIRECAT_STATE_DIR="$scratch/state"
 export DBUS_SESSION_BUS_ADDRESS=disabled:
+unset XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME CLIDEV_CONFIG_DIR CLIDEV_STATE_DIR CLIDEV_CACHE_DIR
 mkdir -p "$HOME"
 npm install -g --prefix "$scratch/prefix" --cache "$npm_cache" --fetch-retries 6 --fetch-retry-mintimeout 20000 \
   --fetch-retry-maxtimeout 120000 --maxsockets 4 --ignore-scripts --no-audit --no-fund --loglevel error \

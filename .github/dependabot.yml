@@ -5,6 +5,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # One pull request a week, not one per action: each runs the whole validation.
+    groups:
+      actions:
+        patterns:
+          - "*"
   # The shared packages, at most a day after they ship, so `new` always copies a template on the latest ones.
   - package-ecosystem: npm
     directory: /

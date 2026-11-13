@@ -1,11 +1,12 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { RunOptions } from "@wirecat/cli-core/cli"
-import { mcpOverStdio } from "@wirecat/cli-core/testing"
+import { changesAuthorityAt, type RunOptions, readsOverMcpAt } from "@wirecat/cli-core/cli"
+import { mcpOverStdio, ownCatalogue } from "@wirecat/cli-core/testing"
 import { expect, it } from "vitest"
+import { permissions } from "./config.js"
 import type { ServiceEnvironment } from "./context.js"
 import { IDENTITY } from "./identity.js"
-import { run } from "./program.js"
+import { createProgram, run } from "./program.js"
 import { fakeComments } from "./testing/fake-comments.js"
 import { runCli, signedIn } from "./testing/harness.js"
 
@@ -18,6 +19,20 @@ it("mcp serve offers search, read and write, and runs a command through the CLI"
   } finally {
     expect(await mcp.close()).toBe(0)
   }
+})
+
+it("pins this CLI's own commands an agent can find, as reads or writes", async () => {
+  const program = createProgram()
+  const options = {
+    includeUnavailable: true,
+    exclude: [["mcp"]],
+    authority: changesAuthorityAt(program),
+    fetchOnly: readsOverMcpAt(program),
+    permissions,
+  }
+  await expect(`${JSON.stringify(ownCatalogue(program, options), null, 2)}\n`).toMatchFileSnapshot(
+    "../contracts/mcp-catalogue.json",
+  )
 })
 
 it("mcp serve refuses a --permission that names no command, and a --profiles this computer lacks", async () => {

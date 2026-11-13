@@ -66,7 +66,7 @@ try {
     { encoding: "utf8", env: npmEnv, stdio: "pipe" },
   )
   const env = {
-    ...process.env,
+    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(XDG_|CLIDEV_)/.test(key))),
     NODE_OPTIONS: "",
     HOME: temp,
     DBUS_SESSION_BUS_ADDRESS: "disabled:",
