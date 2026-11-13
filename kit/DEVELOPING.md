@@ -26,7 +26,7 @@ The lists are in [template.json](../template.json). Their shape, cut short:
   `cspell.json`, `tsconfig*.json` and `.markdownlint-cli2.jsonc`. Do not add a kit-only workflow: `.github/` is
   template-owned and would carry it into every new CLI.
 - `README.md` and `CHANGELOG.md` describe the template, so `new` writes short ones for the new CLI.
-- `config/parity-groups.json` puts the template in parity groups with the published CLIs, so `scripts/audit.sh`
+- `config/parity-groups.json` puts the template in parity groups with the published CLIs, so `pnpm audit:commands`
   compares its `commands`, `upgrade`, `config` and `skill` paths with theirs. It is in neither list, so a new CLI does
   not get it: the file replaces cli-base's `PARITY_GROUPS`, and a WireCat CLI joins those groups instead (step 4 of
   `new`'s output). A CLI outside `@wirecat` cannot join them, so `new` writes it a file with one group of its own:

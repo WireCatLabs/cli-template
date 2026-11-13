@@ -3,7 +3,14 @@
     "name": "template",
     "members": ["clidev", "tg", "max", "memo", "drive", "zm", "wa"],
     "covers": ["commands", "upgrade"],
-    "differences": []
+    "differences": [
+      {
+        "rule": "same-error-reason",
+        "target": "reason meeting-project.stale: code",
+        "reason": "cli-core 0.651.0 makes it conflict; the published CLIs give configuration_error until they adopt 0.651.0",
+        "review_after": "2026-11-27"
+      }
+    ]
   },
   {
     "name": "template-config",
