@@ -74,7 +74,7 @@
     "version:sync": "cli-dev version --sync",
     "standards:check": "node config/wirecat/check.mjs",
     "lint:commands": "pnpm build && node --experimental-strip-types scripts/sandboxed.ts cli-dev lint --cli dist/bin/clidev.js",
-    "audit:commands": "pnpm build && node --experimental-strip-types scripts/sandboxed.ts cli-dev audit --family --cli dist/bin/clidev.js",
+    "audit:commands": "pnpm build && node --experimental-strip-types scripts/sandboxed.ts cli-dev audit --family --cli dist/bin/clidev.js --differences lint/audit-differences.json",
     "ci:quick": "pnpm typecheck && pnpm lint:commands",
     "release:check": "pnpm standards:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check && pnpm security:no-leak && pnpm package:check",
     "prepare": "lefthook install || true",
