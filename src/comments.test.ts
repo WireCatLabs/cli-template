@@ -152,7 +152,16 @@ it("a server failure is outcome_unknown for a write and retryable for a read", a
   expect(service.calls).toHaveLength(2)
 })
 
-it("without a sign-in a command says how to sign in and sends nothing", async () => {
+it("a profile never signed in is unknown, lists the profiles here, says how to sign in and sends nothing", async () => {
+  const service = fakeComments()
+  const { json } = await runCli(["personal", "comments", "list", "--json"], { service, keyring: memoryKeyring() })
+  expect(json()).toMatchObject({ error: { code: "not_found", reason: "profile.unknown", details: { profiles: [] } } })
+  expect(JSON.stringify(json())).toContain("session start")
+  expect(service.calls).toEqual([])
+})
+
+it("a profile this computer knows, with no sign-in, says how to sign in and sends nothing", async () => {
+  withPermissions({})
   const service = fakeComments()
   const { json } = await runCli(["personal", "comments", "list", "--json"], { service, keyring: memoryKeyring() })
   expect(json()).toMatchObject({ error: { code: "authentication_error", reason: "session.missing" } })

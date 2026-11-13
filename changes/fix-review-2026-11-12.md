@@ -1,6 +1,9 @@
 ### Changed — may break callers
 
-- **Built on cli-core 0.647.0** (was 0.623.0), cli-base 0.98.0 and cli-testing 0.7.0. `schedule pause <name>` and
+- **Built on cli-core 0.648.0** (was 0.623.0), cli-base 0.98.0 and cli-testing 0.7.0. A first word this computer
+  has never seen as a profile answers `not_found` with reason `profile.unknown` and the profiles here, not
+  `session.missing`. `store reset` is no longer offered over MCP, and `doctor reports create --output` never
+  overwrites a file. `schedule pause <name>` and
   `schedule resume <name>` take a schedule off its timer and keep it, and `--at` repeats (`--at 08:30 --at 18:00`).
   `doctor reports show` and `doctor reports create` write a problem report to send, and a paged answer reads
   `hasMore` from the service. What changed is in
@@ -8,6 +11,8 @@
   [cli-base's](https://github.com/WireCatLabs/cli-base/blob/main/CHANGELOG.md).
 - **`contracts/mcp-tools.json` keeps only tool names, input schemas and annotations**, cli-testing 0.7.0's short form.
   A cli-core release that rewords a description or widens an answer no longer changes it.
+- **`contracts/mcp-catalogue.json` pins only this CLI's own MCP commands**, as reads or writes, from cli-core's
+  `ownCatalogue` (`src/mcp.test.ts`). The commands cli-core mounts are cli-core's to pin.
 
 ### Fixed
 

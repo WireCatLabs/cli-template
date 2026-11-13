@@ -17,6 +17,9 @@ How the tests run, and what they never touch. The rules are the handbook's
   `scripts/test-matrix-untested.ts`.
 - `pnpm contracts:check` runs the built CLI against `contracts/plan.json`: help, discovery, errors and the MCP tool
   list. `pnpm exec cli-contract contracts/plan.json --update` rewrites the snapshots; review the diff.
+- `src/mcp.test.ts` pins `contracts/mcp-catalogue.json`: this CLI's own commands an agent can find over MCP, each a
+  read or a write, from cli-core's `ownCatalogue`. What cli-core mounts is left out, since cli-core pins it, so a
+  cli-core release does not rewrite the file. Pin a shared command here only when this CLI changes it on purpose.
 - `pnpm contracts:upgrade` does not exist yet, and `.github/workflows/ci.yml` skips the step. It needs both local
   state of the CLI's own (a store, a sync cursor, any other file its code writes and reads back) and a published
   version to upgrade from; the skeleton has neither, and the config file and run records are cli-core's

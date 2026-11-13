@@ -1,0 +1,8 @@
+{
+  "session status": "read",
+  "session list": "read",
+  "comments list": "read",
+  "comments show": "read",
+  "comments create": "write",
+  "comments update": "write"
+}
