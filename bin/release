@@ -12,7 +12,7 @@
 # (`secret-tool store --label=npm service npm account <account>`); unset, the keyring is skipped. Set, a failed
 # lookup stops the release instead of falling back to `npm login`.
 #
-# A package that is not on npm yet is published the same way; its first version needs --local until npm trusts
+# A package that is not on npm yet is published the same way; its first version needs --first until npm trusts
 # release.yml. The npm token is never printed and never written to a file (WC-REL-14).
 set -eu
 
@@ -212,7 +212,7 @@ if [ "$mode" = ci ]; then
       # npm answers 404 to a publish from a workflow it does not trust.
       if gh run view "$run" --log-failed 2>/dev/null | grep -q "404 Not Found - PUT"; then
         echo "npm refused the publish; a package npm does not trust yet publishes its first version with" >&2
-        echo "bin/release --local" >&2
+        echo "bin/release --first" >&2
       fi
       exit 1 ;;
     *) echo "lost track of release run $run — see gh run view $run" >&2; exit 1 ;;
@@ -272,7 +272,7 @@ awk -v v="$version" '$0 ~ "^## "v" " {on=1; next} /^## / && on {exit} on' CHANGE
   gh release create "v$version" --title "$version" --notes-file -
 echo "published $package@$version"
 if [ -n "$first" ]; then
-  repo=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+  repo=$(node -p 'String(require("./package.json").repository?.url ?? "").replace(/^.*github\.com[/:]|\.git$/g, "")')
   echo
   echo "Now let npm trust GitHub Actions, so the next releases need no token on this computer:"
   echo "  the package's Settings on npmjs.com (https://www.npmjs.com/package/$package/access), Trusted Publisher, GitHub Actions:"

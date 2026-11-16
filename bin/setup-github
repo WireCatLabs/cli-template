@@ -118,6 +118,15 @@ const main = async () => {
 
   if (ghOk(["repo", "view", REPO])) {
     process.stdout.write(`${REPO} exists, not created\n`)
+    try {
+      git("remote", "get-url", "origin")
+    } catch {
+      git("remote", "add", "origin", `https://github.com/${REPO}.git`)
+    }
+    if (!git("ls-remote", "origin", "main")) {
+      git("push", "-q", "-u", "origin", "main")
+      process.stdout.write("main pushed\n")
+    }
   } else {
     gh(["repo", "create", REPO, "--public", "--description", description, "--source", ROOT, "--remote", "origin", "--push"])
     process.stdout.write(`${REPO} created and main pushed\n`)

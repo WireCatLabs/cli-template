@@ -477,15 +477,15 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
 }
 
 export const manualSteps = (names: Names, dir: string): string[] => [
-  `1. After the first commit, run ${join(dir, "bin/setup-github")}: it creates ${names.owner}/${names.name}, main's ruleset and the npm environment, and asks first.`,
-  `2. Publish the first version with ${join(dir, "bin/release")} --first; it then says how to set npm trusted publishing (WC-REL-11). Add any secrets CI needs.`,
-  `3. Before each release: replace the sample's reads and its "# Needs:" lines in scripts/live.sh, store the test account's token once with secret-tool store --label="${names.command} live check" service ${appNameOf(names)}-live account <account>, and run ${join(dir, "bin/live")} <account> on the release branch: it commits the record to the release pull request (WC-REL-17).`,
+  `1. After the first commit, run node ${join(dir, "bin/setup-github")}: it creates ${names.owner}/${names.name}, main's ruleset and the npm environment, and asks first. Add any secrets CI needs.`,
+  `2. Before each release, the first too: replace the sample's reads and its "# Needs:" lines in scripts/live.sh, store the test account's token once with secret-tool store --label="${names.command} live check" service ${appNameOf(names)}-live account <account>, and run ${join(dir, "bin/live")} <account> on the release pull request's branch: it commits the record there and names it under Conformance (WC-REL-17).`,
+  `3. Once the first release pull request is merged, publish it from main with ${join(dir, "bin/release")} --first; it then says how to set npm trusted publishing (WC-REL-11). Every later release is bin/release.`,
   ...(isWireCat(names)
     ? [
         "4. Join WireCat's shared lists with the entries below: one pull request to cli-base (the monthly minute in WC-CI-9's table, the command in PARITY_GROUPS' all group), one to cli-core's WIRECAT_TOOLS, and after the first release one to cli-docs' tools.json.",
       ]
     : []),
-  "CI's repo-setup job (cli-dev repo-check) fails until steps 1 and 2 are done; step 2's environment is checked once it exists.",
+  "CI's repo-setup job (cli-dev repo-check) fails until step 1 is done.",
 ]
 
 // Names the service's own tools already use. A CLI with the same environment prefix reads their token as its own; one
@@ -510,7 +510,7 @@ export const nameClashes = (names: Names, files: string[]): string[] => {
   return [
     ...(TAKEN_PREFIXES[prefix]
       ? [
-          `${prefix}_: ${TAKEN_PREFIXES[prefix]}, so ${names.command} would take its token. Pick another prefix (notion-cli uses WCNOTION): envPrefix in src/identity.ts and ${prefix}_ in ${files.join(", ")}. upgrade writes ${prefix}_ back into the template's own files; keep your prefix when it asks.`,
+          `${prefix}_: ${TAKEN_PREFIXES[prefix]}, so ${names.command} would take its token. Pick another prefix (notion-cli uses WCNOTION): envPrefix in src/identity.ts and ${prefix}_ in ${files.join(", ")}. upgrade merges the template's own files, scripts/sandboxed.ts and docs/dev/TESTING.md, with ${prefix}_ in them: check them after each upgrade.`,
         ]
       : []),
     ...(TAKEN_SERVICES[app]

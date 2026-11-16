@@ -65,8 +65,10 @@ describe("new", () => {
     expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${label}\n`)
     expect(read(dir, "src/version.ts")).toBe('export const VERSION = "0.0.0"\n')
-    expect(out).toContain(`1. After the first commit, run ${join(dir, "bin/setup-github")}: it creates example/cal-cli`)
-    expect(out).toContain(`2. Publish the first version with ${join(dir, "bin/release")} --first`)
+    expect(out).toContain(
+      `1. After the first commit, run node ${join(dir, "bin/setup-github")}: it creates example/cal-cli`,
+    )
+    expect(out).toContain(`publish it from main with ${join(dir, "bin/release")} --first`)
   })
 
   it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {
@@ -357,8 +359,8 @@ describe("new from this repository", () => {
     const cwd = tempDir("real")
     const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
 
-    expect(out).toContain("fails until steps 1 and 2 are done")
-    expect(out).toContain("3. Before each release:")
+    expect(out).toContain("fails until step 1 is done")
+    expect(out).toContain("2. Before each release, the first too:")
     expect(out).not.toContain("PARITY_GROUPS")
     expect(out).not.toContain("Names the service's own tools use")
   })
@@ -378,7 +380,7 @@ describe("new from this repository", () => {
       /^100755 /,
     )
     expect(out).toContain("service cal-cli-live account <account>")
-    expect(out).toContain(`and run ${join(cwd, "cal-cli", "bin/live")} <account> on the release branch`)
+    expect(out).toContain(`and run ${join(cwd, "cal-cli", "bin/live")} <account> on the release pull request's branch`)
   })
 
   it("gives the owner bin/setup-github, bin/live and bin/release --first, renamed and runnable", async () => {

@@ -11,3 +11,7 @@
 - **`new` warns about a name the service's own tools use**: an environment prefix such as `NOTION_` or `GH_`, or the
   keyring service `notion-cli`, with the files to change. The steps it prints name the scripts by their absolute
   paths, and `scripts/live.sh` starts with `# Needs:` lines.
+
+  A CLI made earlier that has its own `bin/setup-github` gets a conflict for it from `upgrade`: take the template's
+  (`replace`). `bin/live` reads `service <app>-live`; store the test account's token there once with
+  `secret-tool store`, or keep running your own script.

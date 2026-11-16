@@ -4,14 +4,15 @@
 // scripts/live.sh with the token on stdin, records the pass in docs/dev/live-checks.txt and, when the branch has an
 // open pull request, commits the record, pushes it and adds its line to the pull request's Conformance section.
 //
-//   bin/live <keyring account>
+//   bin/live <keyring account> [arguments for scripts/live.sh, such as the test page's link]
 //
+// Linux only: it reads the keyring with secret-tool and runs scripts/live.sh with bash.
 // The token is the keyring entry `service clidev-app-live account <keyring account>`, stored once with
 //   secret-tool store --label="clidev live check" service clidev-app-live account <keyring account>
 // It stays in this process and reaches scripts/live.sh on stdin only: never an argument, the environment or the
 // screen. A version whose shipped code already has a record is not checked again.
 import { execFileSync, spawnSync } from "node:child_process"
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, realpathSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { createInterface } from "node:readline/promises"
 
@@ -54,7 +55,22 @@ const recordOf = (version) =>
         .findLast((line) => line.startsWith(`${version} `))
     : undefined
 
-const check = async (account, version) => {
+// The record names the code that ran, so it must be the committed code of the pull request's branch on GitHub.
+const requireCurrentBranch = () => {
+  if (git("status", "--porcelain", "--", "src", "package.json", "pnpm-lock.yaml")) {
+    fail("commit src, package.json and pnpm-lock.yaml first: the record names the committed code")
+  }
+  git("fetch", "-q", "origin")
+  const upstream = run("git", ["rev-parse", "@{u}"], { stdio: ["ignore", "pipe", "ignore"] })
+  if (upstream.status === 0 && upstream.stdout.trim() !== git("rev-parse", "HEAD")) {
+    fail("this branch differs from its copy on GitHub: pull or push first, so the check runs on the code under review")
+  }
+}
+
+const check = async (account, version, args) => {
+  if (!existsSync(LIVE_CHECK)) fail(`${LIVE_CHECK} is missing: write the CLI's live check there first`)
+  if (!process.stdin.isTTY) fail("run it in a terminal: it asks before it uses the account")
+  requireCurrentBranch()
   const list = needs()
   process.stdout.write(
     [
@@ -79,7 +95,7 @@ const check = async (account, version) => {
         `  secret-tool store --label="live check" service ${KEYRING_SERVICE} account ${account}`,
     )
   }
-  if (run("bash", [LIVE_CHECK], { input: token, stdio: ["pipe", "inherit", "inherit"] }).status !== 0) {
+  if (run("bash", [LIVE_CHECK, ...args], { input: token, stdio: ["pipe", "inherit", "inherit"] }).status !== 0) {
     fail("the live check failed: no record")
   }
   if (run("pnpm", ["exec", "cli-dev", "live", "record", "--script", "scripts/live.sh"]).status !== 0) {
@@ -89,16 +105,16 @@ const check = async (account, version) => {
 }
 
 const main = async () => {
-  const [account] = process.argv.slice(2)
+  const [account, ...args] = process.argv.slice(2)
   if (!account || account === "--help" || account === "-h") {
-    process.stdout.write(`Usage: ${join(ROOT, "bin/live")} <keyring account>\n`)
+    process.stdout.write(`Usage: ${join(ROOT, "bin/live")} <keyring account> [arguments for scripts/live.sh]\n`)
     process.exitCode = account ? 0 : 2
     return
   }
   if (existsSync(KIT)) fail("this is cli-template itself, which has no service to check")
   const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8"))
   const current = run("pnpm", ["exec", "cli-dev", "live", "check", "--version", version], { stdio: "ignore" })
-  const record = current.status === 0 ? recordOf(version) : await check(account, version)
+  const record = current.status === 0 ? recordOf(version) : await check(account, version, args)
   if (!record) fail(`no record for ${version} in ${RECORDS}`)
 
   const view = run("gh", ["pr", "view", "--json", "url,state,body"], { stdio: ["ignore", "pipe", "ignore"] })
@@ -110,11 +126,16 @@ const main = async () => {
   if (git("status", "--porcelain", "--", RECORDS)) {
     git("add", "--", RECORDS)
     git("commit", "-q", "-m", `chore(release): live check of ${version}`, "--", RECORDS)
-    git("push", "-q")
   }
+  // Every time, not only after a commit: a push that failed on an earlier run is sent now.
+  git("push", "-q", "origin", "HEAD")
   const body = withConformance(pr.body ?? "", record)
-  if (body !== pr.body) run("gh", ["pr", "edit", pr.url, "--body-file", "-"], { input: body, stdio: ["pipe", "ignore", "inherit"] })
+  const edit = { input: body, stdio: ["pipe", "ignore", "inherit"] }
+  if (body !== pr.body && run("gh", ["pr", "edit", pr.url, "--body-file", "-"], edit).status !== 0) {
+    fail(`the record is pushed, but ${pr.url}'s description was not changed: add it under Conformance by hand`)
+  }
   process.stdout.write(`Passed: ${record}\nCommitted to ${pr.url} and named in its Conformance section.\n`)
 }
 
-if (process.argv[1] === import.meta.filename) await main()
+// Imported by the template's test for withConformance; run as a program otherwise, also through a symlink.
+if (process.argv[1] && realpathSync(process.argv[1]) === import.meta.filename) await main()
