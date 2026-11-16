@@ -20,6 +20,17 @@ import {
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
 import { appNameOf, upperCommand } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
+import {
+  SWAGGER_PEERS,
+  specKindOf,
+  specSeeds,
+  withApiCommand,
+  withApiPermissions,
+  withApiRunScope,
+  withApiSkill,
+  withApiSkillLink,
+  withSpecPackage,
+} from "./spec.js"
 
 const run = promisify(execFile)
 
@@ -32,7 +43,7 @@ export type Answers = Record<string, string[]>
 const REFERENCES: Record<string, string[]> = {
   messenger: ["whatsapp-cli", "tg-cli", "max-cli"],
   mail: ["mail-cli"],
-  files: ["drive-cli"],
+  files: ["notion-cli", "drive-cli"],
   calendar: ["gcal-cli"],
   meetings: ["zoom-cli"],
   notes: ["cli-memo"],
@@ -105,11 +116,10 @@ export const wirecatMonthlyTime = (repo: string, taken: Map<string, string>): Mo
   return { hour: Math.floor(slot / 60), minute: slot % 60 }
 }
 
-const ciPage = (): string =>
-  readFileSync(
-    join(dirname(createRequire(import.meta.url).resolve("@wirecat/cli-base")), "../docs/standards/ci.md"),
-    "utf8",
-  )
+const cliBaseFile = (path: string): string =>
+  readFileSync(join(dirname(createRequire(import.meta.url).resolve("@wirecat/cli-base")), "..", path), "utf8")
+
+const ciPage = (): string => cliBaseFile("docs/standards/ci.md")
 
 const MONTHLY_FILE = ".github/workflows/monthly.yml"
 
@@ -352,6 +362,11 @@ export const cliPackageJson = (text: string, names: Names): string => {
     )
   }
   if (isRecord(next.scripts)) next.scripts = withManifestSteps(next.scripts)
+  // The template converts Swagger only to test its seed; new adds the converter back for --spec swagger.
+  if (isRecord(pkg.devDependencies))
+    next.devDependencies = Object.fromEntries(
+      Object.entries(pkg.devDependencies).filter(([name]) => !SWAGGER_PEERS.includes(name)),
+    )
   if (pkg.repository) next.repository = { type: "git", url: repoUrl }
   if (pkg.homepage) next.homepage = `https://github.com/${names.owner}/${names.name}#readme`
   if (pkg.bugs) next.bugs = { url: `https://github.com/${names.owner}/${names.name}/issues` }
@@ -562,8 +577,24 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   const rendered = await renderTemplate(source, names)
   const category = answers.category?.[0] ?? ""
   const time = isWireCat(names) ? wirecatMonthlyTime(names.name, takenMinutes(ciPage())) : monthlyTime(names.package)
+  const spec = specKindOf(answers.spec?.[0])
   const rewrites: Record<string, (text: string) => string> = {
-    "package.json": (text) => cliPackageJson(text, names),
+    "package.json": (text) =>
+      spec
+        ? withSpecPackage(
+            cliPackageJson(text, names),
+            spec,
+            spec === "swagger" ? JSON.parse(cliBaseFile("package.json")) : {},
+          )
+        : cliPackageJson(text, names),
+    ...(spec
+      ? {
+          "src/program.ts": withApiCommand,
+          "src/config.ts": withApiPermissions,
+          "scripts/commands.ts": withApiSkill,
+          "src/run-scope.test.ts": withApiRunScope,
+        }
+      : {}),
     "README.md": () => cliReadme(names),
     "SECURITY.md": ownRepository(names),
     "docs/security.md": ownRepository(names),
@@ -586,13 +617,20 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   }
   const hashes: Record<string, string> = {}
   const prefixed: string[] = []
+  const agentSkill = `skills/${appNameOf(names)}/SKILL.md`
   for (const [path, file] of rendered) {
     if (file.kind === "file") hashes[path] = sha256(file.content)
-    const rewrite = rewrites[path]
+    const rewrite = rewrites[path] ?? (spec && path === agentSkill ? withApiSkillLink : undefined)
     const content = rewrite ? rewrite(file.content.toString("utf8")) : file.content
     if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)
   }
+  if (spec)
+    for (const [path, content] of await specSeeds(source, names, spec)) {
+      if (rendered.has(path)) throw new Error(`the ${spec} seed ${path} would replace a template file`)
+      if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
+      await writeOut(target, path, content)
+    }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
   await writeOut(target, "config/parity-groups.json", `${JSON.stringify(parityGroups(names.command), null, 2)}\n`)
@@ -621,6 +659,13 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "  pnpm install",
     "  pnpm lint:fix",
     "  pnpm generate",
+    ...(spec
+      ? [
+          "  pnpm exec cli-contract contracts/plan.json --update",
+          "  pnpm exec vitest run src/mcp.test.ts --update",
+          "  pnpm lint:fix",
+        ]
+      : []),
     "  pnpm ci:quick",
     "  git add -A",
     '  git commit -m "chore: start from @wirecat/cli-template"',

@@ -14,29 +14,34 @@ pnpm build >/dev/null
 tarball=$(npm pack --silent --ignore-scripts --pack-destination "$work" | tail -n 1)
 npm install --silent --no-save --prefix "$work/install" "$work/$tarball"
 
-# build <name> <command> <category>; outside @wirecat, as a third party makes one, and with every flag new takes.
+# build <name> <command> <category> <spec>; outside @wirecat, as a third party makes one, and with every flag new takes.
 build() {
   mkdir "$work/new-$2"
   cd "$work/new-$2"
   "$work/install/node_modules/.bin/cli-template" new "$1" --command "$2" --package "@example/$1" \
     --owner example --tagline "Made by kit e2e" --category "$3" --content-lang en --sign-in none \
-    --api official-docs --filters time --never-store tokens --untrusted none >/dev/null
+    --api official-docs --spec "$4" --filters time --never-store tokens --untrusted none >/dev/null
   cmp "$root/.gitignore" "$1/.gitignore"
   cd "$1"
   pnpm install
   # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
   pnpm lint:fix
   pnpm generate
+  if [ "$4" != none ]; then
+    pnpm exec cli-contract contracts/plan.json --update
+    pnpm exec vitest run src/mcp.test.ts --update
+    pnpm lint:fix
+  fi
   pnpm lint
   pnpm ci:quick
   pnpm contracts:check
   pnpm test:coverage
   pnpm docs:check
-  echo "kit e2e: new $1 ($2, $3) passed lint, generate, ci:quick, contracts:check, test:coverage and docs:check"
+  echo "kit e2e: new $1 ($2, $3, --spec $4) passed lint, generate, ci:quick, contracts:check, test:coverage and docs:check"
 }
 
-build demo-cli demo notes
-build acme-workspace-cli acme-workspace crm
+build demo-cli demo notes openapi
+build acme-workspace-cli acme-workspace crm none
 
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')
@@ -63,10 +68,13 @@ token=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","s
 demo personal skill show "password tulip42" >/dev/null 2>&1 || true
 named=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","show","password \[redacted\]"\]')
 # The sample: a preview names the write's key and sends nothing; without a sign-in a read stops before any request.
-# No config names the profile, so the refusal is cli-core's profile.unknown, which keeps the sign-in hint.
+# The run has no keyring and no file holds a sign-in, so cli-base says keyring.unreachable, with the file-storage hint.
 preview=$(demo personal comments create --text "kit e2e" --dry-run --json | grep -o '"key":"comments.create"')
-unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"reason":"profile.unknown"' || true)
+unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"reason":"keyring.unreachable"' || true)
 [ -n "$unsigned" ]
+# --spec openapi: the api group lists the spec's operations, and a delete's preview names the manifest's delete key.
+listed=$(demo api list --json | grep -o '"command":"comments-delete"')
+deletes=$(demo personal api comments-delete --comment-id c1 --dry-run --json | grep -o '"key":"comments\.delete"' | head -n 1)
 echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
 echo "kit e2e: demo answers --wcat-describe in format 2, and its contracts/wirecat.json passes manifestSchema"
 echo "kit e2e: a failed run keeps what was typed: $kept"
@@ -74,3 +82,4 @@ echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"
 echo "kit e2e: a password typed after its name is hidden: $named"
 echo "kit e2e: the sample's --dry-run names $preview, and a profile never signed in says $unsigned"
+echo "kit e2e: the api group lists $listed, and its --dry-run names $deletes"

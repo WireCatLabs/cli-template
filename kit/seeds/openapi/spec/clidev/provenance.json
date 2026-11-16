@@ -1,0 +1,11 @@
+{
+  "sources": [
+    {
+      "name": "comments",
+      "url": "https://comments.example.invalid/openapi.json",
+      "file": "openapi.json",
+      "sha256": "ceebdace963dfeff04113bc3b4293ccac41b3d27249ffa4fba933e4852c36960"
+    }
+  ],
+  "retrieved_at": "2026-11-16T00:00:00.000Z"
+}

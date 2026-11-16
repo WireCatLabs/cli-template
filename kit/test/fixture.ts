@@ -162,6 +162,7 @@ export const NOTES_FLAGS = {
   "content-lang": "en,ru",
   "sign-in": "none",
   api: "official-docs",
+  spec: "none",
   filters: "time,person",
   "never-store": "tokens",
   untrusted: "none",

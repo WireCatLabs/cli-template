@@ -20,7 +20,7 @@ export interface ServiceEnvironment extends BaseEnvironment {
 }
 
 // SAMPLE: your service's documented limit; this one is made up.
-const PACE = { perMinute: 120, burst: 20 }
+export const PACE = { perMinute: 120, burst: 20 }
 
 /**
  * Settings, keyring and the run come from cli-core's `baseContext` and nowhere else: a command that resolves settings

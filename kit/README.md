@@ -9,7 +9,7 @@ To have an agent build a whole CLI with it, from research to the first release, 
 
 ```sh
 npx @wirecat/cli-template new cal-cli --command cal --package @wirecat/cal-cli --owner WireCatLabs \
-  --category notes --content-lang en,ru --sign-in token --api official-docs --filters time,person \
+  --category notes --content-lang en,ru --sign-in token --api official-docs --spec openapi --filters time,person \
   --never-store tokens --untrusted names,links
 npx @wirecat/cli-template upgrade --dry-run
 npx @wirecat/cli-template remove-sample
@@ -40,6 +40,14 @@ The steps run the owner's scripts the CLI gets, each one readable file that prin
   stdin, records the pass, and on a release branch commits the record and adds it to the pull request's Conformance
   section (WC-REL-17).
 
+With `--spec` other than `none`, `new` also builds the `api` group from the service's API description: one command
+per operation through cli-core's `serviceApiCommand`, its permissions, its tests against cli-base's `fakeApi`, and the
+agent skill's API pages from `apiSkillFiles`. It writes a sample description of the made-up Example Comments service
+to `spec/<command>/` with `provenance.json`, `scripts/sync-spec.ts`, `scripts/spec-model.ts` and `scripts/generate.ts`,
+puts the API step in front of `pnpm generate` and `generate:check`, and prints the steps that regenerate the
+contracts. Swagger 2.0 adds cli-base's converter, `@scalar/openapi-upgrader`, to `devDependencies`. The order of work is in the new-cli skill's
+[references/openapi.md](skills/new-cli/references/openapi.md).
+
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
 
@@ -54,6 +62,7 @@ choices. Nothing is guessed.
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |
+| `--spec` | `openapi`, `swagger`, `discovery`, `none` |
 | `--filters` | several of `time`, `person`, `container`, `text`, `status` |
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |
 | `--untrusted` | several of `files`, `links`, `names`, and for its category `messages` (messenger, mail), `records` (crm), `invitations` (calendar), `transcripts` (meetings); or `none` alone |

@@ -97,6 +97,18 @@ export const INTERVIEW: Question[] = [
     ],
   },
   {
+    key: "spec",
+    title: "API description",
+    flag: "spec",
+    text: "Which machine-readable description of its API does the service publish? new generates the api group from it",
+    choices: [
+      { value: "openapi", label: "OpenAPI 3.0 or 3.1" },
+      { value: "swagger", label: "Swagger 2.0" },
+      { value: "discovery", label: "Google Discovery" },
+      { value: "none", label: "none" },
+    ],
+  },
+  {
     key: "filters",
     title: "How people filter",
     flag: "filters",
