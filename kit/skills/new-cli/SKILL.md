@@ -85,6 +85,9 @@ Then the four steps that need a person (the repository, its ruleset, npm, the se
 - Tests against a strict fake that refuses what the real service refuses, built from the captured answers; no real
   waits; no test reaches the network or the owner's store.
 - Text that comes from other people is marked untrusted in every answer an agent reads.
+- The agent skill `skills/<cli>/SKILL.md` keeps a core of about 8 KB: the main user job first, the boundaries, and
+  one line per file in `references/` saying when to read it
+  ([WC-DOC-22](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)).
 
 **An unofficial API or a browser session** adds: read-only until the owner asks for writes; requests paced below
 what a person in the browser does; one place that maps the service's answers, so a change breaks one file and one
