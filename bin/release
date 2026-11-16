@@ -6,12 +6,13 @@
 #
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml, npm trusted publishing)
 #   bin/release --local   # publishes from this computer: NPM_TOKEN if exported, else the keyring, else `npm login`
+#   bin/release --first   # --local for a package npm has never seen, then says how to set npm trusted publishing
 #
 # The keyring is read only when NPM_KEYRING_ACCOUNT names the account the token is stored under
 # (`secret-tool store --label=npm service npm account <account>`); unset, the keyring is skipped. Set, a failed
 # lookup stops the release instead of falling back to `npm login`.
 #
-# A package that is not on npm yet is published the same way; its first version needs --local until npm trusts
+# A package that is not on npm yet is published the same way; its first version needs --first until npm trusts
 # release.yml. The npm token is never printed and never written to a file (WC-REL-14).
 set -eu
 
@@ -20,10 +21,12 @@ publish_token=${NPM_TOKEN:-}
 unset NPM_TOKEN
 
 mode=ci
+first=""
 for arg; do
   case "$arg" in
     --local) mode=local ;;
-    *) echo "usage: bin/release [--local]" >&2; exit 2 ;;
+    --first) mode=local first=1 ;;
+    *) echo "usage: bin/release [--local | --first]" >&2; exit 2 ;;
   esac
 done
 
@@ -52,6 +55,10 @@ git fetch -q origin
 pnpm install --frozen-lockfile
 package=$(node -p 'require("./package.json").name')
 version=$(node -p 'require("./package.json").version')
+if [ -n "$first" ] && [ -n "$(npm view "$package" version --prefer-online 2>/dev/null || true)" ]; then
+  echo "$package is already on npm: --first is for its first version; run bin/release" >&2
+  exit 1
+fi
 # The code released is the code a person checked against the real service (WC-REL-17). Only the template has kit/,
 # and no service to check; every CLI made from it has a template.json too, so that file cannot tell them apart.
 [ -d kit ] || pnpm exec cli-dev live check --version "$version"
@@ -205,7 +212,7 @@ if [ "$mode" = ci ]; then
       # npm answers 404 to a publish from a workflow it does not trust.
       if gh run view "$run" --log-failed 2>/dev/null | grep -q "404 Not Found - PUT"; then
         echo "npm refused the publish; a package npm does not trust yet publishes its first version with" >&2
-        echo "bin/release --local" >&2
+        echo "bin/release --first" >&2
       fi
       exit 1 ;;
     *) echo "lost track of release run $run — see gh run view $run" >&2; exit 1 ;;
@@ -264,3 +271,11 @@ git push -q origin "v$version"
 awk -v v="$version" '$0 ~ "^## "v" " {on=1; next} /^## / && on {exit} on' CHANGELOG.md |
   gh release create "v$version" --title "$version" --notes-file -
 echo "published $package@$version"
+if [ -n "$first" ]; then
+  repo=$(node -p 'String(require("./package.json").repository?.url ?? "").replace(/^.*github\.com[/:]|\.git$/g, "")')
+  echo
+  echo "Now let npm trust GitHub Actions, so the next releases need no token on this computer:"
+  echo "  the package's Settings on npmjs.com (https://www.npmjs.com/package/$package/access), Trusted Publisher, GitHub Actions:"
+  echo "  repository $repo, workflow release.yml, environment npm (WC-REL-11)."
+  echo "Then every later release is bin/release, with no flag."
+fi

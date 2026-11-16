@@ -1,0 +1,141 @@
+#!/usr/bin/env node
+// The release's live check against the owner's real account (WC-TEST-18, WC-REL-17), run by the owner on the release
+// branch. It prints what the test account must hold and asks first, reads the token from the keyring, runs
+// scripts/live.sh with the token on stdin, records the pass in docs/dev/live-checks.txt and, when the branch has an
+// open pull request, commits the record, pushes it and adds its line to the pull request's Conformance section.
+//
+//   bin/live <keyring account> [arguments for scripts/live.sh, such as the test page's link]
+//
+// Linux only: it reads the keyring with secret-tool and runs scripts/live.sh with bash.
+// The token is the keyring entry `service clidev-app-live account <keyring account>`, stored once with
+//   secret-tool store --label="clidev live check" service clidev-app-live account <keyring account>
+// It stays in this process and reaches scripts/live.sh on stdin only: never an argument, the environment or the
+// screen. A version whose shipped code already has a record is not checked again.
+import { execFileSync, spawnSync } from "node:child_process"
+import { existsSync, readFileSync, realpathSync } from "node:fs"
+import { join, resolve } from "node:path"
+import { createInterface } from "node:readline/promises"
+
+const ROOT = resolve(import.meta.dirname, "..")
+const PACKAGE_JSON = join(ROOT, "package.json")
+const LIVE_CHECK = join(ROOT, "scripts/live.sh")
+const RECORDS = join(ROOT, "docs/dev/live-checks.txt")
+const KIT = join(ROOT, "kit")
+const KEYRING_SERVICE = "clidev-app-live"
+
+const fail = (message) => {
+  process.stderr.write(`live: ${message}\n`)
+  process.exit(1)
+}
+
+const run = (command, args, options = {}) =>
+  spawnSync(command, args, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"], ...options })
+const git = (...args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim()
+
+// The lines of scripts/live.sh that start with `# Needs:` say what the test account must hold.
+const needs = () =>
+  readFileSync(LIVE_CHECK, "utf8")
+    .split("\n")
+    .filter((line) => line.startsWith("# Needs:"))
+    .map((line) => `  - ${line.slice("# Needs:".length).trim()}`)
+
+export const withConformance = (body, line) => {
+  const entry = `- Live check: \`${line}\``
+  if (body.includes(line)) return body
+  const heading = /^## Conformance[ \t]*$/m.exec(body)
+  if (!heading) return `${body.replace(/\s*$/, "")}\n\n## Conformance\n\n${entry}\n`
+  const at = heading.index + heading[0].length
+  return `${body.slice(0, at)}\n\n${entry}${body.slice(at).replace(/^\n+/, "\n")}`
+}
+
+const recordOf = (version) =>
+  existsSync(RECORDS)
+    ? readFileSync(RECORDS, "utf8")
+        .split("\n")
+        .findLast((line) => line.startsWith(`${version} `))
+    : undefined
+
+// The record names the code that ran, so it must be the committed code of the pull request's branch on GitHub.
+const requireCurrentBranch = () => {
+  if (git("status", "--porcelain", "--", "src", "package.json", "pnpm-lock.yaml")) {
+    fail("commit src, package.json and pnpm-lock.yaml first: the record names the committed code")
+  }
+  git("fetch", "-q", "origin")
+  const upstream = run("git", ["rev-parse", "@{u}"], { stdio: ["ignore", "pipe", "ignore"] })
+  if (upstream.status === 0 && upstream.stdout.trim() !== git("rev-parse", "HEAD")) {
+    fail("this branch differs from its copy on GitHub: pull or push first, so the check runs on the code under review")
+  }
+}
+
+const check = async (account, version, args) => {
+  if (!existsSync(LIVE_CHECK)) fail(`${LIVE_CHECK} is missing: write the CLI's live check there first`)
+  if (!process.stdin.isTTY) fail("run it in a terminal: it asks before it uses the account")
+  requireCurrentBranch()
+  const list = needs()
+  process.stdout.write(
+    [
+      `The live check ${LIVE_CHECK} runs against the account whose token is in the keyring entry`,
+      `service ${KEYRING_SERVICE} account ${account}. The test account must hold:`,
+      ...(list.length ? list : ["  (scripts/live.sh names nothing: add `# Needs:` lines to it)"]),
+      "",
+    ].join("\n"),
+  )
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  const answer = await rl.question("Run it? [y/N] ")
+  rl.close()
+  if (!/^y(es)?$/i.test(answer.trim())) fail("nothing done")
+
+  const lookup = run("secret-tool", ["lookup", "service", KEYRING_SERVICE, "account", account], {
+    stdio: ["ignore", "pipe", "ignore"],
+  })
+  const token = lookup.status === 0 ? lookup.stdout.trim() : ""
+  if (!token) {
+    fail(
+      `no keyring entry service ${KEYRING_SERVICE} account ${account}; store the test account's token with\n` +
+        `  secret-tool store --label="live check" service ${KEYRING_SERVICE} account ${account}`,
+    )
+  }
+  if (run("bash", [LIVE_CHECK, ...args], { input: token, stdio: ["pipe", "inherit", "inherit"] }).status !== 0) {
+    fail("the live check failed: no record")
+  }
+  if (run("pnpm", ["exec", "cli-dev", "live", "record", "--script", "scripts/live.sh"]).status !== 0) {
+    fail("cli-dev live record failed")
+  }
+  return recordOf(version)
+}
+
+const main = async () => {
+  const [account, ...args] = process.argv.slice(2)
+  if (!account || account === "--help" || account === "-h") {
+    process.stdout.write(`Usage: ${join(ROOT, "bin/live")} <keyring account> [arguments for scripts/live.sh]\n`)
+    process.exitCode = account ? 0 : 2
+    return
+  }
+  if (existsSync(KIT)) fail("this is cli-template itself, which has no service to check")
+  const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8"))
+  const current = run("pnpm", ["exec", "cli-dev", "live", "check", "--version", version], { stdio: "ignore" })
+  const record = current.status === 0 ? recordOf(version) : await check(account, version, args)
+  if (!record) fail(`no record for ${version} in ${RECORDS}`)
+
+  const view = run("gh", ["pr", "view", "--json", "url,state,body"], { stdio: ["ignore", "pipe", "ignore"] })
+  const pr = view.status === 0 ? JSON.parse(view.stdout) : undefined
+  if (pr?.state !== "OPEN") {
+    process.stdout.write(`Passed: ${record}\nCommit ${RECORDS} in the release pull request.\n`)
+    return
+  }
+  if (git("status", "--porcelain", "--", RECORDS)) {
+    git("add", "--", RECORDS)
+    git("commit", "-q", "-m", `chore(release): live check of ${version}`, "--", RECORDS)
+  }
+  // Every time, not only after a commit: a push that failed on an earlier run is sent now.
+  git("push", "-q", "origin", "HEAD")
+  const body = withConformance(pr.body ?? "", record)
+  const edit = { input: body, stdio: ["pipe", "ignore", "inherit"] }
+  if (body !== pr.body && run("gh", ["pr", "edit", pr.url, "--body-file", "-"], edit).status !== 0) {
+    fail(`the record is pushed, but ${pr.url}'s description was not changed: add it under Conformance by hand`)
+  }
+  process.stdout.write(`Passed: ${record}\nCommitted to ${pr.url} and named in its Conformance section.\n`)
+}
+
+// Imported by the template's test for withConformance; run as a program otherwise, also through a symlink.
+if (process.argv[1] && realpathSync(process.argv[1]) === import.meta.filename) await main()
