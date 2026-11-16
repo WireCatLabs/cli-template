@@ -1,6 +1,8 @@
 import { execFile } from "node:child_process"
 import { createHash } from "node:crypto"
+import { readFileSync } from "node:fs"
 import { chmod, mkdir, readdir, writeFile } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
@@ -16,7 +18,7 @@ import {
   type Question,
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { appNameOf } from "./rename.js"
+import { appNameOf, upperCommand } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 
 const run = promisify(execFile)
@@ -67,24 +69,57 @@ export const cliServerJson = (text: string, names: Names): string => {
   return `${JSON.stringify(next, null, 2)}\n`
 }
 
+type MonthlyTime = { hour: number; minute: number }
+
 // 04:01 to 05:59 UTC: after WC-CI-9's window, so it never takes a WireCat repository's minute, and off the hour,
 // when GitHub delays scheduled runs most.
-export const monthlyTime = (pkg: string): { hour: number; minute: number } => {
+export const monthlyTime = (pkg: string): MonthlyTime => {
   const slot = createHash("sha256").update(pkg).digest().readUInt32BE(0) % 118
   return { hour: 4 + Math.floor(slot / 59), minute: 1 + (slot % 59) }
 }
 
-const MONTHLY_FILE = ".github/workflows/monthly.yml"
+// WC-CI-9's table of the WireCat repositories' monthly minutes, as `HH:MM → repository`; cli-dev repo-check reads
+// the same table from the same file.
+export const takenMinutes = (ciPage: string): Map<string, string> =>
+  new Map(
+    [...ciPage.matchAll(/^\s*\|\s*(\d\d:\d\d)\s*\|\s*([\w.-]+)\s*\|\s*$/gm)].map(([, time = "", repo = ""]) => [
+      time,
+      repo,
+    ]),
+  )
 
-export const withMonthlyTime = (text: string, pkg: string): string => {
-  const cron = /cron: "\d+ \d+ 1 \* \*"/
-  if (!cron.test(text)) throw new Error(`${MONTHLY_FILE}: no monthly cron to rewrite`)
-  const { hour, minute } = monthlyTime(pkg)
-  return text.replace(cron, `cron: "${minute} ${hour} 1 * *"`)
+const WIRECAT_WINDOW = { from: 2 * 60 + 17, to: 3 * 60 + 20 }
+
+const hhmm = (minutes: number): string =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+
+// A repository already in the table keeps its minute; a new one takes a free minute picked by its name.
+export const wirecatMonthlyTime = (repo: string, taken: Map<string, string>): MonthlyTime => {
+  const window = Array.from({ length: WIRECAT_WINDOW.to - WIRECAT_WINDOW.from + 1 }, (_, i) => WIRECAT_WINDOW.from + i)
+  const free = window.filter((slot) => !taken.has(hhmm(slot)))
+  const slot =
+    window.find((value) => taken.get(hhmm(value)) === repo) ??
+    free[createHash("sha256").update(repo).digest().readUInt32BE(0) % free.length]
+  if (slot === undefined) throw new Error("WC-CI-9's window has no free monthly minute left; ask in cli-base")
+  return { hour: Math.floor(slot / 60), minute: slot % 60 }
 }
 
-// cli-base's PARITY_GROUPS lists WireCat's CLIs only, and repo-check fails a CLI in no group; this is the template's
-// own group, which every CLI made from it passes.
+const ciPage = (): string =>
+  readFileSync(
+    join(dirname(createRequire(import.meta.url).resolve("@wirecat/cli-base")), "../docs/standards/ci.md"),
+    "utf8",
+  )
+
+const MONTHLY_FILE = ".github/workflows/monthly.yml"
+
+export const withMonthlyTime = (text: string, time: MonthlyTime): string => {
+  const cron = /cron: "\d+ \d+ 1 \* \*"/
+  if (!cron.test(text)) throw new Error(`${MONTHLY_FILE}: no monthly cron to rewrite`)
+  return text.replace(cron, `cron: "${time.minute} ${time.hour} 1 * *"`)
+}
+
+// repo-check fails a CLI in no parity group, and a new CLI is in none of cli-base's PARITY_GROUPS yet; this is the
+// template's own group, which every CLI made from it passes.
 export const parityGroups = (command: string): unknown[] => [
   {
     name: command,
@@ -443,24 +478,49 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
 const liveStep = (step: number): string =>
   `${step}. Before each bin/release: replace the sample's reads in scripts/live.sh with your own, run it with a real token on stdin, then pnpm exec cli-dev live record --script scripts/live.sh and commit docs/dev/live-checks.txt (WC-REL-17).`
 
-export const manualSteps = (names: Names): string[] => {
-  const shared = [
-    `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md), and delete merged branches: gh repo edit ${names.owner}/${names.name} --delete-branch-on-merge.`,
-    `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), limit the GitHub npm environment's deployment branches to main, and add any secrets.`,
+export const manualSteps = (names: Names): string[] => [
+  `1. Create the repository ${names.owner}/${names.name} and its main ruleset (cli-base docs/standards/new-cli.md), and delete merged branches: gh repo edit ${names.owner}/${names.name} --delete-branch-on-merge.`,
+  `2. Set npm trusted publishing for ${names.package}, naming release.yml (WC-REL-11), limit the GitHub npm environment's deployment branches to main, and add any secrets.`,
+  liveStep(3),
+  ...(isWireCat(names)
+    ? [
+        "4. Join WireCat's shared lists with the entries below: one pull request to cli-base (the monthly minute in WC-CI-9's table, the command in PARITY_GROUPS' all group), one to cli-core's WIRECAT_TOOLS, and after the first release one to cli-docs' tools.json.",
+      ]
+    : []),
+  "CI's repo-setup job (cli-dev repo-check) fails until steps 1 and 2 are done; step 2's environment is checked once it exists.",
+]
+
+// Ready to paste; the TODO values are the ones only a person can write.
+export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTime): string[] => {
+  const tool = [
+    "{",
+    `  command: ${JSON.stringify(names.command)},`,
+    `  appName: ${JSON.stringify(appNameOf(names))},`,
+    `  envPrefix: ${JSON.stringify(upperCommand(names.command))},`,
+    `  package: ${JSON.stringify(names.package)},`,
+    `  does: ${JSON.stringify(tagline)},`,
+    "},",
   ]
-  if (!isWireCat(names)) {
-    return [
-      ...shared,
-      liveStep(3),
-      "CI's repo-setup job (cli-dev repo-check) fails until steps 1 and 2 are done; step 2's environment is checked once it exists.",
-    ]
-  }
+  const docs = JSON.stringify(
+    {
+      name: names.command,
+      displayName: "TODO: the service's name",
+      repo: `${names.owner}/${names.name}`,
+      package: names.package,
+      lang: "en",
+      docsRef: "TODO: the first release's tag, e.g. v0.1.0",
+      summary: { en: tagline, ru: "TODO", es: "TODO" },
+    },
+    null,
+    2,
+  ).split("\n")
   return [
-    ...shared,
-    "3. Give .github/workflows/monthly.yml a free cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9).",
-    "4. A pull request to cli-base's PARITY_GROUPS, a line in cli-core's WIRECAT_TOOLS and in cli-docs' tools.json.",
-    liveStep(5),
-    "CI's repo-setup job (cli-dev repo-check) fails until steps 1 to 4 are done; step 2's environment is checked once it exists.",
+    "cli-base docs/standards/ci.md, WC-CI-9's table of taken minutes:",
+    `  | ${hhmm(time.hour * 60 + time.minute)} | ${names.name} |`,
+    "cli-core src/ports/wirecat-tools.ts, WIRECAT_TOOLS:",
+    ...tool.map((line) => `  ${line}`),
+    "cli-docs tools.json:",
+    ...docs.map((line) => `  ${line}`),
   ]
 }
 
@@ -470,6 +530,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   if (!(await isEmptyOrMissing(target))) throw new Error(`${target} already exists and is not empty`)
   const rendered = await renderTemplate(source, names)
   const category = answers.category?.[0] ?? ""
+  const time = isWireCat(names) ? wirecatMonthlyTime(names.name, takenMinutes(ciPage())) : monthlyTime(names.package)
   const rewrites: Record<string, (text: string) => string> = {
     "package.json": (text) => cliPackageJson(text, names),
     "README.md": () => cliReadme(names),
@@ -490,7 +551,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
       ? {}
       : { LICENSE: (text: string) => withCopyrightHolder(text, names.owner, new Date().getFullYear()) }),
     "server.json": (text) => cliServerJson(text, names),
-    ...(isWireCat(names) ? {} : { [MONTHLY_FILE]: (text: string) => withMonthlyTime(text, names.package) }),
+    [MONTHLY_FILE]: (text) => withMonthlyTime(text, time),
   }
   const hashes: Record<string, string> = {}
   for (const [path, file] of rendered) {
@@ -501,9 +562,7 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
-  if (!isWireCat(names)) {
-    await writeOut(target, "config/parity-groups.json", `${JSON.stringify(parityGroups(names.command), null, 2)}\n`)
-  }
+  await writeOut(target, "config/parity-groups.json", `${JSON.stringify(parityGroups(names.command), null, 2)}\n`)
   const manifest: CliManifest = {
     template: source.name,
     version: source.version,
@@ -534,6 +593,13 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "",
     "Steps that need a person:",
     ...manualSteps(names).map((step) => `  ${step}`),
+    ...(isWireCat(names)
+      ? [
+          "",
+          "Entries for step 4:",
+          ...sharedListEntries(names, answers.tagline?.[0] ?? "", time).map((line) => `  ${line}`),
+        ]
+      : []),
     "",
   ].join("\n")
 }

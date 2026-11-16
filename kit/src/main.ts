@@ -2,12 +2,14 @@
 import { parseArgs } from "node:util"
 import { INTERVIEW, NAME_QUESTIONS } from "./interview.js"
 import { type Io, runNew, TAGLINE_QUESTION } from "./new.js"
+import { runRemoveSample } from "./remove-sample.js"
 import { fetchPublished, loadSource, ownRoot } from "./source.js"
 import { parseMode, runUpgrade } from "./upgrade.js"
 
 const USAGE = `Usage:
   npx @wirecat/cli-template new <name> [answers]   copy the template into ./<name>
   npx @wirecat/cli-template upgrade [--apply | --replace | --skip] [--dry-run]
+  npx @wirecat/cli-template remove-sample
 
 new asks for every missing answer in a terminal; without one, a missing answer is an error.
   --command <word>      the command word people type
@@ -22,6 +24,10 @@ upgrade brings template changes into a CLI made from it; it needs a clean git wo
   --replace    take the template's new file as it is
   --skip       keep this CLI's files
   --dry-run    list the files and what each would get; write nothing
+
+remove-sample deletes the template's comments sample once your own commands replace it, then regenerates
+docs/commands.md, contracts/ and contracts/mcp-catalogue.json. It needs a clean git working tree, and stops without
+a change while any other file still imports the sample.
 `
 
 const answerFlags = Object.fromEntries(
@@ -63,7 +69,11 @@ const main = async (argv: string[], io: Io): Promise<string> => {
       io,
     )
   }
-  throw new Error(`unknown command "${command}"; expected new or upgrade\n\n${USAGE}`)
+  if (command === "remove-sample") {
+    if (rest.length) throw new Error(`remove-sample takes no arguments, got ${rest.join(" ")}`)
+    return runRemoveSample(process.cwd())
+  }
+  throw new Error(`unknown command "${command}"; expected new, upgrade or remove-sample\n\n${USAGE}`)
 }
 
 const io: Io = {

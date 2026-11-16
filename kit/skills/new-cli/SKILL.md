@@ -71,8 +71,10 @@ npx @wirecat/cli-template new <name>-cli --command <word> --package @wirecat/<na
 cd <name>-cli && pnpm install && pnpm ci:quick
 ```
 
-Then the four steps that need a person (the repository, its ruleset, npm, the secrets): put them in one script in
-`bin/` and hand the owner one command. Keep the template's sample until your commands cover every pattern it shows.
+Then the steps `new` prints for a person (the repository, its ruleset, npm, the secrets, the live check, and the
+pull requests to cli-base, cli-core and cli-docs with the entries it prints): put the GitHub and npm ones in one
+script in `bin/` and hand the owner one command. Keep the template's sample until your commands cover every pattern
+it shows, then remove it with `npx @wirecat/cli-template remove-sample`.
 
 ## 5. Build each slice
 

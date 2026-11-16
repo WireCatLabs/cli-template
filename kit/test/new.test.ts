@@ -5,12 +5,23 @@ import { defineParityGroups } from "@wirecat/cli-base/standards/tables"
 import { KINDS } from "@wirecat/cli-core"
 import { afterAll, describe, expect, it } from "vitest"
 import { INTERVIEW } from "../src/interview.js"
-import { languageWarnings, monthlyTime, runNew, speechModels, taglineOf, withContentLanguages } from "../src/new.js"
+import {
+  languageWarnings,
+  monthlyTime,
+  runNew,
+  speechModels,
+  taglineOf,
+  takenMinutes,
+  wirecatMonthlyTime,
+  withContentLanguages,
+} from "../src/new.js"
 import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
 import { fixture, io, NOTES_FLAGS, read, removeTempDirs, tempDir, V1 } from "./fixture.js"
 
 afterAll(removeTempDirs)
+
+const handbook = join(import.meta.dirname, "../../node_modules/@wirecat/cli-base/docs/standards")
 
 const walk = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
@@ -67,10 +78,47 @@ describe("new", () => {
     expect(out).not.toContain("&&")
   })
 
-  it("sends the person to the handbook's list of taken monthly cron minutes", async () => {
-    const { out } = await makeNew({ ...NOTES_FLAGS, package: "@wirecat/cal-cli" })
+  it("prints a WireCat CLI's entries for cli-base, cli-core and cli-docs, ready to paste", async () => {
+    const { out } = await makeNew({ ...NOTES_FLAGS, package: "@wirecat/cal-cli", tagline: "Calendars offline" })
+    const { hour, minute } = wirecatMonthlyTime("cal-cli", takenMinutes(read(handbook, "ci.md")))
+    const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
 
-    expect(out).toContain("cron minute from the list in cli-base docs/standards/ci.md (WC-CI-9)")
+    expect(out).toContain("4. Join WireCat's shared lists")
+    expect(out).toContain(`    | ${time} | cal-cli |\n`)
+    expect(out).toContain(
+      [
+        "    {",
+        '      command: "cal",',
+        '      appName: "cal-cli",',
+        '      envPrefix: "CAL",',
+        '      package: "@wirecat/cal-cli",',
+        '      does: "Calendars offline",',
+        "    },",
+      ].join("\n"),
+    )
+    const docs = out.slice(out.indexOf("cli-docs tools.json:\n") + "cli-docs tools.json:\n".length)
+    expect(JSON.parse(docs)).toMatchObject({
+      name: "cal",
+      repo: "example/cal-cli",
+      package: "@wirecat/cal-cli",
+      lang: "en",
+      summary: { en: "Calendars offline", ru: "TODO", es: "TODO" },
+    })
+  })
+
+  it("picks a WireCat CLI's monthly minute inside WC-CI-9's window, from the free ones", () => {
+    const taken = takenMinutes("| UTC | Repository |\n|---|---|\n| 02:17 | cli-base |\n| 02:20 | notion-cli |\n")
+    const times = ["a-cli", "b-cli", "c-cli", "d-cli"].map((repo) => wirecatMonthlyTime(repo, taken))
+
+    for (const { hour, minute } of times) {
+      expect(hour * 60 + minute).toBeGreaterThanOrEqual(2 * 60 + 17)
+      expect(hour * 60 + minute).toBeLessThanOrEqual(3 * 60 + 20)
+      expect(`${hour}:${minute}`).not.toMatch(/^2:(17|20)$/)
+    }
+    expect(wirecatMonthlyTime("notion-cli", taken)).toEqual({ hour: 2, minute: 20 })
+    const every = Array.from({ length: 64 }, (_, i) => 137 + i)
+    const full = new Map(every.map((slot) => [`0${Math.floor(slot / 60)}:${String(slot % 60).padStart(2, "0")}`, "x"]))
+    expect(() => wirecatMonthlyTime("new-cli", full)).toThrow("no free monthly minute")
   })
 
   it("rewrites package.json for the new CLI and drops the copy tool", async () => {
@@ -275,13 +323,15 @@ describe("new from this repository", () => {
     expect(JSON.parse(read(await makeReal(WIRECAT_FLAGS), "package.json")).author).toBe(template.author)
   })
 
-  it("puts an outside CLI in a parity group of its own that cli-base accepts", async () => {
-    const dir = await makeReal(NOTES_FLAGS)
+  it.each([
+    ["an outside", NOTES_FLAGS],
+    ["a WireCat", WIRECAT_FLAGS],
+  ])("puts %s CLI in a parity group of its own that cli-base accepts", async (_, flags) => {
+    const dir = await makeReal(flags)
 
     const groups = defineParityGroups(JSON.parse(read(dir, "config/parity-groups.json")))
     expect(groups.map((group) => group.name)).toEqual(["cal"])
     expect(groups[0]?.members).toContain("cal")
-    expect(existsSync(join(await makeReal(WIRECAT_FLAGS), "config/parity-groups.json"))).toBe(false)
   })
 
   it("gives an outside CLI a monthly minute from its package name, after WireCat's window", async () => {
@@ -289,9 +339,11 @@ describe("new from this repository", () => {
     const { hour, minute } = monthlyTime("@example/cal-cli")
 
     expect(read(dir, ".github/workflows/monthly.yml")).toContain(`cron: "${minute} ${hour} 1 * *"`)
-    expect(read(await makeReal(WIRECAT_FLAGS), ".github/workflows/monthly.yml")).toBe(
-      read(root, ".github/workflows/monthly.yml"),
-    )
+    const wirecat = wirecatMonthlyTime("cal-cli", takenMinutes(read(handbook, "ci.md")))
+    const monthly = read(await makeReal(WIRECAT_FLAGS), ".github/workflows/monthly.yml")
+    expect(monthly).toContain(`cron: "${wirecat.minute} ${wirecat.hour} 1 * *"`)
+    const time = `0${wirecat.hour}:${String(wirecat.minute).padStart(2, "0")}`
+    expect(takenMinutes(read(handbook, "ci.md")).has(time)).toBe(false)
     const times = ["@a/x-cli", "@b/x-cli", "@a/y-cli", "x-cli"].map((pkg) => monthlyTime(pkg))
     for (const time of times) {
       expect(time.hour * 60 + time.minute).toBeGreaterThan(4 * 60)
@@ -324,7 +376,7 @@ describe("new from this repository", () => {
     expect(execFileSync("git", ["ls-files", "-s", "scripts/live.sh"], { cwd: dir, encoding: "utf8" })).toMatch(
       /^100755 /,
     )
-    expect(out).toContain("5. Before each bin/release:")
+    expect(out).toContain("3. Before each bin/release:")
     expect(out).toContain("pnpm exec cli-dev live record --script scripts/live.sh")
   })
 

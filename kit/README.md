@@ -1,4 +1,4 @@
-# kit — `new` and `upgrade`
+# kit — `new`, `upgrade` and `remove-sample`
 
 The copy tool behind `npx @wirecat/cli-template`. It is the package's `cli-template` bin
 (`kit/dist/main.js`, built from `kit/src` by `tsc -p kit`). It is never copied into a new CLI. How the
@@ -12,13 +12,20 @@ npx @wirecat/cli-template new cal-cli --command cal --package @wirecat/cal-cli -
   --category notes --content-lang en,ru --sign-in token --api official-docs --filters time,person \
   --never-store tokens --untrusted names,links
 npx @wirecat/cli-template upgrade --dry-run
+npx @wirecat/cli-template remove-sample
 ```
 
 ## `new <name>`
 
 `new` copies the files of its own package version into `./<name>`. It renames the placeholders, rewrites
 `package.json`, runs `git init` and writes `template.json`, `docs/dev/DESIGN.md` and the reference CLI into
-`AGENTS.md`. It then prints the steps that need a person: five for a WireCat CLI, three outside `@wirecat`. It does not install packages, commit or push.
+`AGENTS.md`. It does not install packages, commit or push.
+
+It sets up what CI's `repo-setup` job (`cli-dev repo-check`) checks in the files: a monthly cron minute and a parity
+group in `config/parity-groups.json`. A WireCat CLI gets a free minute inside WC-CI-9's window, from the table in
+cli-base's `docs/standards/ci.md`; a CLI outside `@wirecat` gets one after that window. It then prints the steps that
+need a person: four for a WireCat CLI, three outside `@wirecat`. For a WireCat CLI it also prints the entries to
+paste into cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs' `tools.json`.
 
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
@@ -114,6 +121,15 @@ lacks), upgrade prints it as a step for you.
 
 A conflict leaves git markers, and `template.json` keeps the new state under `pending`. Resolve the markers and run
 `upgrade` again: it checks that the markers are gone and then moves to the new version.
+
+## `remove-sample`
+
+Run it in a CLI made from the template, with a clean git working tree, once your own commands replace the
+`comments` sample. It refuses, changing nothing, while a file outside the sample still imports it, and names each one.
+Otherwise it unmounts `commentsCommand` in `src/program.ts`, deletes `src/sample/`, `src/commands/comments.ts`,
+`src/testing/fake-comments.ts` and the sample's tests, and runs `pnpm generate`,
+`pnpm exec cli-contract contracts/plan.json --update` and `pnpm exec vitest run src/mcp.test.ts --update`, so no
+contract still pins the sample's commands. It lists the files still marked `SAMPLE:`.
 
 ## `template.json` in a CLI made from it
 
