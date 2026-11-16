@@ -69,9 +69,10 @@ Replace, your service's own:
   named after its command, and the token reaches no output, run record or file.
 
 Remove the sample only once your own commands and their tests cover each pattern above: the skeleton alone is below
-the coverage floor, and the floor is never lowered (WC-TEST-11). To remove it, unmount `commentsCommand` in `src/program.ts` and delete `src/sample/`,
-`src/commands/comments.ts`, `src/testing/fake-comments.ts` and their tests. Then run `pnpm generate`,
-`pnpm exec cli-contract contracts/plan.json --update` and `pnpm test:matrix`.
+the coverage floor, and the floor is never lowered (WC-TEST-11). To remove it, run
+`npx @wirecat/cli-template remove-sample` with a clean working tree: it stops while any other file imports the
+sample, then unmounts `commentsCommand`, deletes the sample's files and regenerates `docs/commands.md`, `contracts/`
+and `contracts/mcp-catalogue.json`. Then run `pnpm test:matrix`.
 
 ## Template-owned files
 

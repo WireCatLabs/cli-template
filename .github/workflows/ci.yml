@@ -37,6 +37,7 @@ jobs:
       # get two cli-base copies and crash at start while every local test passes.
       checks: |
         pnpm peers check
+        node --experimental-strip-types scripts/one-cli-base.ts
         pnpm exec cli-dev audit --family --cli dist/bin/clidev.js --differences lint/audit-differences.json
         pnpm smoke:node
 

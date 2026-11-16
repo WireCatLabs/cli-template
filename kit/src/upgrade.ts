@@ -26,12 +26,12 @@ const MODES: Mode[] = ["apply", "replace", "skip"]
 // Git for Windows checks text out with CRLF by default; the template's hashes and merges are of LF text.
 const readMaybe = (path: string): Promise<Buffer | undefined> => readFile(path).then(withLf, () => undefined)
 
-const requireCleanTree = async (cwd: string): Promise<void> => {
+export const requireCleanTree = async (cwd: string): Promise<void> => {
   const { stdout } = await run("git", ["status", "--porcelain"], { cwd }).catch(() => {
-    throw new Error(`${cwd} is not a git repository; upgrade needs one so every change can be seen and undone`)
+    throw new Error(`${cwd} is not a git repository; the kit needs one so every change can be seen and undone`)
   })
   if (stdout.trim()) {
-    throw new Error("the git working tree has changes; commit or stash them first, so upgrade's changes stand alone")
+    throw new Error("the git working tree has changes; commit or stash them first, so these changes stand alone")
   }
 }
 
