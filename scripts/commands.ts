@@ -32,8 +32,9 @@ lists the profiles on this computer.`,
   },
 })
 const check = process.argv.includes("--check")
-const stale = writeArtifacts([{ path: "docs/commands.md", content: page.replace(/\n{3,}/g, "\n\n") }], { root, check })
+const artifacts = [{ path: "docs/commands.md", content: page.replace(/\n{3,}/g, "\n\n") }]
+const stale = writeArtifacts(artifacts, { root, check })
 if (check && stale.length) {
-  process.stderr.write("docs/commands.md is stale; run pnpm generate\n")
+  process.stderr.write(`Stale: ${stale.join(", ")}; run pnpm generate\n`)
   process.exitCode = 1
 }

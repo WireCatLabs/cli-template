@@ -1,0 +1,10 @@
+{
+  "comments": {
+    "source": "https://comments.example.invalid/$discovery/rest?version=v1",
+    "revision": "20261116",
+    "version": "v1",
+    "sha256": "f8fe3d97240188e14cc035d5eb5d2c2e5b5ed348378dcf8bdec5bbf334ce3292",
+    "sourceSha256": "52e6e9d889f2c1c817be7ef0a86742a3017a62cd30ed753ad940ef2697a79c1a",
+    "normalization": "object keys sorted, 2-space JSON; values and array order unchanged"
+  }
+}

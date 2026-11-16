@@ -1,0 +1,179 @@
+{
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://comments.example.invalid/auth/comments": {
+          "description": "See and change comments"
+        }
+      }
+    }
+  },
+  "baseUrl": "https://comments.example.invalid/v1/",
+  "discoveryVersion": "v1",
+  "id": "comments:v1",
+  "kind": "discovery#restDescription",
+  "name": "comments",
+  "parameters": {},
+  "protocol": "rest",
+  "resources": {
+    "comments": {
+      "methods": {
+        "delete": {
+          "description": "Delete a comment",
+          "httpMethod": "DELETE",
+          "id": "comments.comments.delete",
+          "parameterOrder": [
+            "commentId"
+          ],
+          "parameters": {
+            "commentId": {
+              "location": "path",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "path": "comments/{commentId}",
+          "scopes": [
+            "https://comments.example.invalid/auth/comments"
+          ]
+        },
+        "get": {
+          "description": "Show one comment",
+          "httpMethod": "GET",
+          "id": "comments.comments.get",
+          "parameterOrder": [
+            "commentId"
+          ],
+          "parameters": {
+            "commentId": {
+              "location": "path",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "path": "comments/{commentId}",
+          "response": {
+            "$ref": "Comment"
+          },
+          "scopes": [
+            "https://comments.example.invalid/auth/comments"
+          ]
+        },
+        "insert": {
+          "description": "Create a comment",
+          "httpMethod": "POST",
+          "id": "comments.comments.insert",
+          "path": "comments",
+          "request": {
+            "$ref": "NewComment"
+          },
+          "response": {
+            "$ref": "Comment"
+          },
+          "scopes": [
+            "https://comments.example.invalid/auth/comments"
+          ]
+        },
+        "list": {
+          "description": "List comments, newest first",
+          "httpMethod": "GET",
+          "id": "comments.comments.list",
+          "parameters": {
+            "maxResults": {
+              "location": "query",
+              "maximum": "100",
+              "minimum": "1",
+              "type": "integer"
+            },
+            "pageToken": {
+              "location": "query",
+              "type": "string"
+            }
+          },
+          "path": "comments",
+          "response": {
+            "$ref": "CommentList"
+          },
+          "scopes": [
+            "https://comments.example.invalid/auth/comments"
+          ]
+        },
+        "patch": {
+          "description": "Change a comment's text",
+          "httpMethod": "PATCH",
+          "id": "comments.comments.patch",
+          "parameterOrder": [
+            "commentId"
+          ],
+          "parameters": {
+            "commentId": {
+              "location": "path",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "path": "comments/{commentId}",
+          "request": {
+            "$ref": "NewComment"
+          },
+          "response": {
+            "$ref": "Comment"
+          },
+          "scopes": [
+            "https://comments.example.invalid/auth/comments"
+          ]
+        }
+      }
+    }
+  },
+  "revision": "20261116",
+  "rootUrl": "https://comments.example.invalid/",
+  "schemas": {
+    "Comment": {
+      "id": "Comment",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "createdAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "CommentList": {
+      "id": "CommentList",
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "Comment"
+          },
+          "type": "array"
+        },
+        "nextPageToken": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "NewComment": {
+      "id": "NewComment",
+      "properties": {
+        "text": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "servicePath": "v1/",
+  "title": "Example Comments API",
+  "version": "v1"
+}

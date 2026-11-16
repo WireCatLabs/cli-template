@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { existsSync, readdirSync, writeFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { defineParityGroups } from "@wirecat/cli-base/standards/tables"
 import { KINDS } from "@wirecat/cli-core"
@@ -40,7 +40,7 @@ describe("new", () => {
     ["messenger", "whatsapp-cli", "messenger"],
     ["mail", "mail-cli", "mail"],
     ["notes", "cli-memo", "notes"],
-    ["files", "drive-cli", "files and documents"],
+    ["files", "notion-cli", "files and documents"],
     ["calendar", "gcal-cli", "calendar"],
     ["meetings", "zoom-cli", "meetings"],
     ["crm", "bitrix24-cli", "CRM (sales: deals, contacts, companies)"],
@@ -199,6 +199,16 @@ describe("new", () => {
     expect(JSON.parse(read(join(cwd, "cal-cli"), "template.json")).names.owner).toBe("Example-Org")
   })
 
+  it("lists in the new-cli skill exactly the values each flag takes", () => {
+    const skill = readFileSync(join(import.meta.dirname, "../skills/new-cli/SKILL.md"), "utf8")
+    for (const question of INTERVIEW) {
+      if (!question.choices) continue
+      const listed = skill.match(new RegExp(`--${question.flag} ([^\\s\\\\]+)`))?.[1] ?? ""
+      const values = listed.split(/[|,]/).filter((value) => !value.startsWith("other:"))
+      expect(values.sort(), question.flag).toEqual(question.choices.map((choice) => choice.value).sort())
+    }
+  })
+
   it("offers one category for each of cli-core's kinds", () => {
     expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(KINDS.length)
   })
@@ -265,10 +275,44 @@ describe("new from this repository", () => {
   const names = { name: "cal-cli", command: "cal", package: "@example/cal-cli", owner: "example" }
   const cliDevs = (text: string) => text.match(/cli-dev/g)?.length ?? 0
 
+  it.each([
+    ["openapi", "spec/cal/openapi.json"],
+    ["swagger", "spec/cal/swagger.json"],
+    ["discovery", "spec/cal/comments.json"],
+  ])("--spec %s seeds the spec, its scripts and the api group", async (spec, document) => {
+    const cwd = tempDir(`spec-${spec}`)
+
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: { ...NOTES_FLAGS, spec } }, io())
+
+    const dir = join(cwd, "cal-cli")
+    for (const path of [document, "spec/cal/provenance.json", "scripts/sync-spec.ts", "scripts/spec-model.ts"])
+      expect(existsSync(join(dir, path)), path).toBe(true)
+    expect(read(dir, "scripts/generate.ts")).toContain("permissions:")
+    expect(read(dir, "src/program.ts")).toContain("apiCommand(),")
+    expect(read(dir, "src/config.ts")).toContain("commandPermissions(serviceApiPermissions(API))")
+    expect(read(dir, "scripts/commands.ts")).toContain("...apiSkillFiles({")
+    expect(read(dir, "skills/example-cal-cli/SKILL.md")).toContain("[references/api.md](references/api.md)")
+    const pkg = JSON.parse(read(dir, "package.json"))
+    expect(pkg.scripts.generate).toMatch(/^node --experimental-strip-types scripts\/generate.ts && /)
+    expect(pkg.scripts["generate:check"]).toContain("scripts/generate.ts --check && ")
+    expect(Boolean(pkg.devDependencies["swagger-converter"])).toBe(spec === "swagger")
+    expect(out).toContain("cli-contract contracts/plan.json --update")
+  })
+
+  it("--spec none adds no api group", async () => {
+    const cwd = tempDir("spec-none")
+
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+
+    expect(existsSync(join(cwd, "cal-cli/spec"))).toBe(false)
+    expect(existsSync(join(cwd, "cal-cli/src/commands/api.ts"))).toBe(false)
+    expect(out).not.toContain("cli-contract")
+  })
+
   it("replaces every clidev placeholder", async () => {
     const cwd = tempDir("real")
 
-    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
+    await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: { ...NOTES_FLAGS, spec: "openapi" } }, io())
 
     const made = walk(join(cwd, "cal-cli")).filter((path) => !path.endsWith("template.json"))
     for (const file of made) expect(read(file, ""), file).not.toMatch(/clidev/i)

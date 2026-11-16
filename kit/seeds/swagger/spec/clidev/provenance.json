@@ -1,0 +1,11 @@
+{
+  "sources": [
+    {
+      "name": "comments",
+      "url": "https://comments.example.invalid/swagger.json",
+      "file": "swagger.json",
+      "sha256": "a4de68ddab2d59651b0ffe10ef35c88b3befd413f1144b0e4f593e1da878a249"
+    }
+  ],
+  "retrieved_at": "2026-11-16T00:00:00.000Z"
+}

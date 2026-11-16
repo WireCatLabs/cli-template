@@ -14,29 +14,33 @@ pnpm build >/dev/null
 tarball=$(npm pack --silent --ignore-scripts --pack-destination "$work" | tail -n 1)
 npm install --silent --no-save --prefix "$work/install" "$work/$tarball"
 
-# build <name> <command> <category>; outside @wirecat, as a third party makes one, and with every flag new takes.
+# build <name> <command> <category> <spec>; outside @wirecat, as a third party makes one, and with every flag new takes.
 build() {
   mkdir "$work/new-$2"
   cd "$work/new-$2"
   "$work/install/node_modules/.bin/cli-template" new "$1" --command "$2" --package "@example/$1" \
     --owner example --tagline "Made by kit e2e" --category "$3" --content-lang en --sign-in none \
-    --api official-docs --filters time --never-store tokens --untrusted none >/dev/null
+    --api official-docs --spec "$4" --filters time --never-store tokens --untrusted none >/dev/null
   cmp "$root/.gitignore" "$1/.gitignore"
   cd "$1"
   pnpm install
   # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
   pnpm lint:fix
   pnpm generate
+  if [ "$4" != none ]; then
+    pnpm exec cli-contract contracts/plan.json --update
+    pnpm exec vitest run src/mcp.test.ts --update
+  fi
   pnpm lint
   pnpm ci:quick
   pnpm contracts:check
   pnpm test:coverage
   pnpm docs:check
-  echo "kit e2e: new $1 ($2, $3) passed lint, generate, ci:quick, contracts:check, test:coverage and docs:check"
+  echo "kit e2e: new $1 ($2, $3, --spec $4) passed lint, generate, ci:quick, contracts:check, test:coverage and docs:check"
 }
 
-build demo-cli demo notes
-build acme-workspace-cli acme-workspace crm
+build demo-cli demo notes openapi
+build acme-workspace-cli acme-workspace crm none
 
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')

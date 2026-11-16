@@ -80,6 +80,7 @@ describe("the packed bin", () => {
         "content-lang": "en",
         "sign-in": "none",
         api: "official-docs",
+        spec: "none",
         filters: "time",
         "never-store": "tokens",
         untrusted: "none",

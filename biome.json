@@ -8,7 +8,8 @@
       "!.claude",
       "!pnpm-lock.yaml",
       "!config/wirecat",
-      "!contracts/wirecat.json"
+      "!contracts/wirecat.json",
+      "!**/spec"
     ]
   },
   "extends": ["./config/wirecat/biome.base.json"],

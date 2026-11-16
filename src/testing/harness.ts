@@ -26,7 +26,7 @@ export const runCli = async (
     env,
     answer,
   }: {
-    service?: ReturnType<typeof fakeComments>
+    service?: { fetch: (input: string | URL | Request, init?: RequestInit) => Promise<Response> }
     keyring?: KeyringStore
     stdin?: string
     env?: NodeJS.ProcessEnv
