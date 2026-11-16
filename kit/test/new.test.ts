@@ -301,7 +301,7 @@ describe("new from this repository", () => {
     const pkg = JSON.parse(read(dir, "package.json"))
     expect(pkg.scripts.generate).toMatch(/^node --experimental-strip-types scripts\/generate.ts && /)
     expect(pkg.scripts["generate:check"]).toContain("scripts/generate.ts --check && ")
-    expect(Boolean(pkg.devDependencies["swagger-converter"])).toBe(spec === "swagger")
+    expect(Boolean(pkg.devDependencies["@scalar/openapi-upgrader"])).toBe(spec === "swagger")
     expect(out).toContain("cli-contract contracts/plan.json --update")
   })
 

@@ -39,8 +39,9 @@ export const specSeeds = async (source: TemplateSource, names: Names, kind: Spec
 
 const GENERATE = "node --experimental-strip-types scripts/generate.ts"
 
-// upgradeToOpenApi3 converts through two optional peers of cli-base; the CLI pins the versions cli-base tests with.
-const SWAGGER_PEERS = ["@scalar/openapi-upgrader", "swagger-converter"]
+// upgradeToOpenApi3 converts 2.0 through an optional peer of cli-base; the CLI pins the version cli-base tests with.
+// Swagger 1.2 also needs swagger-converter, which the new-cli skill's openapi reference names.
+export const SWAGGER_PEERS = ["@scalar/openapi-upgrader"]
 
 export const withSpecPackage = (text: string, kind: SpecKind, cliBase: Record<string, unknown>): string => {
   const pkg: unknown = JSON.parse(text)
@@ -105,7 +106,6 @@ export const withApiPermissions = (text: string): string =>
     ],
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("src/config.ts", rest, from, to), text)
 
-// apiSkillFiles refuses a skill that does not link its index: an agent reaches the API pages only through that link.
 export const withApiRunScope = (text: string): string =>
   [
     [
@@ -128,6 +128,7 @@ export const withApiRunScope = (text: string): string =>
     ],
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("src/run-scope.test.ts", rest, from, to), text)
 
+// apiSkillFiles refuses a skill that does not link its index: an agent reaches the API pages only through that link.
 export const withApiSkillLink = (text: string): string =>
   replaceOnce(
     "the agent skill",

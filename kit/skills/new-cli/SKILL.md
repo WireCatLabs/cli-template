@@ -110,7 +110,8 @@ CI's `repo-setup` fails until `bin/setup-github` has run; the tests still run be
   [references/sources.md](references/sources.md). Other categories follow the reference CLI.
 - Learn how a command reaches the service from the template's sample, and the domain from the reference CLI. Remove
   the sample once your commands cover every pattern it shows: `npx @wirecat/cli-template remove-sample`.
-- Every request goes through cli-core's run and `hostFetch` with the manifest's hosts; every list pages the same way
+- Every request goes through cli-core's run and `hostFetch` with the hosts in `src/identity.ts` (add the spec's
+  server there); every list pages the same way
   the reference CLI does; `--json` answers have the same envelope and field names as the reference CLI's for the same
   thing (a meeting is a meeting in zoom-cli and here).
 - A secret (token, cookie, session) lives in the keyring through cli-core's token store; it is never an argument,

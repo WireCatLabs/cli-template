@@ -21,6 +21,7 @@ import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./mani
 import { appNameOf, upperCommand } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 import {
+  SWAGGER_PEERS,
   specKindOf,
   specSeeds,
   withApiCommand,
@@ -361,6 +362,11 @@ export const cliPackageJson = (text: string, names: Names): string => {
     )
   }
   if (isRecord(next.scripts)) next.scripts = withManifestSteps(next.scripts)
+  // The template converts Swagger only to test its seed; new adds the converter back for --spec swagger.
+  if (isRecord(pkg.devDependencies))
+    next.devDependencies = Object.fromEntries(
+      Object.entries(pkg.devDependencies).filter(([name]) => !SWAGGER_PEERS.includes(name)),
+    )
   if (pkg.repository) next.repository = { type: "git", url: repoUrl }
   if (pkg.homepage) next.homepage = `https://github.com/${names.owner}/${names.name}#readme`
   if (pkg.bugs) next.bugs = { url: `https://github.com/${names.owner}/${names.name}/issues` }

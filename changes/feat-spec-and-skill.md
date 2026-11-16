@@ -1,15 +1,16 @@
 ### Added
 
 - **`new --spec openapi|swagger|discovery|none`** builds the `api` group from the service's API description, beside
-  `--api`, which stays what the service offers. A CLI gets a sample description of the made-up Example Comments
-  service in `spec/<command>/` with `provenance.json` (each source's URL and SHA-256), `scripts/sync-spec.ts`,
+  `--api`, which stays what the service offers. A CLI gets a sample description of the made-up Example Comments service
+  in `spec/<command>/` with `provenance.json` (each source's URL and SHA-256), `scripts/sync-spec.ts`,
   `scripts/spec-model.ts` (hash check, Swagger upgraded with `upgradeToOpenApi3`, several sources joined with
   `mergeOpenApi`, corrections through `patchSpec`) and `scripts/generate.ts` with the `overrides`, `readingPosts`,
-  `names`, `permissions` and `pagination` options marked `SAMPLE:` (and where `auth` goes). `src/commands/api.ts` is cli-core's
-  `serviceApiCommand` over the generated manifest (its server, sign-in, paging and delete and share keys) with the
-  profile's token and pace and the CLI's hosts; `src/config.ts` merges `serviceApiPermissions`; `src/api.test.ts` runs every
-  operation against `fakeApi`. `scripts/commands.ts` writes the agent skill's API pages with `apiSkillFiles`, and the
-  agent skill links `references/api.md`. `pnpm generate` and `generate:check` run the API step first.
+  `names`, `permissions` and `pagination` options marked `SAMPLE:` (and where `auth` goes). `src/commands/api.ts` is
+  cli-core's `serviceApiCommand` over the generated manifest (its server, sign-in, paging and delete and share keys)
+  with the profile's token and pace and the CLI's hosts; `src/config.ts` merges `serviceApiPermissions`;
+  `src/api.test.ts` runs every operation against `fakeApi`. `scripts/commands.ts` writes the agent skill's API pages
+  with `apiSkillFiles`, and the agent skill links `references/api.md`. `pnpm generate` and `generate:check` run the API
+  step first.
 - **The `new-cli` skill follows the new order**: category → spec → generate → source → `cli-dev ready`. It lists every
   value each `new` flag takes (a test keeps the list equal to the interview's), keeps at most two builder agents per
   repository, each with its own files, and moves the details into references: the API description path, document

@@ -72,6 +72,9 @@ named=$(demo personal runs list --json | grep -o '"argv":\["personal","skill","s
 preview=$(demo personal comments create --text "kit e2e" --dry-run --json | grep -o '"key":"comments.create"')
 unsigned=$(demo personal comments list --json 2>&1 >/dev/null | grep -o '"reason":"keyring.unreachable"' || true)
 [ -n "$unsigned" ]
+# --spec openapi: the api group lists the spec's operations, and a delete's preview names the manifest's delete key.
+listed=$(demo api list --json | grep -o '"command":"comments-delete"')
+deletes=$(demo personal api comments-delete --comment-id c1 --dry-run --json | grep -o '"key":"comments\.delete"' | head -n 1)
 echo "kit e2e: $tarball installed with npm, and the CLIs made from it run as demo and acme-workspace"
 echo "kit e2e: demo answers --wcat-describe in format 2, and its contracts/wirecat.json passes manifestSchema"
 echo "kit e2e: a failed run keeps what was typed: $kept"
@@ -79,3 +82,4 @@ echo "kit e2e: a typed phone number is hidden: $phone"
 echo "kit e2e: a typed token is hidden: $token"
 echo "kit e2e: a password typed after its name is hidden: $named"
 echo "kit e2e: the sample's --dry-run names $preview, and a profile never signed in says $unsigned"
+echo "kit e2e: the api group lists $listed, and its --dry-run names $deletes"

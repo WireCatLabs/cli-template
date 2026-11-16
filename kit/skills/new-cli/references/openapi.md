@@ -15,7 +15,7 @@ this page is the order of work.
 | `src/commands/api.ts` | The `api` group through cli-core's `serviceApiCommand`: `api list`, `api show` and one command per operation, with the server, sign-in header, paging and keys from the manifest, and the profile's token and pace, the hosts in `src/identity.ts` | Nothing, usually |
 | `src/config.ts` | `API`: the service's name and the manifest, without operations that answer with a credential; its keys join the CLI's permissions | `service`; `bodyPermissions` for a body only the CLI can read as a delete |
 | `scripts/commands.ts` | Also writes the agent skill's API pages, `references/api.md` and one `references/api/api-<group>.md` per tag, with `apiSkillFiles`; the skill's `SKILL.md` links `references/api.md` | The tags in the spec, if a group comes out too large |
-| `src/api.test.ts` | Runs every operation against `fakeApi`, a strict fake built from the spec, and checks that a denied delete key refuses before anything is sent | The sample body |
+| `src/api.test.ts` | Runs every operation against `fakeApi`, a strict fake built from the spec, and checks that a denied delete key refuses before anything is sent | The fake's `auth` header, when the spec signs in by something other than a Bearer token (an `apiKey` header) |
 
 `pnpm generate` and `pnpm generate:check` run the API step before the build. Every line marked `SAMPLE:` is replaced
 before the first release.
@@ -27,7 +27,7 @@ before the first release.
    diff. A service with one spec per object (HubSpot) lists each one it needs; `mergeOpenApi` joins them and its report
    lands in `docs/dev/API_COVERAGE.md`.
 2. **Swagger 1.2** (Yandex Disk) is a resource listing plus one declaration per API. `new --spec swagger` sets up
-   2.0; for 1.2, change `scripts/sync-spec.ts` to fetch the listing and each declaration, and call
+   2.0; for 1.2, add cli-base's pinned `swagger-converter` to `devDependencies`, change `scripts/sync-spec.ts` to fetch the listing and each declaration, and call
    `upgradeToOpenApi3(listing, declarations)` in `scripts/spec-model.ts`, as the Kit surface describes. The sync reads
    JSON only: a service that publishes YAML needs a YAML parser there.
 3. **Correct the source only with a reason** from the documentation or a captured answer: a missing server, a wrong
@@ -47,7 +47,8 @@ before the first release.
    an action `delete`) goes in `bodyPermissions` in `src/config.ts`.
 6. **What the api group cannot send.** An operation that answers with a credential is left out in `src/config.ts`.
    `excluded` in `serviceApiCommand` only explains to `api show` why an operation is missing; it removes nothing.
-   To leave an operation out of an OpenAPI spec, remove its path with a patch, with the reason; a Discovery method
+   A patch only sets a value, so to leave one OpenAPI operation out, set its path item to a copy without that
+   method, with the reason; a Discovery method
    goes in the spec model's `exclude`, and so does one with a `{+name}` path, which the group cannot send.
    One server per account (a CRM portal of its own) does not fit the group's one fixed `baseUrl` yet: that is a cli-core
    gap.
