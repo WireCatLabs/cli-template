@@ -45,7 +45,7 @@ per operation through cli-core's `serviceApiCommand`, its permissions, its tests
 agent skill's API pages from `apiSkillFiles`. It writes a sample description of the made-up Example Comments service
 to `spec/<command>/` with `provenance.json`, `scripts/sync-spec.ts`, `scripts/spec-model.ts` and `scripts/generate.ts`,
 puts the API step in front of `pnpm generate` and `generate:check`, and prints the steps that regenerate the
-contracts. Swagger adds cli-base's two converters to `devDependencies`. The order of work is in the new-cli skill's
+contracts. Swagger 2.0 adds cli-base's two converters to `devDependencies`. The order of work is in the new-cli skill's
 [references/openapi.md](skills/new-cli/references/openapi.md).
 
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the

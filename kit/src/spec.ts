@@ -92,16 +92,19 @@ export const withApiPermissions = (text: string): string =>
       "export const permissions = commandPermissions()\n",
       [
         "// SAMPLE: your service's name, and the key every delete through `api` also checks, so denying it holds there as",
-        "// over your own commands.",
-        'export const API = { operations, deleteKey: "comments.delete", service: "Example Comments" }',
+        "// over your own commands. An operation that answers with a credential is left out: the CLI signs in through",
+        "// `session`, and the api group would drop it anyway.",
+        "export const API = {",
+        "  operations: operations.filter((operation) => !operation.response?.sensitive),",
+        '  deleteKey: "comments.delete",',
+        '  service: "Example Comments",',
+        "}",
         "",
         "export const permissions = commandPermissions(serviceApiPermissions(API))",
         "",
       ].join("\n"),
     ],
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("src/config.ts", rest, from, to), text)
-
-export const AGENT_SKILL = /^skills\/[^/]+\/SKILL\.md$/
 
 // apiSkillFiles refuses a skill that does not link its index: an agent reaches the API pages only through that link.
 export const withApiSkillLink = (text: string): string =>

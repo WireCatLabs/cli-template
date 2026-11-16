@@ -73,7 +73,8 @@ Show the owner the plan and the gap list before step 3 when the prompt does not 
 ## 3. Shared code first
 
 For each item on the gap list: a pull request in cli-core or cli-base, with tests, merged, and released when the CLI
-needs it on npm (batch with what is already merged; announce as cli-core's `COORDINATION.md` says). The CLI pins the
+needs it on npm (batch with what is already merged; announce as cli-core's
+[COORDINATION.md](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/COORDINATION.md) says). The CLI pins the
 exact version. A gap found later in the build goes the same way: stop, fix it in the shared package, then go on.
 Bump the CLI to the latest cli-core and cli-base as its first commit; `pnpm deps:check` must pass.
 

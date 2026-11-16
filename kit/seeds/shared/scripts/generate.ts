@@ -15,6 +15,11 @@ import { specModel } from "./spec-model.ts"
 // the service's documentation, never guessed; cli-base docs/standards/kit-surface.md says what each one does.
 const root = resolve(import.meta.dirname, "..")
 const { model, notes } = await specModel(root)
+const server = model.servers?.[0]?.url
+if (!server || !/^https:\/\/[^{}]+$/.test(server))
+  throw new Error(
+    `the spec's first server must be one fixed https address, not ${server ?? "none"}; patch it in scripts/spec-model.ts`,
+  )
 const artifacts = generate(
   model,
   [
@@ -38,6 +43,8 @@ const artifacts = generate(
     names: { fromPath: true },
     // SAMPLE: the permission group, and the body fields or query parameters that delete when true.
     permissions: { group: "comments", deletingFlags: [] },
+    // SAMPLE: how each read pages, found from the spec; an override's `pagination` wins. `auth` replaces a wrong or
+    // missing sign-in in the spec: { securitySchemes, security, reason }.
     pagination: true,
   },
 )

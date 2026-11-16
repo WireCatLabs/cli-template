@@ -21,7 +21,6 @@ import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./mani
 import { appNameOf, upperCommand } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 import {
-  AGENT_SKILL,
   specKindOf,
   specSeeds,
   withApiCommand,
@@ -606,14 +605,20 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   }
   const hashes: Record<string, string> = {}
   const prefixed: string[] = []
+  const agentSkill = `skills/${appNameOf(names)}/SKILL.md`
   for (const [path, file] of rendered) {
     if (file.kind === "file") hashes[path] = sha256(file.content)
-    const rewrite = rewrites[path] ?? (spec && AGENT_SKILL.test(path) ? withApiSkillLink : undefined)
+    const rewrite = rewrites[path] ?? (spec && path === agentSkill ? withApiSkillLink : undefined)
     const content = rewrite ? rewrite(file.content.toString("utf8")) : file.content
     if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)
   }
-  if (spec) for (const [path, content] of await specSeeds(source, names, spec)) await writeOut(target, path, content)
+  if (spec)
+    for (const [path, content] of await specSeeds(source, names, spec)) {
+      if (rendered.has(path)) throw new Error(`the ${spec} seed ${path} would replace a template file`)
+      if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
+      await writeOut(target, path, content)
+    }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
   await writeOut(target, "config/parity-groups.json", `${JSON.stringify(parityGroups(names.command), null, 2)}\n`)

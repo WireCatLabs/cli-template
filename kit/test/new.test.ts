@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process"
+import { createHash } from "node:crypto"
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { defineParityGroups } from "@wirecat/cli-base/standards/tables"
@@ -287,6 +288,10 @@ describe("new from this repository", () => {
     const dir = join(cwd, "cal-cli")
     for (const path of [document, "spec/cal/provenance.json", "scripts/sync-spec.ts", "scripts/spec-model.ts"])
       expect(existsSync(join(dir, path)), path).toBe(true)
+    const sha256 = createHash("sha256")
+      .update(readFileSync(join(dir, document)))
+      .digest("hex")
+    expect(read(dir, "spec/cal/provenance.json")).toContain(sha256)
     expect(read(dir, "scripts/generate.ts")).toContain("permissions:")
     expect(read(dir, "src/program.ts")).toContain("apiCommand(),")
     expect(read(dir, "src/config.ts")).toContain("commandPermissions(serviceApiPermissions(API))")

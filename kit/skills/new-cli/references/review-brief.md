@@ -14,7 +14,7 @@ Read first:
 - the builder's report: <absolute path, or pasted below>.
 
 Answer each item with a file:line, or say it holds:
-1. The six questions in new-cli.md → Done when.
+1. The review questions in new-cli.md → Done when.
 2. The builder's report, claim by claim: does the code do what the report says? A claim with no code behind it is a
    finding.
 3. Parity: each command, option, --json field and error reason against the reference CLI's for the same thing. A

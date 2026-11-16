@@ -5,8 +5,8 @@
   service in `spec/<command>/` with `provenance.json` (each source's URL and SHA-256), `scripts/sync-spec.ts`,
   `scripts/spec-model.ts` (hash check, Swagger upgraded with `upgradeToOpenApi3`, several sources joined with
   `mergeOpenApi`, corrections through `patchSpec`) and `scripts/generate.ts` with the `overrides`, `readingPosts`,
-  `names`, `permissions`, `pagination` and `auth` options marked `SAMPLE:`. `src/commands/api.ts` is cli-core's
-  `serviceApiCommand` with the profile's token and the manifest's hosts; `src/config.ts` merges
+  `names`, `permissions` and `pagination` options marked `SAMPLE:` (and where `auth` goes). `src/commands/api.ts` is cli-core's
+  `serviceApiCommand` with the profile's token and pace and the CLI's hosts; `src/config.ts` merges
   `serviceApiPermissions` and sets the delete key every delete through `api` also checks; `src/api.test.ts` runs every
   operation against `fakeApi`. `scripts/commands.ts` writes the agent skill's API pages with `apiSkillFiles`, and the
   agent skill links `references/api.md`. `pnpm generate` and `generate:check` run the API step first.

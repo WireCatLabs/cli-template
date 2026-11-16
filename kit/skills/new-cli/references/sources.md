@@ -17,13 +17,13 @@ them. Take from drive-cli only the command tree.
   `markdown.ts`.
 - The contracts, from `@wirecat/cli-core/documents/testing`: `documentSourceContract` against your source over its
   fake (notion-cli's `src/sync/source.test.ts`), and `documentCommandsContract` over the commands with
-  `fakeDocumentSource` (notion-cli's `src/library.test.ts`). Fix a failing contract in the source, never by skipping
+  a fake source: `fakeDocumentSource`, or a strict fake of your own as notion-cli's `src/library.test.ts` has. Fix a failing contract in the source, never by skipping
   a case.
 
 ## CRM
 
-**Reference: bitrix24-cli.** Take its `src/commands/crm-shared.ts`, `config.ts`, `store.ts` and the shape of
-`source.ts`; leave its `calls/`, `api.ts` and `api-keys.ts`, which are Bitrix24's own.
+**Reference: bitrix24-cli.** Take its `src/commands/crm-shared.ts`, `src/config.ts`, `src/store.ts` and the shape of
+`src/crm/source.ts`; leave its `src/calls/`, `src/commands/api.ts` and `src/api-keys.ts`, which are Bitrix24's own.
 
 - The commands: `addCrmCommands` from `@wirecat/cli-core/crm/cli`, and the shared queries and CSV output it exports.
 - The contracts, from `@wirecat/cli-core/crm/testing`: `crmSourceContract` over your source and its fake,

@@ -103,7 +103,7 @@ export const INTERVIEW: Question[] = [
     text: "Which machine-readable description of its API does the service publish? new generates the api group from it",
     choices: [
       { value: "openapi", label: "OpenAPI 3.0 or 3.1" },
-      { value: "swagger", label: "Swagger 2.0 or 1.2" },
+      { value: "swagger", label: "Swagger 2.0" },
       { value: "discovery", label: "Google Discovery" },
       { value: "none", label: "none" },
     ],
