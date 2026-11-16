@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# The release's live check against the real service (WC-TEST-18, WC-REL-17): a person runs it with a real token on
-# stdin, then records it with `pnpm exec cli-dev live record --script scripts/live.sh`. Every folder is a temporary
-# one and the keyring is out of reach, so nothing touches the owner's store, keyring or settings.
+# The release's live check against the real service (WC-TEST-18, WC-REL-17). The owner runs bin/live, which prints
+# the `# Needs:` lines below, passes the token on stdin and records the pass. Every folder is a temporary one and the
+# keyring is out of reach, so nothing touches the owner's store, keyring or settings.
 #   scripts/live.sh < token-file
 # SAMPLE: replace the comments reads with your own commands; checked against the sample, it fails at sign-in.
+# SAMPLE: one `# Needs:` line for each thing the test account must hold, so the owner prepares it before the run.
+# Needs: a token for a test account, never one that matters
+# Needs: at least one comment the token can read
 set -euo pipefail
 root=$(cd -- "$(dirname -- "$0")/.." && pwd)
 work=$(mktemp -d)

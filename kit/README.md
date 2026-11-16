@@ -25,7 +25,20 @@ It sets up what CI's `repo-setup` job (`cli-dev repo-check`) checks in the files
 group in `config/parity-groups.json`. A WireCat CLI gets a free minute inside WC-CI-9's window, from the table in
 cli-base's `docs/standards/ci.md`; a CLI outside `@wirecat` gets one after that window. It then prints the steps that
 need a person: four for a WireCat CLI, three outside `@wirecat`. For a WireCat CLI it also prints the entries to
-paste into cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs' `tools.json`.
+paste into cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs' `tools.json`. It warns when the
+environment prefix or the keyring service is a name the service's own tools already use, such as `NOTION_` or
+`notion-cli`.
+
+The steps run the owner's scripts the CLI gets, each one readable file that prints its plan and asks first:
+
+- `bin/setup-github` creates the public repository, main's ruleset with the checks `cli-dev repo-check` requires,
+  and the npm environment limited to main. A step already done is skipped.
+- `bin/release --first` publishes the first version from the owner's computer, then says how to set npm trusted
+  publishing.
+- `bin/live <keyring account>` runs `scripts/live.sh` against a test account. It prints the script's `# Needs:`
+  lines, reads the token from the keyring entry `service <app>-live account <keyring account>` and passes it on
+  stdin, records the pass, and on a release branch commits the record and adds it to the pull request's Conformance
+  section (WC-REL-17).
 
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
@@ -78,18 +91,17 @@ with a group of its own, and a monthly run between 04:01 and 05:59 UTC picked fr
 publishes no skill to ClawHub, whose `wirecat` owner is WireCat's.
 
 1. **Make the repository public.** npm makes no provenance record for a package built in a private repository, and
-   WireCat Desktop checks that record. Let GitHub delete a branch once its pull request is merged,
-   `gh repo edit <owner>/<name> --delete-branch-on-merge`, so merged branches do not pile up.
-2. **Publish the first version by hand**, `npm publish --access public` from your own computer: npm sets a trusted
+   WireCat Desktop checks that record. `bin/setup-github` makes it public and lets GitHub delete a branch once its
+   pull request is merged.
+2. **Publish the first version by hand**, `bin/release --first` from your own computer: npm sets a trusted
    publisher in the settings of a package that already exists.
 3. **Set the trusted publisher** on npmjs.com, as [Trusted publishing](https://docs.npmjs.com/trusted-publishers)
    says: your GitHub owner and repository, the workflow file `release.yml` (case matters), and the environment `npm`,
    which the template's publish job uses. Its first publish must follow within two days of setting it.
 4. **Record a live check.** `bin/release` refuses a version without one (WC-REL-17). `scripts/live.sh` signs in
    with a token read from stdin, in temporary folders and out of reach of the keyring, runs the CLI's reads, `doctor`
-   and `--wcat-describe`, and signs out. Replace the sample's reads with your own, run
-   `scripts/live.sh < <file with the token>`, then `pnpm exec cli-dev live record --script scripts/live.sh`, and
-   commit `docs/dev/live-checks.txt` with the version.
+   and `--wcat-describe`, and signs out. Replace the sample's reads and `# Needs:` lines with your own, then run
+   `bin/live <keyring account>` on the release branch.
 5. **Release with `bin/release`.** It starts `release.yml`, which publishes with no npm token. Trusted publishing
    needs npm 11.5.1 or later and Node 22.14.0 or later.
 

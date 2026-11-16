@@ -65,8 +65,8 @@ describe("new", () => {
     expect(read(dir, "AGENTS.md")).toContain("Keep CAL_HOME out of logs.")
     expect(read(dir, "docs/dev/DESIGN.md")).toContain(`**Category:** ${label}\n`)
     expect(read(dir, "src/version.ts")).toBe('export const VERSION = "0.0.0"\n')
-    expect(out).toContain("Create the repository example/cal-cli")
-    expect(out).toContain("gh repo edit example/cal-cli --delete-branch-on-merge")
+    expect(out).toContain(`1. After the first commit, run ${join(dir, "bin/setup-github")}: it creates example/cal-cli`)
+    expect(out).toContain(`2. Publish the first version with ${join(dir, "bin/release")} --first`)
   })
 
   it("prints each next step on its own line, which PowerShell 5.1 can run", async () => {
@@ -358,8 +358,9 @@ describe("new from this repository", () => {
     const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags: NOTES_FLAGS }, io())
 
     expect(out).toContain("fails until steps 1 and 2 are done")
-    expect(out).toContain("3. Before each bin/release:")
+    expect(out).toContain("3. Before each release:")
     expect(out).not.toContain("PARITY_GROUPS")
+    expect(out).not.toContain("Names the service's own tools use")
   })
 
   it("gives the CLI an executable live check to record before its first release", async () => {
@@ -376,8 +377,61 @@ describe("new from this repository", () => {
     expect(execFileSync("git", ["ls-files", "-s", "scripts/live.sh"], { cwd: dir, encoding: "utf8" })).toMatch(
       /^100755 /,
     )
-    expect(out).toContain("3. Before each bin/release:")
-    expect(out).toContain("pnpm exec cli-dev live record --script scripts/live.sh")
+    expect(out).toContain("service cal-cli-live account <account>")
+    expect(out).toContain(`and run ${join(cwd, "cal-cli", "bin/live")} <account> on the release branch`)
+  })
+
+  it("gives the owner bin/setup-github, bin/live and bin/release --first, renamed and runnable", async () => {
+    const dir = await makeReal(WIRECAT_FLAGS)
+    const env = { ...process.env, DBUS_SESSION_BUS_ADDRESS: "disabled:" }
+
+    for (const script of ["bin/setup-github", "bin/live", "bin/release"]) {
+      expect(execFileSync("git", ["ls-files", "-s", script], { cwd: dir, encoding: "utf8" })).toMatch(/^100755 /)
+    }
+    expect(execFileSync(join(dir, "bin/setup-github"), ["--help"], { env, encoding: "utf8" })).toContain(
+      "Sets up WireCatLabs/cal-cli on GitHub",
+    )
+    expect(execFileSync(join(dir, "bin/live"), ["--help"], { env, encoding: "utf8" })).toContain("<keyring account>")
+    expect(read(dir, "bin/live")).toContain('const KEYRING_SERVICE = "cal-cli-live"')
+    expect(read(dir, "bin/release")).toContain("--first")
+  })
+
+  it("adds bin/live's record line to a release pull request's Conformance section once, keeping what is there", async () => {
+    const copy = join(tempDir("live"), "live.mjs")
+    writeFileSync(copy, read(root, "bin/live"))
+    const { withConformance } = await import(copy)
+    const line = "0.1.0 abc 2026-11-16 scripts/live.sh v2:ff"
+
+    expect(withConformance("Release.", line)).toBe(`Release.\n\n## Conformance\n\n- Live check: \`${line}\`\n`)
+    const kept = withConformance("## Conformance\n\n- release:check passed\n", line)
+    expect(kept).toBe(`## Conformance\n\n- Live check: \`${line}\`\n- release:check passed\n`)
+    expect(withConformance(kept, line)).toBe(kept)
+  })
+
+  it("requires on main every check cli-dev repo-check asks for, and no other", async () => {
+    const { REQUIRED_CHECKS } = await import("../../node_modules/@wirecat/cli-base/dist/dev/conformance.js")
+    const script = read(root, "bin/setup-github")
+    const listed = /const REQUIRED_CHECKS = \[([^\]]*)\]/.exec(script)?.[1] ?? ""
+
+    expect([...listed.matchAll(/"([^"]+)"/g)].map(([, check]) => check)).toEqual([...REQUIRED_CHECKS, "conformance"])
+  })
+
+  it.each([
+    ["@wirecat/notion-cli", "notion", "NOTION_: Notion's MCP server reads NOTION_TOKEN"],
+    ["@wirecat/notion-cli", "wcnotion", "keyring service notion-cli: Notion's ntn"],
+    ["@example/gh-tool", "gh", "GH_: GitHub's gh reads GH_TOKEN"],
+  ])("warns when %s with the command %s takes a name the service's own tools use", async (pkg, command, warning) => {
+    const cwd = tempDir("clash")
+    const name = pkg.split("/")[1] ?? ""
+    const out = await runNew(
+      cwd,
+      await loadSource(root),
+      { name, flags: { ...NOTES_FLAGS, package: pkg, command } },
+      io(),
+    )
+
+    expect(out).toContain("Names the service's own tools use:")
+    expect(out).toContain(warning)
   })
 
   it("makes the owner the copyright holder of an outside package, under the same Apache-2.0 text", async () => {

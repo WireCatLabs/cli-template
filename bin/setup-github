@@ -1,0 +1,147 @@
+#!/usr/bin/env node
+// The owner's one-time GitHub setup for this CLI (cli-base docs/standards/new-cli.md, steps 1 and 2): the public
+// repository, main's ruleset with the checks the template's CI reports, and the npm environment limited to main.
+// It prints the plan and asks before it changes anything; a step already done is skipped, so it can run again.
+//
+//   bin/setup-github
+//
+// It uses your gh login and reads no secret. npm trusted publishing is set on npmjs.com after the first publish
+// (bin/release --first), which says how.
+import { execFileSync } from "node:child_process"
+import { existsSync, readFileSync } from "node:fs"
+import { join, resolve } from "node:path"
+import { createInterface } from "node:readline/promises"
+
+const ROOT = resolve(import.meta.dirname, "..")
+const PACKAGE_JSON = join(ROOT, "package.json")
+const KIT = join(ROOT, "kit")
+const REPO = "WireCatLabs/clidev-cli"
+
+// What cli-dev repo-check requires (cli-base REQUIRED_CHECKS, and conformance from release-pr.yml); a kit test keeps
+// this list equal to cli-base's.
+const REQUIRED_CHECKS = [
+  "standards",
+  "changelog / guard",
+  "validation / ci / check",
+  "validation / ci / bun",
+  "validation / ci / secrets",
+  "validation / prose",
+  "validation / version",
+  "validation / node-22",
+  "validation / repo-setup",
+  "conformance",
+]
+// GitHub Actions' app id: a required check from any other app with the same name does not count.
+const ACTIONS_APP = 15368
+
+const RULESET = {
+  name: "main",
+  target: "branch",
+  enforcement: "active",
+  bypass_actors: [],
+  conditions: { ref_name: { include: ["~DEFAULT_BRANCH"], exclude: [] } },
+  rules: [
+    { type: "deletion" },
+    { type: "non_fast_forward" },
+    {
+      type: "pull_request",
+      parameters: {
+        required_approving_review_count: 0,
+        dismiss_stale_reviews_on_push: false,
+        require_code_owner_review: false,
+        require_last_push_approval: false,
+        required_review_thread_resolution: false,
+      },
+    },
+    {
+      type: "required_status_checks",
+      parameters: {
+        strict_required_status_checks_policy: false,
+        do_not_enforce_on_create: false,
+        required_status_checks: REQUIRED_CHECKS.map((context) => ({ context, integration_id: ACTIONS_APP })),
+      },
+    },
+  ],
+}
+
+const fail = (message) => {
+  process.stderr.write(`setup-github: ${message}\n`)
+  process.exit(1)
+}
+
+const git = (...args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim()
+const gh = (args, input) =>
+  execFileSync("gh", args, { cwd: ROOT, encoding: "utf8", input, stdio: ["pipe", "pipe", "inherit"] }).trim()
+const ghOk = (args) => {
+  try {
+    execFileSync("gh", args, { cwd: ROOT, stdio: "ignore" })
+    return true
+  } catch {
+    return false
+  }
+}
+
+const main = async () => {
+  if (process.argv.includes("--help") || process.argv.includes("-h")) {
+    process.stdout.write(`Usage: ${join(ROOT, "bin/setup-github")}\nSets up ${REPO} on GitHub; asks first.\n`)
+    return
+  }
+  if (existsSync(KIT)) fail("this is cli-template itself; run it in a CLI made from it")
+  const { description = "" } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8"))
+  if (git("status", "--porcelain")) fail("commit or stash the working tree first")
+  try {
+    git("rev-parse", "--verify", "main")
+  } catch {
+    fail("main has no commit yet: commit the new CLI first, then run this again")
+  }
+
+  process.stdout.write(
+    [
+      `This sets up ${REPO} from ${ROOT}:`,
+      "",
+      `  1. Create the public repository ${REPO} and push main, unless it exists; delete merged branches.`,
+      "  2. Add main's ruleset, unless one named main exists: no deletion, no force push, changes only through a pull",
+      `     request, and the required checks: ${REQUIRED_CHECKS.join(", ")}.`,
+      "  3. Create the GitHub environment npm, deployable from main only.",
+      "",
+      "It uses your gh login. Nothing is published.",
+      "",
+    ].join("\n"),
+  )
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  const answer = await rl.question("Go ahead? [y/N] ")
+  rl.close()
+  if (!/^y(es)?$/i.test(answer.trim())) {
+    process.stdout.write("Nothing done.\n")
+    return
+  }
+
+  if (ghOk(["repo", "view", REPO])) {
+    process.stdout.write(`${REPO} exists, not created\n`)
+  } else {
+    gh(["repo", "create", REPO, "--public", "--description", description, "--source", ROOT, "--remote", "origin", "--push"])
+    process.stdout.write(`${REPO} created and main pushed\n`)
+  }
+  gh(["repo", "edit", REPO, "--delete-branch-on-merge"])
+
+  const rulesets = JSON.parse(gh(["api", `repos/${REPO}/rulesets`]))
+  if (rulesets.some((ruleset) => ruleset.name === "main")) {
+    process.stdout.write("ruleset main exists, not changed\n")
+  } else {
+    gh(["api", "-X", "POST", `repos/${REPO}/rulesets`, "--input", "-"], JSON.stringify(RULESET))
+    process.stdout.write("ruleset main created\n")
+  }
+
+  const policy = { deployment_branch_policy: { protected_branches: false, custom_branch_policies: true } }
+  gh(["api", "-X", "PUT", `repos/${REPO}/environments/npm`, "--input", "-"], JSON.stringify(policy))
+  const branches = JSON.parse(gh(["api", `repos/${REPO}/environments/npm/deployment-branch-policies`]))
+  if (!branches.branch_policies.some((entry) => entry.name === "main")) {
+    gh(["api", "-X", "POST", `repos/${REPO}/environments/npm/deployment-branch-policies`, "-f", "name=main", "-f", "type=branch"])
+  }
+  process.stdout.write("environment npm deploys from main only\n")
+  process.stdout.write(
+    `\nDone. The first publish is ${join(ROOT, "bin/release")} --first; it then says how to set npm trusted publishing.\n`,
+  )
+}
+
+await main()
