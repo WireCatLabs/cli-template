@@ -113,7 +113,7 @@ describe("new", () => {
     for (const { hour, minute } of times) {
       expect(hour * 60 + minute).toBeGreaterThanOrEqual(2 * 60 + 17)
       expect(hour * 60 + minute).toBeLessThanOrEqual(3 * 60 + 20)
-      expect(`${hour}:${minute}`).not.toMatch(/^2:(17|20)$/)
+      expect(`${hour}:${minute}`).not.toMatch(/^(2:(16|17|18|19|20|21)|3:0)$/)
     }
     expect(wirecatMonthlyTime("notion-cli", taken)).toEqual({ hour: 2, minute: 20 })
     const every = Array.from({ length: 64 }, (_, i) => 137 + i)

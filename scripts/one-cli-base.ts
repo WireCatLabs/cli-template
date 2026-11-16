@@ -5,7 +5,9 @@ import { join, resolve } from "node:path"
 // CLI and cli-core different error classes and registries: the packed CLI crashes or misreads errors while every
 // local test passes. Each copy is its own key under the lockfile's `snapshots:`.
 const lock = readFileSync(join(resolve(import.meta.dirname, ".."), "pnpm-lock.yaml"), "utf8")
-const snapshots = lock.slice(lock.indexOf("\nsnapshots:\n"))
+const start = lock.search(/^snapshots:\r?$/m)
+if (start < 0) throw new Error("pnpm-lock.yaml has no snapshots: section to count cli-base copies in")
+const snapshots = lock.slice(start)
 const copies = [...snapshots.matchAll(/^ {2}'?(@wirecat\/cli-base@[^':\s]+)'?:/gm)].map(([, key]) => key)
 if (copies.length > 1) {
   process.stderr.write(

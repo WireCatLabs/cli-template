@@ -3,10 +3,12 @@
 - **`npx @wirecat/cli-template remove-sample`** removes the `comments` sample once your own commands replace it, and
   regenerates `docs/commands.md`, `contracts/` and `contracts/mcp-catalogue.json`, so no test still pins the sample's
   commands. It changes nothing while another file imports the sample, and names each one.
-- **`pnpm deps:check`**, in `ci:quick`, `release:check` and CI: `pnpm peers check` and one copy of `@wirecat/cli-base`
-  in `pnpm-lock.yaml` (`scripts/one-cli-base.ts`).
-- **`src/test-timeouts.test.ts`** fails a test that passes `--timeout` between 1 s and 10 s: too short for a slow
-  Windows runner to finish, too long to be a deliberate cut.
+- **`pnpm deps:check`**, in `ci:quick` and `release:check`: `pnpm peers check` and one copy of `@wirecat/cli-base` in
+  `pnpm-lock.yaml` (`scripts/one-cli-base.ts`, template-owned, which CI also runs). A CLI made earlier gets the script
+  from `upgrade`; add the `deps:check` line to its `package.json` by hand.
+- **`src/test-timeouts.test.ts`**, template-owned, fails a test that passes `--timeout` between 1 s and 10 s: too short
+  for a slow Windows runner to finish, too long to be a deliberate cut. After `upgrade`, a CLI with such a test raises
+  it to 10 s or cuts at 1 s or less.
 
 ### Fixed
 

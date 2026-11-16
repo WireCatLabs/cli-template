@@ -93,10 +93,11 @@ const WIRECAT_WINDOW = { from: 2 * 60 + 17, to: 3 * 60 + 20 }
 const hhmm = (minutes: number): string =>
   `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
 
-// A repository already in the table keeps its minute; a new one takes a free minute picked by its name.
+// A repository already in the table keeps its minute; a new one takes a free minute picked by its name, two minutes
+// from any other so the runs do not overlap, and off the hour, when GitHub delays scheduled runs most.
 export const wirecatMonthlyTime = (repo: string, taken: Map<string, string>): MonthlyTime => {
   const window = Array.from({ length: WIRECAT_WINDOW.to - WIRECAT_WINDOW.from + 1 }, (_, i) => WIRECAT_WINDOW.from + i)
-  const free = window.filter((slot) => !taken.has(hhmm(slot)))
+  const free = window.filter((slot) => slot % 60 !== 0 && [-1, 0, 1].every((step) => !taken.has(hhmm(slot + step))))
   const slot =
     window.find((value) => taken.get(hhmm(value)) === repo) ??
     free[createHash("sha256").update(repo).digest().readUInt32BE(0) % free.length]
