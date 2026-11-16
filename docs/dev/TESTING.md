@@ -12,6 +12,9 @@ How the tests run, and what they never touch. The rules are the handbook's
   that sees your home can move your real folders.
 - `pnpm test:slow` lists the 20 slowest tests and the 10 slowest files. No test waits for real time (`WC-TEST-5`):
   waits go through an injected sleep, and `fakeClock()` from `@wirecat/cli-base/testing` records them.
+- Every test has 15 s (`testTimeout` in `vitest.config.ts`), and a test that builds big data runs within 3 s on your
+  machine, since a slow CI runner takes up to five times as long (`WC-TEST-20`). Shrink the data; never raise one
+  test's timeout. From cli-base 0.107.0, `pnpm test:slow` warns about each test over 3 s.
 - Each run logs the command lines the tests drove (`coverage/argv.jsonl`). `pnpm test:matrix` turns that log into
   [test-matrix.md](test-matrix.md); a command or option no test drives needs a reason in
   `scripts/test-matrix-untested.ts`.

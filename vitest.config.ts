@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts", "kit/test/**/*.test.ts"],
     maxWorkers: 4,
+    testTimeout: 15_000,
     setupFiles: ["@wirecat/cli-base/testing/setup", "src/testing/sandbox.ts"],
     globalSetup: ["src/testing/argv-log.ts"],
     coverage: {
