@@ -6,7 +6,14 @@
   "schemes": ["https"],
   "consumes": ["application/json"],
   "produces": ["application/json"],
-  "securityDefinitions": { "token": { "type": "apiKey", "name": "authorization", "in": "header" } },
+  "securityDefinitions": {
+    "token": {
+      "type": "oauth2",
+      "flow": "implicit",
+      "authorizationUrl": "https://comments.example.invalid/oauth/authorize",
+      "scopes": {}
+    }
+  },
   "security": [{ "token": [] }],
   "paths": {
     "/comments": {

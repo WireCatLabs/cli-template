@@ -12,8 +12,8 @@ this page is the order of work.
 | `scripts/sync-spec.ts` | Downloads each source `provenance.json` lists and records its hash | For OpenAPI and Swagger: nothing, the sources are listed in `provenance.json`. For Discovery: the documents in the script |
 | `scripts/spec-model.ts` | Checks the hashes, upgrades Swagger to OpenAPI 3, joins several sources with `mergeOpenApi`, applies `patchSpec` | The `PATCHES`, each with its reason |
 | `scripts/generate.ts` | Writes `src/generated/` and `docs/dev/API_COVERAGE.md`; `--check` fails on stale files | `overrides`, `readingPosts`, `names`, `permissions`, `pagination`, `auth` |
-| `src/commands/api.ts` | The `api` group through cli-core's `serviceApiCommand`: `api list`, `api show` and one command per operation, the profile's token and pace, the hosts in `src/identity.ts` | The service's name |
-| `src/config.ts` | `API`: the service's name, the operations the group offers (none that answers with a credential) and the key every delete through `api` also checks | `service`, and `deleteKey` to the delete key your own commands use |
+| `src/commands/api.ts` | The `api` group through cli-core's `serviceApiCommand`: `api list`, `api show` and one command per operation, with the server, sign-in header, paging and keys from the manifest, and the profile's token and pace, the hosts in `src/identity.ts` | Nothing, usually |
+| `src/config.ts` | `API`: the service's name and the manifest, without operations that answer with a credential; its keys join the CLI's permissions | `service`; `bodyPermissions` for a body only the CLI can read as a delete |
 | `scripts/commands.ts` | Also writes the agent skill's API pages, `references/api.md` and one `references/api/api-<group>.md` per tag, with `apiSkillFiles`; the skill's `SKILL.md` links `references/api.md` | The tags in the spec, if a group comes out too large |
 | `src/api.test.ts` | Runs every operation against `fakeApi`, a strict fake built from the spec, and checks that a denied delete key refuses before anything is sent | The sample body |
 
@@ -40,12 +40,11 @@ before the first release.
    - `permissions`: the group (the CLI's delete key is `<group>.delete`), `deletingFlags` (Notion's `in_trash`, Yandex
      Disk's `permanently` and `overwrite`; an undocumented flag counts as a delete) and `shares`;
    - `auth` when the spec's sign-in is wrong or missing, with the reason.
-5. **The delete key.** `src/config.ts` passes one `deleteKey` to the whole group: a destructive operation also asks
-   by that key, so denying `<group>.delete` holds in `api` as in your own commands. cli-core 0.684 does not yet read
-   the manifest's `permissions`, so a deleting body field (`in_trash`) is checked only when it is listed in the
-   operation's `deletingFields`, and a deleting query parameter or a share not at all: check what your cli-core
-   version reads before you rely on `deletingFlags` and `shares`. A body only the CLI can read as a delete goes in
-   `deletingBodies`.
+5. **The keys.** The api group reads each operation's `permissions` from the manifest: a destructive operation, and
+   one sent with a deleting flag set to `true`, also asks by `<group>.delete`; a share asks by `<group>.share`. Use the
+   same group as your own commands, so denying `<group>.delete` holds in `api` too. The group refuses to build when an
+   operation can delete and has no delete key. A body only the CLI can read as a delete (Notion's `agent-batch` with
+   an action `delete`) goes in `bodyPermissions` in `src/config.ts`.
 6. **What the api group cannot send.** An operation that answers with a credential is left out in `src/config.ts`.
    `excluded` in `serviceApiCommand` only explains to `api show` why an operation is missing; it removes nothing.
    To leave an operation out of an OpenAPI spec, remove its path with a patch, with the reason; a Discovery method

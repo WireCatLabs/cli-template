@@ -296,6 +296,7 @@ describe("new from this repository", () => {
     expect(read(dir, "src/program.ts")).toContain("apiCommand(),")
     expect(read(dir, "src/config.ts")).toContain("commandPermissions(serviceApiPermissions(API))")
     expect(read(dir, "scripts/commands.ts")).toContain("...apiSkillFiles({")
+    expect(read(dir, "src/run-scope.test.ts")).toContain("API.manifest.operations.map")
     expect(read(dir, "skills/example-cal-cli/SKILL.md")).toContain("[references/api.md](references/api.md)")
     const pkg = JSON.parse(read(dir, "package.json"))
     expect(pkg.scripts.generate).toMatch(/^node --experimental-strip-types scripts\/generate.ts && /)

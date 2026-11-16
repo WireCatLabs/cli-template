@@ -86,17 +86,16 @@ export const withApiPermissions = (text: string): string =>
   [
     [
       'import { type Configuration, commandPermissions, settingsFor } from "@wirecat/cli-core/cli"\n',
-      'import { type Configuration, commandPermissions, serviceApiPermissions, settingsFor } from "@wirecat/cli-core/cli"\nimport { operations } from "./generated/manifest.js"\n',
+      'import { type Configuration, commandPermissions, serviceApiPermissions, settingsFor } from "@wirecat/cli-core/cli"\nimport * as manifest from "./generated/manifest.js"\n',
     ],
     [
       "export const permissions = commandPermissions()\n",
       [
-        "// SAMPLE: your service's name, and the key every delete through `api` also checks, so denying it holds there as",
-        "// over your own commands. An operation that answers with a credential is left out: the CLI signs in through",
+        "// SAMPLE: your service's name. The keys a delete or a share checks come from `permissions` in",
+        "// scripts/generate.ts. An operation that answers with a credential is left out: the CLI signs in through",
         "// `session`, and the api group would drop it anyway.",
         "export const API = {",
-        "  operations: operations.filter((operation) => !operation.response?.sensitive),",
-        '  deleteKey: "comments.delete",',
+        "  manifest: { ...manifest, operations: manifest.operations.filter((operation) => !operation.response?.sensitive) },",
         '  service: "Example Comments",',
         "}",
         "",
@@ -107,6 +106,28 @@ export const withApiPermissions = (text: string): string =>
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("src/config.ts", rest, from, to), text)
 
 // apiSkillFiles refuses a skill that does not link its index: an agent reaches the API pages only through that link.
+export const withApiRunScope = (text: string): string =>
+  [
+    [
+      'import { definition } from "./program.js"\n',
+      'import { API } from "./config.js"\nimport { definition } from "./program.js"\n',
+    ],
+    [
+      "    skip: {\n",
+      [
+        "    skip: {",
+        "      ...Object.fromEntries(",
+        "        API.manifest.operations.map((operation) => [",
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: this is the generated test's own template string
+        "          `api ${operation.command}`,",
+        '          "cli-core\'s serviceApiCommand runs it in its run; src/api.test.ts sends each one",',
+        "        ]),",
+        "      ),",
+        "",
+      ].join("\n"),
+    ],
+  ].reduce((rest, [from = "", to = ""]) => replaceOnce("src/run-scope.test.ts", rest, from, to), text)
+
 export const withApiSkillLink = (text: string): string =>
   replaceOnce(
     "the agent skill",
@@ -142,7 +163,7 @@ export const withApiSkill = (text: string): string =>
         "    folder: skillFolder,",
         "    files: skillFiles(SKILL),",
         "    service: API.service,",
-        "    operations: API.operations,",
+        "    operations: API.manifest.operations,",
         '    skill: readFileSync(SKILL, "utf8"),',
         "    commands: describeProgram(program),",
         '    banner: "Generated from the API manifest and the command tree by pnpm generate. Do not edit.",',

@@ -25,6 +25,7 @@ import {
   specSeeds,
   withApiCommand,
   withApiPermissions,
+  withApiRunScope,
   withApiSkill,
   withApiSkillLink,
   withSpecPackage,
@@ -581,7 +582,12 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
           )
         : cliPackageJson(text, names),
     ...(spec
-      ? { "src/program.ts": withApiCommand, "src/config.ts": withApiPermissions, "scripts/commands.ts": withApiSkill }
+      ? {
+          "src/program.ts": withApiCommand,
+          "src/config.ts": withApiPermissions,
+          "scripts/commands.ts": withApiSkill,
+          "src/run-scope.test.ts": withApiRunScope,
+        }
       : {}),
     "README.md": () => cliReadme(names),
     "SECURITY.md": ownRepository(names),
@@ -648,7 +654,11 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "  pnpm lint:fix",
     "  pnpm generate",
     ...(spec
-      ? ["  pnpm exec cli-contract contracts/plan.json --update", "  pnpm exec vitest run src/mcp.test.ts --update"]
+      ? [
+          "  pnpm exec cli-contract contracts/plan.json --update",
+          "  pnpm exec vitest run src/mcp.test.ts --update",
+          "  pnpm lint:fix",
+        ]
       : []),
     "  pnpm ci:quick",
     "  git add -A",

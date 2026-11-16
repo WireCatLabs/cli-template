@@ -6,8 +6,8 @@
   `scripts/spec-model.ts` (hash check, Swagger upgraded with `upgradeToOpenApi3`, several sources joined with
   `mergeOpenApi`, corrections through `patchSpec`) and `scripts/generate.ts` with the `overrides`, `readingPosts`,
   `names`, `permissions` and `pagination` options marked `SAMPLE:` (and where `auth` goes). `src/commands/api.ts` is cli-core's
-  `serviceApiCommand` with the profile's token and pace and the CLI's hosts; `src/config.ts` merges
-  `serviceApiPermissions` and sets the delete key every delete through `api` also checks; `src/api.test.ts` runs every
+  `serviceApiCommand` over the generated manifest (its server, sign-in, paging and delete and share keys) with the
+  profile's token and pace and the CLI's hosts; `src/config.ts` merges `serviceApiPermissions`; `src/api.test.ts` runs every
   operation against `fakeApi`. `scripts/commands.ts` writes the agent skill's API pages with `apiSkillFiles`, and the
   agent skill links `references/api.md`. `pnpm generate` and `generate:check` run the API step first.
 - **The `new-cli` skill follows the new order**: category → spec → generate → source → `cli-dev ready`. It lists every
@@ -20,5 +20,5 @@
 
 ### Changed — may break callers
 
-- cli-core 0.684.0, cli-base 0.108.0 and cli-testing 0.7.3. `scripts/commands.ts` (a seed) collects its files in
+- cli-core 0.686.0, cli-base 0.109.0 and cli-testing 0.7.3. `scripts/commands.ts` (a seed) collects its files in
   `artifacts` and names every stale one; an existing CLI keeps its own copy.
