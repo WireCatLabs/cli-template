@@ -45,7 +45,7 @@ export type Answers = Record<string, string[]>
 const REFERENCES: Record<string, string[]> = {
   messenger: ["whatsapp-cli", "tg-cli", "max-cli"],
   mail: ["mail-cli"],
-  files: ["ydisk", "drive-cli", "notion-cli"],
+  files: ["ydisk-cli", "drive-cli", "notion-cli"],
   calendar: ["gcal-cli"],
   meetings: ["zoom-cli"],
   notes: ["cli-memo"],

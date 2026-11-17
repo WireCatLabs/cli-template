@@ -34,7 +34,7 @@ choice: never pick a profile, and never run the CLI on a real account without th
 1. **The category** decides the reference CLI, the store writer and the contracts `cli-dev ready` expects. The
    reference for each, from [Reference CLIs](https://github.com/WireCatLabs/cli-template/blob/main/docs/dev/reference-clis.md):
    meetings → zoom-cli; messenger → whatsapp-cli, then tg-cli; mail → mail-cli; calendar → gcal-cli;
-   files and documents → **ydisk** for the wiring, drive-cli for the command tree, notion-cli for a
+   files and documents → **ydisk-cli** for the wiring, drive-cli for the command tree, notion-cli for a
    source with a change feed;
    CRM → bitrix24-cli; notes → cli-memo. Read its `README.md`, `docs/dev/DESIGN.md`, `commands --json`, the store
    writes and the sync. Write down the command tree you will mirror.
