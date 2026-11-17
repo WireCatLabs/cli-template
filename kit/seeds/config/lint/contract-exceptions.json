@@ -1,0 +1,6 @@
+[
+  {
+    "contract": "crmWriteContract",
+    "reason": "The source wirecat.config.ts describes only reads; the CLI mounts no write commands until it has a writer."
+  }
+]

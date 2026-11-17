@@ -92,11 +92,13 @@ npx @wirecat/cli-template new --from-config wirecat.config.ts <the other answers
 ```
 
 The config sets the command, package, owner, category, sign-in and API description; the other answers are the flags
-below, or are asked. The CLI keeps the config and gets `pnpm source:check`. After `new`, only the
-config's `source` is read again: change the names, the URL or the sign-in in the CLI's own files. For a CRM, work in
-a loop: read the API's answers in `docs/dev/API_COVERAGE.md` and `src/generated/`, change `source`,
-`pnpm generate && pnpm source:check`, and the contract tests. `new` lists what the config holds that it does not
-build from yet (the CRM commands, the hooks, the OAuth options); wire those by hand until it does. When generation
+below, or are asked. The CLI keeps the config and gets `pnpm source:check`. Name `auth.verify`, the call that
+answers whose a token is, before `new`: it writes the session and the CRM files only for what the config holds then,
+and a CRM source needs the token preset with `verify`. Afterwards `pnpm generate` reads the values of `auth.verify`,
+`source` and `hooks` again; change the names, the URL or the sign-in preset in the CLI's own files. For a CRM,
+work in a loop: read the API's answers in `docs/dev/API_COVERAGE.md` and `src/generated/`, change `source`,
+`pnpm generate && pnpm source:check`, and the contract tests; `src/commands/crm.ts` already mounts the CRM commands.
+`new` lists what the config holds that it does not build from yet; wire those by hand until it does. When generation
 stops, the
 [api-to-cli skill](https://github.com/WireCatLabs/cli-template/blob/main/SKILL.md#3-when-generation-stops)
 says what to change.

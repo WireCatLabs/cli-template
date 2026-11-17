@@ -73,7 +73,7 @@ import { defineCli } from "@wirecat/cli-core/manifest"
 export default defineCli({
   identity: { command: "acme", package: "@wirecat/acme-cli", prefix: "WCACME", service: "Acme", owner: "WireCatLabs" },
   spec: { kind: "openapi", from: "https://acme.example/openapi.json" },
-  auth: { preset: "token" },
+  auth: { preset: "token", verify: { operation: "getMe", id: "workspace.id", name: "workspace.name" } },
   category: "crm",
   source: { provider: "acme", kinds: ["person"], entities: { person: { … } } },
 })
@@ -84,8 +84,22 @@ The folder is the package's name without its scope. The config sets `--command`,
 giving one of them as a flag too is an error. The other answers are flags or asked. `prefix` names the environment
 variables (`WCACME_…`) and is kept in `template.json`; `service` is the service's name in the README. The config is
 read before the CLI has `node_modules`: its import resolves to the kit's own cli-core, which checks it with
-`parseCliConfig`. The CLI gets `pnpm source:check`, which checks a CRM source's operations and every path its map
-reads against the generated API, after `pnpm generate`.
+`parseCliConfig`. In the CLI:
+
+- `pnpm generate` first writes `src/generated/wirecat-config.ts` from the config (`scripts/from-config.ts`): the
+  token check, the source and the hooks, which `src/` reads; the config stays the one file to edit.
+- A CRM `source` needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
+  holds at `new`, and `pnpm generate` then reads their values again.
+- With `auth.verify`, `session start` is cli-core's `tokenSessionCommand`: it checks a token with that operation and
+  keeps the account's id from the answer.
+- With a `source`, `src/commands/crm.ts` mounts cli-core's CRM commands (`sync`, `store status`, `deals`, `search`…)
+  over `crmSourceFromManifest`, the store keyed by the account `session start` checked.
+- Tests come with them: `src/commands/session.test.ts` signs in against a fake of the API, and
+  `src/crm-contracts.test.ts` runs `crmSourceContract` and `crmSyncContract`. `lint/contract-exceptions.json` excepts
+  `crmWriteContract`, as the source only reads. A list the generator finds no paging for fails the contract's
+  cut-list case on purpose: describe the paging in the API description or an override.
+- `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
+  `pnpm generate`.
 
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.

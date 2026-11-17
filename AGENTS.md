@@ -64,9 +64,10 @@ Replace, your service's own:
   `--json=a,b` and the MCP schema come from one schema (WC-CMD-19, WC-CMD-20); `show`; `create` and `update`.
 - **The strict fake**, `src/testing/fake-comments.ts`: it refuses an unknown path, parameter or field, so a name typed
   from memory fails a test instead of reaching the owner's account. Build yours from the documentation.
-- **The tests**, `src/comments.test.ts` and `src/sample/transport.test.ts`. Keep each case for your commands: a deny
-  stops a read before any request, `--dry-run` sends nothing, a lost write is `outcome_unknown`, a recorded run is
-  named after its command, and the token reaches no output, run record or file.
+- **The tests**, `src/comments.test.ts`, `src/commands/session.test.ts` and `src/sample/transport.test.ts`. Keep each
+  case for your commands: a deny stops a read before any request, `--dry-run` sends nothing, a lost write is
+  `outcome_unknown`, a recorded run is named after its command, `session start` keeps a token only once the service
+  took it, and the token reaches no output, run record or file.
 
 Remove the sample only once your own commands and their tests cover each pattern above: the skeleton alone is below
 the coverage floor, and the floor is never lowered (WC-TEST-11). To remove it, run
