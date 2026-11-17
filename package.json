@@ -81,7 +81,7 @@
     "release:check": "pnpm standards:check && pnpm deps:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check && pnpm security:no-leak && pnpm package:check",
     "prepare": "lefthook install || true",
     "prepack": "pnpm build",
-    "docs:spell": "cspell lint --config cspell.json --no-progress --no-summary README.md SECURITY.md CHANGELOG.md AGENTS.md CLAUDE.md 'docs/*.md' 'skills/**/*.md'",
+    "docs:spell": "cspell lint --config cspell.json --no-progress --no-summary README.md SECURITY.md CHANGELOG.md AGENTS.md CLAUDE.md 'docs/*.md' 'skills/**/*.md' 'changes/*.md'",
     "kit:build": "tsc -p kit && node -e \"require('node:fs').copyFileSync('.gitignore', 'gitignore')\"",
     "kit:typecheck": "tsc -p kit/tsconfig.test.json",
     "kit:e2e": "bash kit/e2e.sh",
