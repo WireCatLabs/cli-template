@@ -18,6 +18,8 @@ export default defineConfig({
         "src/testing/**",
         // The entry point: one line handing argv to run(), which the suite drives directly.
         "src/bin/**",
+        // Written by pnpm generate from the service's API description; src/api.test.ts sends every operation through it.
+        "src/generated/**",
         // The kit's entry point runs only as a separate process, in kit/test/package.test.ts.
         "kit/src/main.ts",
       ],
