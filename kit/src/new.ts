@@ -24,6 +24,7 @@ import { renderTemplate, type TemplateSource } from "./source.js"
 import {
   replaceOnce,
   SWAGGER_PEERS,
+  serviceOf,
   specKindOf,
   specSeeds,
   withApiCommand,
@@ -32,6 +33,8 @@ import {
   withApiSkill,
   withApiSkillLink,
   withDownloadedSpec,
+  withService,
+  withServicePage,
   withSpecPackage,
 } from "./spec.js"
 import { type DownloadedSpec, downloadSpec, type SpecFetch } from "./spec-url.js"
@@ -805,7 +808,7 @@ export const runNew = async (
   )
   const answers = collected.answers
   const names = withFreePrefix(loaded ? { ...collected.names, prefix: loaded.config.identity.prefix } : collected.names)
-  const service = loaded?.config.identity.service ?? downloaded?.title
+  const service = loaded?.config.identity.service ?? (downloaded && serviceOf(downloaded.title))
   if (preset && isWireCat(names))
     throw new Error(`--preset ${preset} is for a CLI outside WireCat; ${names.package} is a WireCat package`)
   const description = preset ? GENERIC_DESCRIPTION : DESCRIPTION
@@ -853,7 +856,11 @@ export const runNew = async (
         api: Boolean(spec),
       }),
     "SECURITY.md": ownRepository(names),
-    "docs/security.md": ownRepository(names),
+    "docs/security.md": (text: string) => {
+      const own = ownRepository(names)(text)
+      return spec && service ? withServicePage("docs/security.md", own, service) : own
+    },
+    ...(spec && service ? { "docs/index.md": (text: string) => withServicePage("docs/index.md", text, service) } : {}),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
     [IDENTITY_FILE]: (text) => {
@@ -866,8 +873,9 @@ export const runNew = async (
         ),
         downloaded?.hosts ?? [],
       )
+      const named = service ? withService(identity, service) : identity
       const kinds = loaded?.config.source?.kinds
-      return loaded?.config.source ? withSyncs(identity, Array.isArray(kinds) ? kinds.map(String) : []) : identity
+      return loaded?.config.source ? withSyncs(named, Array.isArray(kinds) ? kinds.map(String) : []) : named
     },
     "AGENTS.md": (text) => withReference(text, category),
     "cspell.json": withReferenceWords,
@@ -882,7 +890,14 @@ export const runNew = async (
   const agentSkill = `skills/${appNameOf(names)}/SKILL.md`
   for (const [path, file] of rendered) {
     if (file.kind === "file") hashes[path] = sha256(file.content)
-    const rewrite = rewrites[path] ?? (spec && path === agentSkill ? withApiSkillLink : undefined)
+    const rewrite =
+      rewrites[path] ??
+      (spec && path === agentSkill
+        ? (text: string) => {
+            const linked = withApiSkillLink(text)
+            return service ? withServicePage(agentSkill, linked, service) : linked
+          }
+        : undefined)
     const content = rewrite ? rewrite(file.content.toString("utf8")) : file.content
     if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)

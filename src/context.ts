@@ -10,9 +10,9 @@ import {
 import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { configuration } from "./config.js"
-import { IDENTITY } from "./identity.js"
+import { IDENTITY, SERVICE } from "./identity.js"
 import { type CommentsService, commentsService } from "./sample/comments.js"
-import { SERVICE, transport } from "./sample/transport.js"
+import { transport } from "./sample/transport.js"
 
 /** What a test hands `run()` beside cli-core's own: the fake service in place of the network (WC-ARCH-10). */
 export interface ServiceEnvironment extends BaseEnvironment {

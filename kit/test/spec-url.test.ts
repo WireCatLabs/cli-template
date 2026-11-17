@@ -11,7 +11,7 @@ afterAll(removeTempDirs)
 
 const YAML_SPEC = `openapi: 3.0.3
 info:
-  title: Acme Notes
+  title: Acme Notes API
   version: "1"
 servers:
   - url: /v1
@@ -61,7 +61,7 @@ describe("downloadSpec", () => {
     expect(spec).toMatchObject({
       kind: "openapi",
       file: "openapi.yaml",
-      title: "Acme Notes",
+      title: "Acme Notes API",
       operations: 2,
       hosts: ["docs.notes.example"],
       prefix: ["api"],
@@ -142,12 +142,18 @@ describe("new --spec-url", () => {
     ])
     expect(read(dir, "src/identity.ts")).toContain('hosts: ["comments.example.invalid", "docs.notes.example"],')
     expect(read(dir, "src/config.ts")).toContain('service: "Acme Notes",')
+    expect(read(dir, "src/identity.ts")).toContain('\nexport const SERVICE = "Acme Notes"\n')
+    expect(read(dir, "src/identity.ts")).not.toContain("SAMPLE: your service's name")
+    for (const page of ["docs/index.md", "docs/security.md", "skills/example-cal-cli/SKILL.md"]) {
+      expect(read(dir, page)).toContain("group reaches Acme Notes")
+      expect(read(dir, page)).not.toContain("Example Comments")
+    }
     expect(read(dir, "scripts/generate.ts")).toContain('group: "cal"')
     expect(read(dir, "scripts/generate.ts")).toContain('names: { fromPath: true, segments: { "api": "" } }')
     expect(read(dir, "scripts/spec-model.ts")).toContain('"url": "https://docs.notes.example/v1"')
     expect(JSON.parse(read(dir, "package.json")).devDependencies.yaml).toBeTruthy()
     expect(read(dir, "docs/dev/DESIGN.md")).toContain("**API description:** OpenAPI 3.0 or 3.1")
-    expect(out).toContain("Downloaded Acme Notes, 2 operations, into spec/cal/openapi.yaml")
+    expect(out).toContain("Downloaded Acme Notes API, 2 operations, into spec/cal/openapi.yaml")
     const readme = read(dir, "README.md")
     expect(readme.split("\n")[0]).toBe("# cal: Acme Notes CLI for AI agents")
     expect(readme).toContain("**Every operation of the Acme Notes API is a command.**")

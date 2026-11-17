@@ -26,8 +26,7 @@ import {
 import { Command } from "commander"
 import { configuration } from "../config.js"
 import { contextOf, refuseOffline, serviceFor, withService } from "../context.js"
-import { IDENTITY } from "../identity.js"
-import { SERVICE } from "../sample/transport.js"
+import { IDENTITY, SERVICE } from "../identity.js"
 
 // `session start | status | end | list` is every provider CLI's sign-in (WC-ACCT-12). Keep it; replace the token
 // prompt and the `me` check with your service's. A service with OAuth signs in through cli-core's oauth module
