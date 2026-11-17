@@ -13,5 +13,5 @@
 
 ### Changed — may break callers
 
-- **cli-base 0.112.0 and cli-core 0.693.0.** A CLI whose spec names no sign-in now sends no token: generate with `auth`
+- **cli-core 0.694.0.** A CLI whose spec names no sign-in now sends no token: generate with `auth`
   to name it (see the SAMPLE comment in `scripts/generate.ts`).
