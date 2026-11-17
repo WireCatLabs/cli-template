@@ -26,10 +26,12 @@
   <a href="https://github.com/WireCatLabs/cli-template/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache 2.0"></a>
 </p>
 
+<!-- cspell:words hubspot ydisk -->
+
 From PokeAPI's published description to 102 commands, a real answer and a working MCP server took 16 seconds with an
-empty pnpm store and 12 with a warm one, not counting npx's own download. Nine of WireCat's own CLIs, among them
-[mail-cli](https://github.com/WireCatLabs/mail-cli) and [notion-cli](https://github.com/WireCatLabs/notion-cli), are
-made from it and kept current with its upgrade.
+empty pnpm store and 12 with a warm one, not counting npx's own download. Nine of WireCat's own CLIs are made from
+it, among them [hubspot-cli](https://github.com/WireCatLabs/hubspot-cli) and [ydisk](https://github.com/WireCatLabs/ydisk),
+which are on its latest version through its upgrade.
 
 ## Quick start
 
