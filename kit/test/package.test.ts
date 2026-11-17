@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { cpSync, existsSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { fetchPacked, npmCommand } from "../src/source.js"
@@ -58,6 +58,12 @@ beforeAll(() => {
     ]),
   )
   bin = join(installed, "node_modules/@wirecat/cli-template/kit/dist/main.js")
+  // The fixture lists no dependencies; the published package has cli-core, which npm puts beside it.
+  mkdirSync(join(installed, "node_modules/@wirecat"), { recursive: true })
+  symlinkSync(
+    realpathSync(join(repoRoot, "node_modules/@wirecat/cli-core")),
+    join(installed, "node_modules/@wirecat/cli-core"),
+  )
 }, 60_000)
 
 const flags = (values: Record<string, string>) => Object.entries(values).flatMap(([key, value]) => [`--${key}`, value])
@@ -106,6 +112,31 @@ describe("the packed bin", () => {
     expect(result.stderr).toContain(
       "--category: messenger, mail, notes, files, meetings, calendar, crm, or other:<your answer>",
     )
+  })
+
+  // The installed kit, as npx runs it: the config's own folder has no node_modules, so cli-core is the kit's.
+  it.each([
+    ['prefix: "wc-acme"', "wirecat.config: identity.prefix"],
+    ['prefix: "WCACME", extra: (await import("./helper.ts")).x', "keep the config in one file; it imports ./helper.ts"],
+  ])("checks a typed --from-config file with the kit's own cli-core (%s)", (prefix, error) => {
+    const cwd = tempDir("packed-config")
+    const config = `import { defineCli } from "@wirecat/cli-core/manifest"
+
+const kind: "openapi" = "openapi"
+
+export default defineCli({
+  identity: { command: "acme", package: "@wirecat/acme-cli", ${prefix}, service: "Acme", owner: "WireCatLabs" },
+  spec: { kind, from: "https://docs.acme.example/openapi.json" },
+  auth: { preset: "token" },
+  category: "other",
+})
+`
+    writeFileSync(join(cwd, "wirecat.config.ts"), config)
+
+    const result = cli(cwd, ["new", "--from-config", "wirecat.config.ts"])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain(error)
   })
 })
 

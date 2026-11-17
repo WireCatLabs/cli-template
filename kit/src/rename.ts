@@ -6,6 +6,8 @@ const word = (text: string): string => `(?<![A-Za-z0-9_])${escapeRegex(text)}(?!
 
 export const upperCommand = (command: string): string => command.toUpperCase().replaceAll("-", "_")
 
+export const prefixOf = (names: Names): string => names.prefix ?? upperCommand(names.command)
+
 // WireCat Desktop takes a tool outside @wirecat only when its data folder, and so its skill, is <scope>-<name>: no
 // package can then take another publisher's folder. WireCat's own CLIs keep the repository name.
 export const appNameOf = (names: Names): string => {
@@ -24,7 +26,7 @@ export const renamer = (placeholders: Placeholders, names: Names): ((text: strin
     [placeholders.repository, `${names.owner}/${names.name}`],
     [placeholders.name, names.name],
     [placeholders.command, names.command],
-    [upperCommand(placeholders.command), upperCommand(names.command)],
+    [upperCommand(placeholders.command), prefixOf(names)],
   ])
   const pattern = new RegExp(
     [
