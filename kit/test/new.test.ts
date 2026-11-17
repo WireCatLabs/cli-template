@@ -440,10 +440,11 @@ describe("new from this repository", () => {
     for (const script of ["bin/setup-github", "bin/live", "bin/release"]) {
       expect(execFileSync("git", ["ls-files", "-s", script], { cwd: dir, encoding: "utf8" })).toMatch(/^100755 /)
     }
-    expect(execFileSync(join(dir, "bin/setup-github"), ["--help"], { env, encoding: "utf8" })).toContain(
-      "Sets up WireCatLabs/cal-cli on GitHub",
-    )
-    expect(execFileSync(join(dir, "bin/live"), ["--help"], { env, encoding: "utf8" })).toContain("<keyring account>")
+    // Through node, as Windows runs no shebang; the mode bits above are what makes them runnable elsewhere.
+    const help = (script: string) =>
+      execFileSync(process.execPath, [join(dir, script), "--help"], { env, encoding: "utf8" })
+    expect(help("bin/setup-github")).toContain("Sets up WireCatLabs/cal-cli on GitHub")
+    expect(help("bin/live")).toContain("<keyring account>")
     expect(read(dir, "bin/live")).toContain('const KEYRING_SERVICE = "cal-cli-live"')
     expect(read(dir, "bin/release")).toContain("--first")
   })
