@@ -174,6 +174,40 @@ const NAME_QUESTION: Question = {
 }
 
 const DESCRIPTION = "A new WireCat CLI, started from cli-template"
+const GENERIC_DESCRIPTION = "A CLI and MCP server, started from cli-template"
+
+export const PRESETS = ["generic"] as const
+
+// The answers that matter to WireCat's own tools (its store, search and Desktop), answered for any API, so a developer
+// outside WireCat meets only the names; each stays a flag that wins over the preset.
+const GENERIC_ANSWERS: Record<string, string> = {
+  category: "other:api",
+  "content-lang": "en",
+  "sign-in": "token",
+  api: "official-docs",
+  spec: "none",
+  filters: "text",
+  "never-store": "tokens",
+  untrusted: "names,links",
+  tagline: GENERIC_DESCRIPTION,
+}
+
+const presetOf = (flags: NewArgs["flags"]): (typeof PRESETS)[number] | undefined => {
+  const preset = flags.preset
+  if (preset === undefined) return undefined
+  const known = PRESETS.find((name) => name === preset)
+  if (!known) throw new Error(`--preset: "${preset}" is not one of ${PRESETS.join(", ")}`)
+  return known
+}
+
+const withPreset = (args: NewArgs): NewArgs => {
+  if (!presetOf(args.flags)) return args
+  const { flags, name } = args
+  const command = flags.command ?? name?.replace(/-cli$/, "")
+  const pkg = flags.package ?? (name && flags.owner ? `@${flags.owner.toLowerCase()}/${name}` : undefined)
+  const defaults = Object.fromEntries(Object.entries(GENERIC_ANSWERS).filter(([flag]) => flags[flag] === undefined))
+  return { name, flags: { ...defaults, ...flags, ...(command ? { command } : {}), ...(pkg ? { package: pkg } : {}) } }
+}
 const TAGLINE_MAX = 55
 const ONE_LINE = /^\S(?:[^\n\r]*\S)?$/
 
@@ -336,7 +370,7 @@ const removeKit = (command: string): string =>
 // contracts/wirecat.json is what WireCat Desktop reads out of the tarball before it installs the CLI (WC-CMD-29).
 const CLI_FILES = ["dist", "skills", "contracts/wirecat.json", "/README.md", "CHANGELOG.md", "LICENSE"]
 
-export const cliPackageJson = (text: string, names: Names): string => {
+export const cliPackageJson = (text: string, names: Names, description = DESCRIPTION): string => {
   const pkg: unknown = JSON.parse(text)
   if (!isRecord(pkg)) throw new Error("package.json must be a JSON object")
   const isKit = (value: unknown) => typeof value === "string" && /^(\.\/)?kit(\/|$)/.test(value)
@@ -345,7 +379,7 @@ export const cliPackageJson = (text: string, names: Names): string => {
     ...pkg,
     name: names.package,
     version: "0.0.0",
-    description: DESCRIPTION,
+    description,
   }
   const bin = typeof pkg.bin === "object" && pkg.bin ? pkg.bin : {}
   next.bin = {
@@ -449,29 +483,104 @@ export const withContentLanguages = (text: string, languages: readonly string[])
   return text.slice(0, end) + line + text.slice(end)
 }
 
+// A CLI that never signs in has no account for `mcp check` to look for; with the check, it reports every profile unhealthy.
+export const withoutSignInCheck = (text: string): string => {
+  const check = /^ {4}signedIn: \(profile, env, keyring\) =>\n {6}new ProfileTokenStore\(.*\)\.signedIn\(profile\),\n/m
+  const named = /^ {2}ProfileTokenStore,\n/m
+  if (!check.test(text) || !named.test(text))
+    throw new Error("src/program.ts: no signedIn check to take out of the MCP command")
+  return text.replace(check, "").replace(named, "")
+}
+
 // cli-core treats an unset or true `messenger` as a messenger and speaks of chats; the template says false.
 export const withMessenger = (text: string, category: string): string =>
   category === "messenger" ? text.replace(/^ {2}messenger: false,$/m, "  messenger: true,") : text
 
-export const cliReadme = (names: Names): string =>
-  [
-    `# ${names.command}`,
+export type ReadmeFacts = { tagline: string; service?: string; signIn: string; api: boolean }
+
+// WC-DOC-7's order, tg-cli's: the gain first, then why, then the steps. Every command in it runs as written.
+export const cliReadme = (names: Names, facts: ReadmeFacts): string => {
+  const cli = names.command
+  const service = facts.service ?? cli
+  const signsIn = facts.signIn !== "none"
+  const npm = `https://www.npmjs.com/package/${names.package}`
+  return [
+    `# ${cli}: ${service} CLI for AI agents`,
     "",
-    `\`${names.command}\` is a WireCat command-line tool, started from`,
-    "[cli-template](https://github.com/WireCatLabs/cli-template). Its design is in",
-    "[docs/dev/DESIGN.md](docs/dev/DESIGN.md).",
+    `${facts.tagline.replace(/\.$/, "")}. One tool for you and for Claude Code, Codex or any agent that speaks MCP.`,
+    "",
+    ...(facts.api
+      ? [
+          `- **Every operation of the ${service} API is a command.** \`${cli} api list\` shows them, each with its own`,
+          "  flags, help and `--json`.",
+        ]
+      : [`- **Commands made for the job.** \`${cli} commands\` lists them, each with its own help and \`--json\`.`]),
+    "- **Your agent gets the same commands as tools.** An MCP server and an agent skill come with it, no second codebase.",
+    "- **You decide what it may change.** Each profile allows, asks or denies each command, and a delete needs a key of",
+    "  its own.",
+    "",
+    "## What you get",
+    "",
+    `Ask your agent about ${service}. It finds the right command with \`${cli} commands --json\`, runs it, and answers`,
+    `from the result. A command it may not run stops with a clear refusal before anything reaches ${service}.`,
+    "",
+    `## Why ${cli}`,
+    "",
+    ...(signsIn ? ["- The token stays in the system keyring, and every command names the profile it uses."] : []),
+    ...(facts.api
+      ? ["- Every operation is tested against a strict fake built from the API description, in `src/api.test.ts`."]
+      : []),
+    "- `--dry-run` shows what a write would send, and sends nothing.",
     "",
     "## Quick start",
     "",
     "```sh",
     "pnpm install",
     "pnpm build",
-    `node dist/bin/${names.command}.js doctor`,
+    `node dist/bin/${cli}.js doctor`,
     "```",
     "",
-    `\`doctor\` needs no profile. Every command that uses an account starts with one, a name you choose: \`${names.command} personal config show\`.`,
+    `Once it is on npm: \`npm install -g ${names.package}\`, then \`${cli} doctor\`. Every command that uses an account`,
+    `starts with a profile, a name you choose: \`${cli} personal config show\`.`,
+    ...(signsIn
+      ? ["", `Sign in once with \`${cli} personal session start\`. It asks for the token and keeps it in the keyring.`]
+      : []),
+    "",
+    "## Use it with your agent",
+    "",
+    "```sh",
+    `${cli} personal mcp add claude-code`,
+    `${cli} skill install`,
+    "```",
+    "",
+    `\`${cli} personal mcp check\` shows the tools your agent gets. \`${cli} personal mcp config\` prints the setup for any`,
+    "other MCP client.",
+    "",
+    "## What it can do",
+    "",
+    "[docs/commands.md](docs/commands.md) lists every command, and `--help` after any of them shows its flags.",
+    "",
+    "## Settings and permissions",
+    "",
+    `\`${cli} personal config show\` prints the profile's settings. See [docs/configuration.md](docs/configuration.md).`,
+    "",
+    "## Security",
+    "",
+    "See [docs/security.md](docs/security.md), and [SECURITY.md](SECURITY.md) to report a problem.",
+    "",
+    "## When something goes wrong",
+    "",
+    `Run \`${cli} doctor\` and see [docs/troubleshooting.md](docs/troubleshooting.md). Report a bug on`,
+    `[GitHub](https://github.com/${names.owner}/${names.name}/issues).`,
+    "",
+    "## Development",
+    "",
+    `Started from [cli-template](https://github.com/WireCatLabs/cli-template). Its design is in`,
+    "[docs/dev/DESIGN.md](docs/dev/DESIGN.md), and the working rules are in [AGENTS.md](AGENTS.md). Published as",
+    `[${names.package}](${npm}).`,
     "",
   ].join("\n")
+}
 
 // The template's own security links point at cli-template, where a report about the template belongs; the placeholder
 // repository does not exist. A CLI's copy names its own repository.
@@ -506,9 +615,9 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
   if (paths.length) await run("git", ["add", "--chmod=+x", "--", ...paths], { cwd })
 }
 
-export const manualSteps = (names: Names, dir: string): string[] => [
+export const manualSteps = (names: Names, dir: string, preset?: string): string[] => [
   `1. After the first commit, run node ${join(dir, "bin/setup-github")}: it creates ${names.owner}/${names.name}, main's ruleset and the npm environment, and asks first. Add any secrets CI needs.`,
-  `2. Before each release, the first too: replace the sample's reads and its "# Needs:" lines in scripts/live.sh, store the test account's token once with secret-tool store --label="${names.command} live check" service ${appNameOf(names)}-live account <account>, and run ${join(dir, "bin/live")} <account> on the release pull request's branch: it commits the record there and names it under Conformance (WC-REL-17).`,
+  `2. ${preset ? "Optional, since bin/release does not ask for it outside WireCat: before a release," : "Before each release, the first too:"} replace the sample's reads and its "# Needs:" lines in scripts/live.sh, store the test account's token once with secret-tool store --label="${names.command} live check" service ${appNameOf(names)}-live account <account>, and run ${join(dir, "bin/live")} <account> on the release pull request's branch: it commits the record there and names it under Conformance (WC-REL-17).`,
   `3. Once the first release pull request is merged, publish it from main with ${join(dir, "bin/release")} --first; it then says how to set npm trusted publishing (WC-REL-11). Every later release is bin/release.`,
   ...(isWireCat(names)
     ? [
@@ -604,11 +713,15 @@ export const runNew = async (
   io: Io,
   fetch?: SpecFetch,
 ): Promise<string> => {
+  const preset = presetOf(args.flags)
   const downloaded = await specFromUrl(args, fetch)
   const { names, answers } = await collect(
-    downloaded ? { ...args, flags: { ...args.flags, spec: downloaded.kind } } : args,
+    withPreset(downloaded ? { ...args, flags: { ...args.flags, spec: downloaded.kind } } : args),
     io,
   )
+  if (preset && isWireCat(names))
+    throw new Error(`--preset ${preset} is for a CLI outside WireCat; ${names.package} is a WireCat package`)
+  const description = preset ? GENERIC_DESCRIPTION : DESCRIPTION
   const target = join(cwd, names.name)
   if (!(await isEmptyOrMissing(target))) throw new Error(`${target} already exists and is not empty`)
   const rendered = await renderTemplate(source, names)
@@ -619,21 +732,30 @@ export const runNew = async (
     "package.json": (text) =>
       spec
         ? withSpecPackage(
-            cliPackageJson(text, names),
+            cliPackageJson(text, names, description),
             spec,
             spec === "swagger" ? JSON.parse(cliBaseFile("package.json")) : {},
             JSON.parse(text).dependencies?.yaml,
           )
-        : cliPackageJson(text, names),
+        : cliPackageJson(text, names, description),
     ...(spec
       ? {
-          "src/program.ts": withApiCommand,
           "src/config.ts": (text: string) => withApiPermissions(text, downloaded?.title),
           "scripts/commands.ts": withApiSkill,
           "src/run-scope.test.ts": withApiRunScope,
         }
       : {}),
-    "README.md": () => cliReadme(names),
+    "src/program.ts": (text: string) => {
+      const program = spec ? withApiCommand(text) : text
+      return answers.signIn?.[0] === "none" ? withoutSignInCheck(program) : program
+    },
+    "README.md": () =>
+      cliReadme(names, {
+        tagline: answers.tagline?.[0] ?? description,
+        ...(downloaded ? { service: downloaded.title } : {}),
+        signIn: answers.signIn?.[0] ?? "none",
+        api: Boolean(spec),
+      }),
     "SECURITY.md": ownRepository(names),
     "docs/security.md": ownRepository(names),
     "CHANGELOG.md": () => cliChangelog(names, source),
@@ -680,6 +802,7 @@ export const runNew = async (
   const manifest: CliManifest = {
     template: source.name,
     version: source.version,
+    ...(preset ? { preset } : {}),
     names,
     files: hashes,
     seeds: source.manifest.seeds,
@@ -721,7 +844,7 @@ export const runNew = async (
     `  then give the agent docs/dev/DESIGN.md; every account command passes a profile, e.g. ${names.command} personal config show`,
     "",
     "Steps that need a person:",
-    ...manualSteps(names, target).map((step) => `  ${step}`),
+    ...manualSteps(names, target, preset).map((step) => `  ${step}`),
     ...(isWireCat(names)
       ? [
           "",

@@ -15,6 +15,6 @@ jobs:
     uses: WireCatLabs/cli-base/.github/workflows/release-start.yml@ea16e6b6b800332d39c71e7b74a4ccc2cf548a60 # v0.109.0
     with:
       app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
-      check: '[ -d kit ] || pnpm exec cli-dev live check --version "$VERSION"'
+      check: '[ -d kit ] || grep -qs "\"preset\": \"generic\"" template.json || pnpm exec cli-dev live check --version "$VERSION"'
     secrets:
       app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
