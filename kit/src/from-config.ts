@@ -58,8 +58,9 @@ const notWiredYet = (config: CliConfig): string[] => [
   ...(config.auth.preset === "token" && !config.auth.verify
     ? ["auth.verify: the call that checks a token; session keeps the template's sample until it is named"]
     : []),
-  ...(config.source ? ["source: the CRM commands (pnpm source:check checks it)"] : []),
-  ...(config.hooks ? ["hooks"] : []),
+  ...(config.source
+    ? ["source: the contract test over a fake of the CRM (the generic fake is not in cli-core yet)"]
+    : []),
 ]
 
 /** The answers the config gives; the rest come from flags or the terminal, as without it. */

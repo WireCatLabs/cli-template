@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import { join, relative } from "node:path"
 import { parseCliConfig } from "@wirecat/cli-core/manifest"
 import config from "../wirecat.config.ts"
 
@@ -12,12 +12,28 @@ if (process.argv.includes("--if-missing") && existsSync(out)) process.exit(0)
 const cli = parseCliConfig(config)
 const verify = cli.auth.preset === "none" ? undefined : cli.auth.verify
 const literal = (value: unknown) => (value === undefined ? "undefined" : JSON.stringify(value, null, 2))
+// The hooks module is imported from src/generated/, inside the bundle: it must live under src/.
+const hooksImport = (() => {
+  if (!cli.hooks) return undefined
+  const path = relative(join(root, "src/generated"), join(root, cli.hooks)).replace(/\.([cm]?)ts$/, ".$1js")
+  if (!join(root, cli.hooks).startsWith(join(root, "src")))
+    throw new Error(`wirecat.config: hooks: ${cli.hooks} must be under ./src/, where the bundle reaches it`)
+  return path.startsWith(".") ? path : `./${path}`
+})()
 const text = [
   "// Generated from wirecat.config.ts by scripts/from-config.ts; run pnpm generate",
   "",
   `export const VERIFY: { operation: string; id: string; name?: string } | undefined = ${literal(verify)}`,
   "",
   `export const SOURCE: Readonly<Record<string, unknown>> | undefined = ${literal(cli.source)}`,
+  "",
+  ...(hooksImport
+    ? [`export { hooks as HOOKS } from "${hooksImport}"`]
+    : [
+        'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
+        "",
+        "export const HOOKS: CrmManifestHooks | undefined = undefined",
+      ]),
   "",
 ].join("\n")
 

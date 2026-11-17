@@ -22,6 +22,7 @@ import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./mani
 import { appNameOf, prefixOf } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 import {
+  replaceOnce,
   SWAGGER_PEERS,
   specKindOf,
   specSeeds,
@@ -732,6 +733,21 @@ const CONFIG_FILE = "wirecat.config.ts"
 const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
 const SESSION = "src/commands/session.ts"
+const CRM = "src/commands/crm.ts"
+
+/** cli-core's CRM commands over the config's source, beside the api group. */
+export const withCrmCommands = (text: string): string =>
+  replaceOnce(
+    "src/program.ts",
+    replaceOnce(
+      "src/program.ts",
+      text,
+      'import { apiCommand } from "./commands/api.js"\n',
+      'import { apiCommand } from "./commands/api.js"\nimport { crmCommands } from "./commands/crm.js"\n',
+    ),
+    /^( +)apiCommand\(\),\n/m,
+    "$1apiCommand(),\n$1...crmCommands(),\n",
+  )
 
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
@@ -794,7 +810,8 @@ export const runNew = async (
         }
       : {}),
     "src/program.ts": (text: string) => {
-      const program = spec ? withApiCommand(text) : text
+      const api = spec ? withApiCommand(text) : text
+      const program = loaded?.config.source ? withCrmCommands(api) : api
       return answers.signIn?.[0] === "none" ? withoutSignInCheck(program) : program
     },
     "README.md": () =>
@@ -847,7 +864,12 @@ export const runNew = async (
   }
   if (loaded) {
     await writeOut(target, CONFIG_FILE, loaded.text)
-    const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? [SESSION] : [])]
+    const seeds = [
+      SOURCE_CHECK,
+      FROM_CONFIG,
+      ...(loaded.verifies ? [SESSION] : []),
+      ...(loaded.config.source ? [CRM] : []),
+    ]
     for (const path of seeds) await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", path)))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
