@@ -59,7 +59,7 @@ const notWiredYet = (config: CliConfig): string[] => [
     ? ["auth.verify: the call that checks a token; session keeps the template's sample until it is named"]
     : []),
   ...(config.source
-    ? ["source: the contract test over a fake of the CRM (the generic fake is not in cli-core yet)"]
+    ? ["source: the CRM's write commands (crmWriteContract is excepted in lint/contract-exceptions.json)"]
     : []),
 ]
 

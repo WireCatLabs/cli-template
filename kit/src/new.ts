@@ -733,7 +733,7 @@ const CONFIG_FILE = "wirecat.config.ts"
 const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
 const SESSION = "src/commands/session.ts"
-const CRM = "src/commands/crm.ts"
+const CRM = ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"]
 
 /** cli-core's CRM commands over the config's source, beside the api group. */
 export const withCrmCommands = (text: string): string =>
@@ -868,7 +868,7 @@ export const runNew = async (
       SOURCE_CHECK,
       FROM_CONFIG,
       ...(loaded.verifies ? [SESSION] : []),
-      ...(loaded.config.source ? [CRM] : []),
+      ...(loaded.config.source ? CRM : []),
     ]
     for (const path of seeds) await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", path)))
   }

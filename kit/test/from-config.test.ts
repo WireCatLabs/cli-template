@@ -69,6 +69,37 @@ describe("new --from-config", () => {
     expect(out).toContain('"displayName": "Acme",')
   })
 
+  it("wires a CRM config's token check, CRM commands and contract tests", async () => {
+    const cwd = tempDir("from-config-crm")
+    const crm = CONFIG.replace(
+      "auth: { preset },",
+      'auth: { preset, verify: { operation: "getMe", id: "workspace.id" } },',
+    ).replace('category: "other",', 'category: "crm",\n  source: { provider: "acme", kinds: ["person"] },')
+    writeFileSync(join(cwd, "wirecat.config.ts"), crm)
+    const loaded = await loadCliConfig(join(cwd, "wirecat.config.ts"))
+
+    const out = await runNew(
+      cwd,
+      await loadSource(join(import.meta.dirname, "../..")),
+      configArgs(loaded.config, { flags: ANSWERS }),
+      io(),
+      fetch,
+      loaded,
+    )
+
+    const dir = join(cwd, "acme-cli")
+    expect(read(dir, "src/commands/session.ts")).toContain("tokenSessionCommand(")
+    expect(read(dir, "src/program.ts")).toMatch(/apiCommand\(\),\n +\.\.\.crmCommands\(\),/)
+    expect(read(dir, "src/crm-contracts.test.ts")).toContain("crmSourceContract(")
+    expect(JSON.parse(read(dir, "lint/contract-exceptions.json"))).toEqual([
+      expect.objectContaining({ contract: "crmWriteContract" }),
+    ])
+    const scripts = JSON.parse(read(dir, "package.json")).scripts
+    expect(scripts.generate).toMatch(/^node --experimental-strip-types scripts\/from-config\.ts && /)
+    expect(scripts["generate:check"]).toMatch(/^node --experimental-strip-types scripts\/from-config\.ts --check && /)
+    expect(out).not.toContain("auth.verify:")
+  })
+
   it("names the field a config gets wrong", async () => {
     const cwd = tempDir("from-config-bad")
     writeFileSync(join(cwd, "wirecat.config.ts"), CONFIG.replace('"WCACME"', '"wc-acme"'))
