@@ -2,6 +2,9 @@ import type { ManifestIdentity } from "@wirecat/cli-base/wcat/manifest"
 import type { AppIdentity } from "@wirecat/cli-core/cli"
 import { VERSION } from "./version.js"
 
+// SAMPLE: your service's name, as the sign-in, the MCP server and an offline refusal say it.
+export const SERVICE = "Example Comments"
+
 export const PACKAGE = "@wirecat/clidev-cli"
 
 export const IDENTITY: AppIdentity = {

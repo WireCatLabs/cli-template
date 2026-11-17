@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { fakeApi, sampleOf } from "@wirecat/cli-base/codegen"
-import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
+import { apiFlagOf, manifestBaseUrl, type ServiceApiManifest, sendsBytes } from "@wirecat/cli-core/cli"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
 import { definitions } from "./generated/definitions.js"
@@ -21,14 +21,17 @@ afterEach(() => {
 
 type Operation = (typeof API.manifest.operations)[number]
 
+// A spec without sign-in, such as PokeAPI's, gives the manifest no securitySchemes.
+const { security, securitySchemes }: ServiceApiManifest = API.manifest
+
 // The fake checks each call's path, parameters and body, and the token where its security, else the spec's, names it.
 const fake = () =>
   fakeApi({
     operations: API.manifest.operations,
     definitions,
     baseUrl: manifestBaseUrl(API.manifest),
-    security: API.manifest.security,
-    securitySchemes: API.manifest.securitySchemes,
+    ...(security ? { security } : {}),
+    ...(securitySchemes ? { securitySchemes } : {}),
     token: FAKE_TOKEN,
   })
 
@@ -42,7 +45,8 @@ const deleteKeys = [
 
 const argsOf = (operation: Operation) => [
   ...operation.parameters
-    .filter((parameter) => parameter.required)
+    // A required parameter with a default is left out: the command sends the default itself.
+    .filter((parameter) => parameter.required && parameter.schema.default === undefined)
     .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, String(sampleOf(parameter.schema, definitions))]),
   ...(sendsBytes(operation) ? ["--body-file", upload] : []),
   ...(operation.request?.schema

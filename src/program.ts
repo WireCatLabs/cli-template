@@ -21,8 +21,7 @@ import type { Command } from "commander"
 import { commentsCommand } from "./commands/comments.js"
 import { sessionCommand } from "./commands/session.js"
 import { configuration } from "./config.js"
-import { IDENTITY, PACKAGE, SKILL } from "./identity.js"
-import { SERVICE } from "./sample/transport.js"
+import { IDENTITY, PACKAGE, SERVICE, SKILL } from "./identity.js"
 
 const update = appUpdate({
   packageName: PACKAGE,
