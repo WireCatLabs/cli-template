@@ -5,6 +5,43 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.27.0 — 17.11.2026
+
+### Added
+
+- **A new CLI's README opens with a Docs, Install and Usage row** under the hero line, linking the CLI's own
+  `docs/index.md`, `docs/installation.md` and `docs/usage.md` on GitHub, as cli-base's README links rule asks. It
+  has no community link, since only the owner knows where the tool's audience talks.
+- **`new --from-config wirecat.config.ts` builds a CLI from one file.** The config, typed by `defineCli` from
+  `@wirecat/cli-core/manifest`, gives the names, the environment prefix, the service's name, the API description's
+  URL, the sign-in preset, the category and, for a CRM, the source manifest. The CLI keeps the file and gets
+  `pnpm source:check`, which checks the source's operations and the paths its map reads against the generated API
+  ([kit reference](kit/README.md#new-name)).
+- **The new-cli skill starts a CLI from the config** and works in a loop: the API's answers, the config,
+  `pnpm generate && pnpm source:check`, the contract tests, and a hook only where they show the config cannot say it.
+
+### Changed — may break callers
+
+- **cli-core 0.694.0.** A CLI whose spec names no sign-in now sends no token: generate with `auth`
+  to name it (see the SAMPLE comment in `scripts/generate.ts`).
+- cli-core 0.693.0 and cli-base 0.112.0, so a CLI made from the template starts on them; cli-core 0.693.0 needs
+  cli-base 0.112.0 or later.
+
+### Fixed
+
+- **`new --spec-url` makes a CLI from Resend's and Petstore 3's public specs that generates, builds and passes its
+  tests.** cli-base now reads OpenAPI 3.1 fields of several types and uploads sent as bytes, and cli-core sends an
+  upload from `--body-file <path>`. Each operation's test sends its upload from a small file.
+- **The `api` test's fake checks the sign-in each operation's own security names, else the spec's.** It takes the
+  manifest's `security`, `securitySchemes` and the profile's token, so an `api_key` header, a bearer token and an
+  open call each pass where the spec says; the copy of the spec's `security` onto each operation is gone.
+- **A CLI made with `--sign-in none` sends no token from its `api` group**, and its test's fake expects none. Before,
+  every `api` call stopped on the missing sign-in.
+- **The `api` group, its skill pages and its tests leave out an operation cli-core cannot send**, such as a
+  multipart upload, as they already left out one that answers with a credential.
+- **A CLI made with `--spec` from a description without a top-level `security` typechecks.** The seed
+  `src/api.test.ts` read `API.manifest.security`, which the generated manifest leaves out then.
+
 ## 0.26.0 — 17.11.2026
 
 ### Added
