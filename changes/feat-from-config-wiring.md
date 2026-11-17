@@ -4,6 +4,16 @@
   check, CRM source and hooks into `src/generated/wirecat-config.ts`. With `auth.verify`, `session start` checks a
   token with that operation and keeps the account's id; with a `source`, `src/commands/crm.ts` mounts cli-core's CRM
   commands over `crmSourceFromManifest`, the store keyed by that account ([kit reference](../kit/README.md#new-name)).
+- **Its tests cover that wiring.** `src/commands/session.test.ts` signs in against a fake of the API built from its
+  description. `src/crm-contracts.test.ts` runs cli-core's `crmSourceContract` over `crmManifestFixture` and
+  `crmSyncContract` over the store. `lint/contract-exceptions.json` excepts `crmWriteContract` with its reason, as the
+  source only reads. The CLI says what `sync` copies in (`syncs`), so `cli-dev ready` passes every row but the live
+  check, which the owner runs.
+
+### Changed — may break callers
+
+- **The sample's `session` tests moved from `src/comments.test.ts` to `src/commands/session.test.ts`**, so a CLI can
+  replace them along with `session.ts`.
 
 ### Fixed
 

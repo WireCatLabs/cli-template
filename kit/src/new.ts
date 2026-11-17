@@ -477,6 +477,20 @@ export const withHosts = (text: string, hosts: readonly string[]): string => {
   return text.replace(line, `$1${JSON.stringify([...new Set([...listed, ...hosts])]).replaceAll(",", ", ")},`)
 }
 
+const KIND_WORDS: Readonly<Record<string, string>> = {
+  person: "people",
+  organization: "companies",
+  deal: "deals",
+  lead: "leads",
+}
+
+/** A CLI with `sync` says what it copies in (contracts/wirecat.json): for a config's source, its kinds. */
+export const withSyncs = (text: string, kinds: readonly string[]): string => {
+  const words = kinds.map((kind) => KIND_WORDS[kind] ?? `${kind}s`)
+  const list = words.length > 1 ? `${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : (words[0] ?? "records")
+  return replaceOnce(IDENTITY_FILE, text, /^( {2}tagline: .*\n)/m, `$1  syncs: ${JSON.stringify(`your ${list}`)},\n`)
+}
+
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {
   const match = /export const IDENTITY: AppIdentity = \{\n[\s\S]*?\n\}/.exec(text)
   if (!match) throw new Error(`${IDENTITY_FILE}: no IDENTITY object to add contentLanguages to`)
@@ -732,7 +746,7 @@ const specFromUrl = async (args: NewArgs, fetch: SpecFetch | undefined): Promise
 const CONFIG_FILE = "wirecat.config.ts"
 const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
-const SESSION = "src/commands/session.ts"
+const SESSION = ["src/commands/session.ts", "src/commands/session.test.ts", "src/testing/fake-api.ts"]
 const CRM = ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"]
 
 /** cli-core's CRM commands over the config's source, beside the api group. */
@@ -748,6 +762,40 @@ export const withCrmCommands = (text: string): string =>
     /^( +)apiCommand\(\),\n/m,
     "$1apiCommand(),\n$1...crmCommands(),\n",
   )
+
+const RUN_SCOPE = "src/run-scope.test.ts"
+
+/**
+ * run-scope over a config's wiring: `session start` checks the token with the API, so the answering fake answers the
+ * API's host too; `sync` is cli-core's, run in its own run and tested by crmSyncContract.
+ */
+export const withConfigRunScope = (text: string, { verifies, crm }: { verifies: boolean; crm: boolean }): string => {
+  const answering = verifies
+    ? replaceOnce(
+        RUN_SCOPE,
+        replaceOnce(
+          RUN_SCOPE,
+          text,
+          'import { signedIn } from "./testing/harness.js"\n',
+          'import { withServiceApi } from "./testing/fake-api.js"\nimport { signedIn } from "./testing/harness.js"\n',
+        ),
+        "fetch: fakeComments().fetch, stdin: stdin()",
+        "fetch: withServiceApi(fakeComments()).fetch, stdin: stdin()",
+      )
+    : text
+  return crm
+    ? replaceOnce(
+        RUN_SCOPE,
+        answering,
+        '      "mcp serve": "listens until stopped",\n',
+        [
+          '      "mcp serve": "listens until stopped",',
+          '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
+          "",
+        ].join("\n"),
+      )
+    : answering
+}
 
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
@@ -806,7 +854,13 @@ export const runNew = async (
       ? {
           "src/config.ts": (text: string) => withApiPermissions(text, service),
           "scripts/commands.ts": withApiSkill,
-          "src/run-scope.test.ts": withApiRunScope,
+          "src/run-scope.test.ts": (text: string) =>
+            loaded
+              ? withConfigRunScope(withApiRunScope(text), {
+                  verifies: loaded.verifies,
+                  crm: Boolean(loaded.config.source),
+                })
+              : withApiRunScope(text),
         }
       : {}),
     "src/program.ts": (text: string) => {
@@ -825,8 +879,8 @@ export const runNew = async (
     "docs/security.md": ownRepository(names),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
-    [IDENTITY_FILE]: (text) =>
-      withHosts(
+    [IDENTITY_FILE]: (text) => {
+      const identity = withHosts(
         withDesktopTexts(
           withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
           names.command,
@@ -834,7 +888,10 @@ export const runNew = async (
           answers.signIn?.[0] ?? "none",
         ),
         downloaded?.hosts ?? [],
-      ),
+      )
+      const kinds = loaded?.config.source?.kinds
+      return loaded?.config.source ? withSyncs(identity, Array.isArray(kinds) ? kinds.map(String) : []) : identity
+    },
     "AGENTS.md": (text) => withReference(text, category),
     "cspell.json": withReferenceWords,
     ...(isWireCat(names)
@@ -864,12 +921,7 @@ export const runNew = async (
   }
   if (loaded) {
     await writeOut(target, CONFIG_FILE, loaded.text)
-    const seeds = [
-      SOURCE_CHECK,
-      FROM_CONFIG,
-      ...(loaded.verifies ? [SESSION] : []),
-      ...(loaded.config.source ? CRM : []),
-    ]
+    const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? SESSION : []), ...(loaded.config.source ? CRM : [])]
     for (const path of seeds) await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", path)))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))

@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
-import { join, relative } from "node:path"
+import { execFileSync } from "node:child_process"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { dirname, join, relative } from "node:path"
 import { parseCliConfig } from "@wirecat/cli-core/manifest"
 import config from "../wirecat.config.ts"
 
@@ -20,26 +21,38 @@ const hooksImport = (() => {
     throw new Error(`wirecat.config: hooks: ${cli.hooks} must be under ./src/, where the bundle reaches it`)
   return path.startsWith(".") ? path : `./${path}`
 })()
-const text = [
-  "// Generated from wirecat.config.ts by scripts/from-config.ts; run pnpm generate",
-  "",
-  `export const VERIFY: { operation: string; id: string; name?: string } | undefined = ${literal(verify)}`,
-  "",
-  `export const SOURCE: Readonly<Record<string, unknown>> | undefined = ${literal(cli.source)}`,
-  "",
-  ...(hooksImport
-    ? [`export { hooks as HOOKS } from "${hooksImport}"`]
-    : [
-        'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
-        "",
-        "export const HOOKS: CrmManifestHooks | undefined = undefined",
-      ]),
-  "",
-].join("\n")
+// Formatted as scripts/generate.ts formats its files, so lint and --check agree.
+const formatted = (content: string) =>
+  execFileSync(
+    process.execPath,
+    [join(root, "node_modules/@biomejs/biome/bin/biome"), "check", "--write", `--stdin-file-path=${out}`],
+    { cwd: root, encoding: "utf8", input: content },
+  )
+const text = formatted(
+  [
+    "// Generated from wirecat.config.ts by scripts/from-config.ts; run pnpm generate",
+    "",
+    `export const VERIFY: { operation: string; id: string; name?: string } | undefined = ${literal(verify)}`,
+    "",
+    `export const SOURCE: Readonly<Record<string, unknown>> | undefined = ${literal(cli.source)}`,
+    "",
+    ...(hooksImport
+      ? [`export { hooks as HOOKS } from "${hooksImport}"`]
+      : [
+          'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
+          "",
+          "export const HOOKS: CrmManifestHooks | undefined = undefined",
+        ]),
+    "",
+  ].join("\n"),
+)
 
 if (process.argv.includes("--check")) {
   if (!existsSync(out) || readFileSync(out, "utf8") !== text) {
     process.stderr.write("Generated files are stale: src/generated/wirecat-config.ts; run pnpm generate\n")
     process.exit(1)
   }
-} else writeFileSync(out, text)
+} else {
+  mkdirSync(dirname(out), { recursive: true })
+  writeFileSync(out, text)
+}

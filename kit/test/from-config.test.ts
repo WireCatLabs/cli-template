@@ -89,6 +89,11 @@ describe("new --from-config", () => {
 
     const dir = join(cwd, "acme-cli")
     expect(read(dir, "src/commands/session.ts")).toContain("tokenSessionCommand(")
+    expect(read(dir, "src/commands/session.test.ts")).toContain("recalledAccount(")
+    expect(read(dir, "src/identity.ts")).toContain('  syncs: "your people",')
+    const runScope = read(dir, "src/run-scope.test.ts")
+    expect(runScope).toContain("fetch: withServiceApi(fakeComments()).fetch")
+    expect(runScope).toContain("sync: \"cli-core's addCrmCommands runs it in its run")
     expect(read(dir, "src/program.ts")).toMatch(/apiCommand\(\),\n +\.\.\.crmCommands\(\),/)
     expect(read(dir, "src/crm-contracts.test.ts")).toContain("crmSourceContract(")
     expect(JSON.parse(read(dir, "lint/contract-exceptions.json"))).toEqual([

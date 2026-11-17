@@ -92,6 +92,10 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   keeps the account's id from the answer.
 - With a `source`, `src/commands/crm.ts` mounts cli-core's CRM commands (`sync`, `store status`, `deals`, `people`…)
   over `crmSourceFromManifest`, the store keyed by the account `session start` checked.
+- Tests come with them: `src/commands/session.test.ts` signs in against a fake of the API, and
+  `src/crm-contracts.test.ts` runs `crmSourceContract` and `crmSyncContract`. `lint/contract-exceptions.json` excepts
+  `crmWriteContract`, as the source only reads. A list the generator finds no paging for fails the contract's
+  cut-list case on purpose: describe the paging in the API description or an override.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
 

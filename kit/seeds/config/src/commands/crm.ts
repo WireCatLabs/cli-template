@@ -32,7 +32,8 @@ const openStore = async (env: NodeJS.ProcessEnv, { readOnly = false } = {}): Pro
     ...(readOnly ? { readOnly } : {}),
   })
   try {
-    if (!readOnly) await store.accounts.registerProvider({ name: provider(), kind: "crm", command: IDENTITY.command })
+    if (!readOnly)
+      await store.accounts.registerProvider({ name: provider(), kind: "crm", aliases: [], command: IDENTITY.command })
     return store
   } catch (error) {
     await store.close()
