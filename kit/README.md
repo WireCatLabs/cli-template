@@ -24,10 +24,11 @@ npx @wirecat/cli-template remove-sample
 It sets up what CI's `repo-setup` job (`cli-dev repo-check`) checks in the files: a monthly cron minute and a parity
 group in `config/parity-groups.json`. A WireCat CLI gets a free minute inside WC-CI-9's window, from the table in
 cli-base's `docs/standards/ci.md`; a CLI outside `@wirecat` gets one after that window. It then prints the steps that
-need a person: four for a WireCat CLI, three outside `@wirecat`. For a WireCat CLI it also prints the entries to
-paste into cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs' `tools.json`. It warns when the
-environment prefix or the keyring service is a name the service's own tools already use, such as `NOTION_` or
-`notion-cli`.
+need a person: four for a WireCat CLI, two with `--preset generic`. Before them it prints how to try the CLI, and
+`pnpm bootstrap`, the one script that readies it for the first commit. For a WireCat CLI it also prints the entries to
+paste into cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs' `tools.json`. When the command word's
+environment prefix is one the service's own tools read, such as `NOTION_`, it makes the CLI with `NOTION_CLI_`
+(`WCNOTION_` for a WireCat package) and says so. It warns when the keyring service is taken, such as `notion-cli`.
 
 The steps run the owner's scripts the CLI gets, each one readable file that prints its plan and asks first:
 
@@ -44,7 +45,7 @@ With `--spec` other than `none`, `new` also builds the `api` group from the serv
 per operation through cli-core's `serviceApiCommand`, its permissions, its tests against cli-base's `fakeApi`, and the
 agent skill's API pages from `apiSkillFiles`. It writes a sample description of the made-up Example Comments service
 to `spec/<command>/` with `provenance.json`, `scripts/sync-spec.ts`, `scripts/spec-model.ts` and `scripts/generate.ts`,
-puts the API step in front of `pnpm generate` and `generate:check`, and prints the steps that regenerate the
+and puts the API step in front of `pnpm generate` and `generate:check`; `pnpm bootstrap` then regenerates the
 contracts. Swagger 2.0 adds cli-base's converter, `@scalar/openapi-upgrader`, to `devDependencies`. The order of work is in the new-cli skill's
 [references/openapi.md](skills/new-cli/references/openapi.md).
 
