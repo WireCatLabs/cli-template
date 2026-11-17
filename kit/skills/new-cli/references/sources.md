@@ -8,13 +8,20 @@ with no test skipped.
 
 ## Documents
 
-**Reference: notion-cli**, not drive-cli: notion-cli runs cli-core's shared commands and contracts, drive-cli predates
-them. Take from drive-cli only the command tree.
+**Reference: ydisk** for the wiring, drive-cli for the command tree and the words, notion-cli for a
+source with a change feed. All three run cli-core's shared commands; the words follow the shared vocabulary where
+drive-cli keeps older ones in its lint baseline (`files get`, `mkdir`, `trash`).
 
-- The commands: `addDocumentCommands` and its parts (`addDocumentSyncCommands`, `addDocumentSearchCommand`,
-  `addDocumentCatalogCommands`, …) from `@wirecat/cli-core/documents/cli`. See notion-cli's `src/commands/library.ts`.
-- The source: one `DocumentSource` (list, read, cursor, files). See notion-cli's `src/sync/source.ts`, `cursor.ts` and
-  `markdown.ts`.
+- The commands: `documentLibraryCommands` from `@wirecat/cli-core/documents/cli` mounts `folders`, `sync`,
+  `status`, `documents`, `search`, `catalog` and the knowledge groups over your source, with the profile's files,
+  lock, store and account check. The CLI gives the source, `ingestion`, its words, a `documents list` row and, if it
+  has one, `folders browse`. See ydisk's `src/commands/library.ts`. notion-cli and drive-cli predate it and
+  wire the parts (`addDocumentSyncCommands`, …) themselves; do not copy their wiring.
+- The source: one `DocumentSource` (list, read, change feed). A service without a change feed (Yandex Disk, WebDAV,
+  S3) writes a `FeedlessDocumentSource`: each sync walks the chosen folders and reads only what changed. A service that
+  addresses files by path reads the path from the file cli-core passes to `metadata`, `children` and `content`. Text
+  from a downloaded file comes from cli-core's `fileText`. See ydisk's `src/yandex/source.ts`, and
+  notion-cli's `src/sync/source.ts` for a feed.
 - The contracts, from `@wirecat/cli-core/documents/testing`: `documentSourceContract` against your source over its
   fake (notion-cli's `src/sync/source.test.ts`), and `documentCommandsContract` over the commands with
   a fake source: `fakeDocumentSource`, or a strict fake of your own as notion-cli's `src/library.test.ts` has. Fix a failing contract in the source, never by skipping
