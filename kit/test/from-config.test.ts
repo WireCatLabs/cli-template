@@ -65,7 +65,7 @@ describe("new --from-config", () => {
       "node --experimental-strip-types scripts/source-check.ts",
     )
     expect(read(dir, "scripts/source-check.ts")).toContain("crmManifestProblems(parseCrmManifest(")
-    expect(out).toContain("  pnpm generate\n  pnpm source:check\n")
+    expect(out).toContain("  pnpm bootstrap\n  pnpm source:check\n")
     expect(out).toContain('"displayName": "Acme",')
   })
 

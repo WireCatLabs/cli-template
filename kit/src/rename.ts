@@ -66,3 +66,51 @@ export const stripKit = (path: string, content: Buffer): Buffer => {
     .replace(/"!?(\.\/)?kit\/[^"]*",\s*/g, "")
   return stripped === text ? content : Buffer.from(stripped, "utf8")
 }
+
+export const isWireCat = (names: Names): boolean => names.package.startsWith("@wirecat/")
+
+// Names the service's own tools already use. A CLI with the same environment prefix reads their token as its own; one
+// with the same keyring service overwrites their sign-in. Each entry names where it was seen.
+const TAKEN_PREFIXES: Record<string, string> = {
+  // notion-cli BUG-759 (cli-factory plan, notion lessons).
+  NOTION: "Notion's MCP server reads NOTION_TOKEN",
+  // The cli-factory plan, 6.3.6.
+  HUBSPOT: "HubSpot's own tools read HUBSPOT_ variables",
+  // https://cli.github.com/manual/gh_help_environment
+  GH: "GitHub's gh reads GH_TOKEN",
+  GITHUB: "GitHub's gh reads GITHUB_TOKEN",
+}
+const TAKEN_SERVICES: Record<string, string> = {
+  // notion-cli RISK-2303 (cli-factory plan, notion lessons).
+  "notion-cli": "Notion's ntn keeps its sign-in under the keyring service notion-cli",
+}
+
+// A prefix the service's own tools read is replaced before any file is written, so nobody has to rename it by hand.
+export const withFreePrefix = (names: Names): Names => {
+  const prefix = prefixOf(names)
+  if (names.prefix !== undefined || !TAKEN_PREFIXES[prefix]) return names
+  return { ...names, prefix: isWireCat(names) ? `WC${prefix}` : `${prefix}_CLI` }
+}
+
+export const nameClashes = (names: Names, files: string[]): string[] => {
+  const prefix = prefixOf(names)
+  const taken = upperCommand(names.command)
+  const app = appNameOf(names)
+  return [
+    ...(taken !== prefix && TAKEN_PREFIXES[taken]
+      ? [
+          `${taken}_: ${TAKEN_PREFIXES[taken]}, so this CLI reads ${prefix}_ variables instead (envPrefix in src/identity.ts).`,
+        ]
+      : []),
+    ...(TAKEN_PREFIXES[prefix]
+      ? [
+          `${prefix}_: ${TAKEN_PREFIXES[prefix]}, so ${names.command} would take its token. Pick another prefix (notion-cli uses WCNOTION): envPrefix in src/identity.ts and ${prefix}_ in ${files.join(", ")}. upgrade merges the template's own files, scripts/sandboxed.ts and docs/dev/TESTING.md, with ${prefix}_ in them: check them after each upgrade.`,
+        ]
+      : []),
+    ...(TAKEN_SERVICES[app]
+      ? [
+          `keyring service ${app}: ${TAKEN_SERVICES[app]}, so a sign-in would replace it. Pick another name: appName in src/identity.ts.`,
+        ]
+      : []),
+  ]
+}
