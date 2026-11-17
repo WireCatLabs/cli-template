@@ -5,6 +5,44 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.29.0 — 17.11.2026
+
+### Changed — may break callers
+
+- **With cli-base 0.116.0, `GET /v1/users/me` is `users-me-get`, not `users-me-list`.** A path ending in `/me`
+  reads one item. A CLI generated before keeps its names until it regenerates.
+- **A new CLI pins `@wirecat/cli-core` 0.696.0 and `@wirecat/cli-base` 0.116.0**, which carry the two fixes above.
+- **The `server.json` that `new` writes asks which profiles to serve.** It started `mcp serve --profiles all`, so a
+  client that installed a new CLI's server from the MCP Registry reached every account on the computer without the
+  owner choosing. Now `--profiles` is a required argument with the example `personal`: the client asks for one
+  profile, a comma-separated list or `all`. Why: a CLI never picks an account for the owner
+  ([WC-MCP-9](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/mcp.md#wc-mcp-9--a-server-serves-the-profiles-it-is-told-with-one-connection-for-each)). Watch for: `server.json` is a seed, so `upgrade` does not change it in a CLI made before;
+  make the same change there by hand.
+- **`new` ends with a short summary.** "Try it" lists the four lines that make the CLI and show its commands. "Before
+  the first commit" is one new script, `pnpm bootstrap`, in place of seven commands: it runs the lint fix, the
+  generator twice, the contract and MCP snapshot updates and `ci:quick`. A `--preset generic` CLI gets two publishing
+  steps with paths relative to it, in place of three long ones with absolute paths.
+- **`new` picks a free environment prefix by itself.** When the command word's prefix is one the service's own tools
+  read (`NOTION_`, `GH_`, `GITHUB_`, `HUBSPOT_`), the CLI is made with `<PREFIX>_CLI_` (`WC<PREFIX>_` for a WireCat
+  package) and the summary says so, in place of a list of files to rename by hand.
+
+### Fixed
+
+- **A CLI made from an OpenAPI description names the service without a trailing "API".** Notion's description is
+  titled "Notion API", and `api --help`, `api list`, the README, the skill and the MCP texts said "the raw Notion API
+  API". `new` now takes "Notion" as the service's name; the download line still shows the description's own title.
+- **The sign-in, the MCP server and an offline refusal name the real service, not the sample's.** `session --help`
+  said "keep this profile's Example Comments token" in a CLI made for Notion. The CLI's service name is now `SERVICE`
+  in `src/identity.ts`, and `new` writes the service's name there; the sample's `comments` group and its transport
+  keep "Example Comments".
+- **A required parameter with a default needs no flag.** With cli-core 0.696.0, Notion's page-markdown calls
+  send `Notion-Version: 2026-03-11` by themselves instead of stopping with `required option '--notion-version
+  <value>' not specified`. The generated `src/api.test.ts` leaves such a parameter out, so it checks this.
+- **A CLI made from a description without sign-in typechecks again.** PokeAPI's manifest has no `securitySchemes`,
+  and the generated `src/api.test.ts` read it, so `pnpm bootstrap` stopped at `ci:quick`.
+- **The docs and the skill of a CLI made with `--spec-url` say its `api` group reaches the service.** They said its
+  one service was the sample.
+
 ## 0.28.0 — 17.11.2026
 
 ### Added
