@@ -97,6 +97,16 @@ describe("the new CLI's README", () => {
       expect(existsSync(join(dir, `docs/${page}.md`))).toBe(true)
     }
     for (const block of readme.match(/```sh\n[\s\S]*?```/g) ?? []) expect(block).not.toMatch(/<[a-z]/)
+    expect(readme).not.toContain("permissions.api")
+  })
+
+  it("says that over MCP ask runs the api group's writes, and how to stop them, when the CLI has one", async () => {
+    const { dir } = await makeGeneric({ owner: "example", spec: "openapi" })
+
+    const readme = read(dir, "README.md")
+    expect(readme).toContain("Over MCP nobody is there to answer `ask`, so the agent runs the API's writes and deletes")
+    expect(readme).toContain("`acme personal config set permissions.api readonly`")
+    expect(readme).toContain("`acme personal config set permissions.api.<operation> deny`")
   })
 })
 

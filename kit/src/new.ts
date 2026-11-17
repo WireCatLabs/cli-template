@@ -598,6 +598,16 @@ export const cliReadme = (names: Names, facts: ReadmeFacts): string => {
     `until you review its permissions and pass \`--allow-writes\`. \`${cli} personal mcp config\` prints the setup for`,
     "any other MCP client.",
     "",
+    ...(facts.api
+      ? [
+          // NEED-2731 B: `ask` stays the default for the api group's deletes; over MCP nobody answers it, so say so.
+          "Over MCP nobody is there to answer `ask`, so the agent runs the API's writes and deletes without asking. Each",
+          `one is kept as a run in \`${cli} personal runs list\`. To stop that, make the profile read-only with`,
+          `\`${cli} personal config set permissions.api readonly\`, or refuse one operation with`,
+          `\`${cli} personal config set permissions.api.<operation> deny\`. \`${cli} api list\` names the operations.`,
+          "",
+        ]
+      : []),
     "## What it can do",
     "",
     "[docs/commands.md](docs/commands.md) lists every command, and `--help` after any of them shows its flags.",
