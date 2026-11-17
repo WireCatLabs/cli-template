@@ -86,6 +86,9 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
   now gets a free monthly minute inside WC-CI-9's window and `config/parity-groups.json`, as a CLI outside WireCat
   already did, and `new` prints the entries for cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs'
   `tools.json`.
+- **The kit's test of the owner scripts runs on Windows.** It started `bin/setup-github` and `bin/live` by path,
+  which Windows cannot do for a script with a shebang, and the 0.25.0 release stopped on it. It now runs them with
+  `node`.
 
 ## 0.24.0 — 13.11.2026
 
