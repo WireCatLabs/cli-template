@@ -493,6 +493,18 @@ export const withoutSignInCheck = (text: string): string => {
   return text.replace(check, "").replace(named, "")
 }
 
+// Without a sign-in the api group sends no token, and its test's fake expects none.
+export const withoutApiSignIn = (path: string, text: string): string => {
+  const cuts: Record<string, RegExp[]> = {
+    "src/commands/api.ts": [/^ \* The token is the profile's own.*\n/m, /^ {4}token: tokenOf,\n/m, /, tokenOf(?= \})/],
+    "src/api.test.ts": [/^import \{ FAKE_TOKEN \} from .*\n/m, /^ {4}token: FAKE_TOKEN,\n/m],
+  }
+  const own = cuts[path]
+  if (!own) return text
+  if (own.some((cut) => !cut.test(text))) throw new Error(`${path}: no token to take out of the api group`)
+  return own.reduce((rest, cut) => rest.replace(cut, ""), text)
+}
+
 // cli-core treats an unset or true `messenger` as a messenger and speaks of chats; the template says false.
 export const withMessenger = (text: string, category: string): string =>
   category === "messenger" ? text.replace(/^ {2}messenger: false,$/m, "  messenger: true,") : text
@@ -815,8 +827,9 @@ export const runNew = async (
   }
   if (spec) {
     const seeds = await specSeeds(source, names, spec)
-    for (const [path, content] of downloaded ? withDownloadedSpec(seeds, names, downloaded) : seeds) {
+    for (const [path, seed] of downloaded ? withDownloadedSpec(seeds, names, downloaded) : seeds) {
       if (rendered.has(path)) throw new Error(`the ${spec} seed ${path} would replace a template file`)
+      const content = answers.signIn?.[0] === "none" ? withoutApiSignIn(path, seed.toString("utf8")) : seed
       if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
       await writeOut(target, path, content)
     }

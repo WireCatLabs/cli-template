@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { fakeApi, sampleOf } from "@wirecat/cli-base/codegen"
-import { apiFlagOf, manifestBaseUrl } from "@wirecat/cli-core/cli"
+import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
 import { definitions } from "./generated/definitions.js"
@@ -9,28 +9,27 @@ import { FAKE_TOKEN } from "./testing/fake-comments.js"
 import { runCli } from "./testing/harness.js"
 
 const configFile = join(process.env.CLIDEV_CONFIG_DIR ?? "", "config.json")
+const upload = join(process.env.CLIDEV_CONFIG_DIR ?? "", "..", "upload.bin")
 const withPermissions = (permissions: Record<string, string>) => {
   mkdirSync(join(configFile, ".."), { recursive: true })
   writeFileSync(configFile, JSON.stringify({ profiles: { personal: { permissions } } }))
 }
-afterEach(() => rmSync(configFile, { force: true }))
+afterEach(() => {
+  rmSync(configFile, { force: true })
+  rmSync(upload, { force: true })
+})
 
 type Operation = (typeof API.manifest.operations)[number]
 
-// The generated manifest has no `security` when the spec declares none at the top; then nothing is signed.
-const documentSecurity = (API.manifest as { security?: Operation["security"] }).security
-
+// The fake checks each call's path, parameters and body, and the token where its security, else the spec's, names it.
 const fake = () =>
   fakeApi({
-    // fakeApi reads only each operation's own security; the CLI falls back to the document's, as `security: []`.
-    operations: API.manifest.operations.map((operation) => ({
-      ...operation,
-      security: operation.security ?? documentSecurity ?? [],
-    })),
+    operations: API.manifest.operations,
     definitions,
     baseUrl: manifestBaseUrl(API.manifest),
-    // SAMPLE: the header the spec's sign-in names; an `apiKey` scheme sends the bare token in its own header.
-    auth: { header: "authorization", value: `Bearer ${FAKE_TOKEN}` },
+    security: API.manifest.security,
+    securitySchemes: API.manifest.securitySchemes,
+    token: FAKE_TOKEN,
   })
 
 const deleteKeys = [
@@ -45,6 +44,7 @@ const argsOf = (operation: Operation) => [
   ...operation.parameters
     .filter((parameter) => parameter.required)
     .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, String(sampleOf(parameter.schema, definitions))]),
+  ...(sendsBytes(operation) ? ["--body-file", upload] : []),
   ...(operation.request?.schema
     ? ["--body", JSON.stringify(sampleOf({ type: "ref", ref: operation.request.schema }, definitions))]
     : []),
@@ -57,8 +57,9 @@ it("the spec offers operations", () => {
 
 // One test each, so a large API stays inside the per-test timeout and a failure names its operation.
 it.each(API.manifest.operations.map((operation) => [operation.command, operation] as const))(
-  "sends %s as the spec describes it, with the profile's token",
+  "sends %s as the spec describes it",
   async (_, operation) => {
+    writeFileSync(upload, new Uint8Array([0x89, 0x50, 0x4e, 0x47]))
     withPermissions({ api: "allow", ...Object.fromEntries(deleteKeys.map((key) => [key, "allow"])) })
     const service = fake()
     const ran = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--json"], { service })

@@ -9,8 +9,8 @@ import { DESKTOP, IDENTITY } from "../identity.js"
 /**
  * The service's raw API from its spec, `api list`, `api show` and one command per operation, through cli-core's shared
  * group. The manifest gives the server, the sign-in header, the paging of `--all` and the keys: each write asks or
- * refuses by `api.<operation>`, a delete or a share also by its key. The requests keep the profile's pace, and the
- * token is the profile's own, read by `tokenOf` like every other command's.
+ * refuses by `api.<operation>`, a delete or a share also by its key. The requests keep the profile's pace.
+ * The token is the profile's own, read by `tokenOf` like every other command's.
  */
 export const apiCommand = (): Command =>
   serviceApiCommand({
