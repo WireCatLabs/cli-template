@@ -5,6 +5,49 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.26.0 — 17.11.2026
+
+### Added
+
+- **`new --preset generic` for a CLI outside WireCat.** It needs only the name and `--owner`: the command word is the
+  name without `-cli`, the package `@<owner>/<name>`, and the questions only WireCat's store, search and Desktop need
+  get neutral answers. Any flag given wins, and a `@wirecat/` package is refused. `template.json` records the preset,
+  and `bin/release` and `release-start.yml` then need no recorded live check
+  ([kit reference](kit/README.md#new-name)).
+- **An agent skill for building a CLI from an API description**, installed with `npx skills add
+  WireCatLabs/cli-template` ([SKILL.md](SKILL.md)), without WireCat's own repositories and reviews.
+- **The README opens with a demo GIF**: `new --spec-url` on PokeAPI's description, 102 commands, a real call and
+  `mcp check`. `pnpm kit:images --gif --local` renders it from this checkout and shrinks it with gifsicle.- **A new CLI's README follows tg-cli's order**: the gains, what you get and why, then the quick start and the agent
+  setup, as cli-base's README rule asks.
+- **`new --spec-url <url>` downloads the service's API description and builds the api group from it.** OpenAPI 3 or
+  Swagger 2.0, JSON or YAML, https only (or http from localhost), at most 20 MB. `new` writes the description's
+  servers into the identity's `hosts`, a recorded patch when they are relative to its URL, its title as the service's
+  name, and drops the path prefix every operation shares from the command names
+  ([openapi](kit/skills/new-cli/references/openapi.md#new---spec-url-url)).
+- **A CLI made with `--spec openapi` or `--spec swagger` reads YAML descriptions.** `scripts/sync-spec.ts` and
+  `scripts/spec-model.ts` read JSON and YAML, with `yaml` in the CLI's `devDependencies`.
+
+### Fixed
+
+- **The new-cli skill points a documents CLI at cli-core's `documentLibraryCommands`** and at ydisk-cli as the
+  reference for its wiring, with drive-cli for the command tree and notion-cli for a source with a change feed. It
+  said drive-cli predates the shared commands; drive-cli runs them now. It also names `FeedlessDocumentSource` and
+  `fileText` ([sources](kit/skills/new-cli/references/sources.md)).
+- **Coverage leaves out `src/generated/`.** A CLI made with `new --spec` failed its coverage thresholds on the
+  generated schemas, which `src/api.test.ts` already sends every operation through.
+- **The README describes the kit.** The GitHub and npm page opened with the placeholder `clidev` and explained
+  nothing about the template. It now leads with the CLI and MCP server you get from `new`, a quick start, a comparison with other
+  tools and what the template does not do. Its banner is rendered from `kit/images/src/banner.html` by
+  `pnpm kit:images`, which also renders the GIF from `kit/images/src/new.tape` once VHS can run.
+- **A CLI made with `--sign-in none` has no sign-in check in its MCP command**, so `mcp check` reports it healthy
+  instead of waiting for an account it never needs.
+- **A CLI made with `new --spec` builds before its first `pnpm generate`.** `pnpm build` and `pnpm typecheck`
+  failed with a type error on the missing `src/generated/`, and `doctor` then crashed. Both now generate once when
+  `src/generated/` is missing.
+- **The api group's test fits any API.** It sends each operation as a test of its own, so a large API stays within
+  the test timeout, checks a delete only when the API has one, and gives the fake the document's sign-in when an
+  operation names none, as `security: []` does.
+
 ## 0.25.0 — 17.11.2026
 
 ### Added
