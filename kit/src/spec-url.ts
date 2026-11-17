@@ -192,6 +192,7 @@ export const introspectSpec = async (raw: string, fetch: SpecFetch = globalThis.
     const { syncGraphql } = await import("@wirecat/cli-base/codegen")
     const provenance = await syncGraphql({ url: url.href, dir, fetch: fetch as typeof globalThis.fetch })
     const text = await readFile(join(dir, "schema.json"), "utf8")
+    if (text.length > SPEC_MAX_BYTES) throw new Error(`${url.href}'s schema is larger than 20 MB; check it by hand`)
     return {
       url: url.href,
       kind: "graphql",

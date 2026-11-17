@@ -5,7 +5,7 @@ import { parseCliConfig } from "@wirecat/cli-core/manifest"
 import config from "../wirecat.config.ts"
 
 // wirecat.config.ts → src/generated/wirecat-config.ts, what the CLI reads of it at run time: the call that checks a
-// token and the CRM source. src/ cannot import the config itself: it sits outside src/ and the bin is bundled.
+// token and the source. src/ cannot import the config itself: it sits outside src/ and the bin is bundled.
 const root = join(import.meta.dirname, "..")
 const out = join(root, "src/generated/wirecat-config.ts")
 if (process.argv.includes("--if-missing") && existsSync(out)) process.exit(0)
@@ -42,11 +42,17 @@ const text = formatted(
     "",
     ...(hooksImport
       ? [`export { hooks as HOOKS } from "${hooksImport}"`]
-      : [
-          'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
-          "",
-          "export const HOOKS: CrmManifestHooks | undefined = undefined",
-        ]),
+      : cli.category === "tracker"
+        ? [
+            'import type { TrackerManifestHooks } from "@wirecat/cli-core/tracker"',
+            "",
+            "export const HOOKS: TrackerManifestHooks | undefined = undefined",
+          ]
+        : [
+            'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
+            "",
+            "export const HOOKS: CrmManifestHooks | undefined = undefined",
+          ]),
     "",
   ].join("\n"),
 )

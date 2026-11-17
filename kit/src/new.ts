@@ -757,7 +757,7 @@ const RUN_SCOPE = "src/run-scope.test.ts"
 
 /**
  * run-scope over a config's wiring: `session start` checks the token with the API, so the answering fake answers the
- * API's host too; `sync` is cli-core's, run in its own run and tested by crmSyncContract.
+ * API's host too; `sync` is cli-core's, run in its own run and tested by the source's contracts test.
  */
 export const withConfigRunScope = (
   text: string,

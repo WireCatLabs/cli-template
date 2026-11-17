@@ -72,7 +72,7 @@ const notWiredYet = (config: CliConfig): string[] => [
   ...(config.source && config.category === "tracker"
     ? ["source: the tracker's write commands, and its items in the shared search; sync and the reads are built"]
     : []),
-  ...(config.spec.kind === "graphql"
+  ...(config.spec.kind === "graphql" && config.auth.preset !== "none"
     ? ["auth: the header the key travels in is the sample's Authorization in scripts/generate.ts; check its docs"]
     : []),
 ]
