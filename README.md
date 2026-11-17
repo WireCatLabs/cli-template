@@ -6,7 +6,7 @@
 
 <p align="center">
   Turn an API description into a CLI your agent can use in Claude Code, Codex or any app that speaks MCP. One
-  command gives you the CLI, an MCP server, an agent skill and a test for every operation. When the template
+  command gives you the CLI with an MCP server, and a test for every operation of the API. When the template
   improves, its upgrade command merges the change into the CLI you already edited.
 </p>
 
