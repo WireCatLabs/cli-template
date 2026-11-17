@@ -780,7 +780,7 @@ export const withConfigRunScope = (text: string, { verifies, crm }: { verifies: 
           'import { withServiceApi } from "./testing/fake-api.js"\nimport { signedIn } from "./testing/harness.js"\n',
         ),
         "fetch: fakeComments().fetch, stdin: stdin()",
-        "fetch: withServiceApi(fakeComments()).fetch, stdin: stdin()",
+        "fetch: withServiceApi(fakeComments(), FAKE_TOKEN).fetch, stdin: stdin()",
       )
     : text
   return crm

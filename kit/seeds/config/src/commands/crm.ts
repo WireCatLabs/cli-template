@@ -87,7 +87,7 @@ const open = async (command: Command, { readOnly }: { readOnly: boolean }): Prom
   }
 }
 
-/** cli-core's CRM commands over the source wirecat.config.ts describes: sync, store status, deals, people. */
+/** cli-core's CRM commands over the source wirecat.config.ts describes: sync, store status, deals, search. */
 export const crmCommands = (): Command[] => {
   const holder = new Command(IDENTITY.command)
   addCrmCommands(holder, {

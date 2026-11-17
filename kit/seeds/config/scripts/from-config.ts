@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { dirname, join, relative } from "node:path"
+import { dirname, isAbsolute, join, relative, sep } from "node:path"
 import { parseCliConfig } from "@wirecat/cli-core/manifest"
 import config from "../wirecat.config.ts"
 
@@ -16,10 +16,14 @@ const literal = (value: unknown) => (value === undefined ? "undefined" : JSON.st
 // The hooks module is imported from src/generated/, inside the bundle: it must live under src/.
 const hooksImport = (() => {
   if (!cli.hooks) return undefined
-  const path = relative(join(root, "src/generated"), join(root, cli.hooks)).replace(/\.([cm]?)ts$/, ".$1js")
-  if (!join(root, cli.hooks).startsWith(join(root, "src")))
+  const file = join(root, cli.hooks)
+  const inSrc = relative(join(root, "src"), file)
+  if (inSrc.startsWith("..") || isAbsolute(inSrc))
     throw new Error(`wirecat.config: hooks: ${cli.hooks} must be under ./src/, where the bundle reaches it`)
-  return path.startsWith(".") ? path : `./${path}`
+  return relative(join(root, "src/generated"), file)
+    .split(sep)
+    .join("/")
+    .replace(/\.([cm]?)ts$/, ".$1js")
 })()
 // Formatted as scripts/generate.ts formats its files, so lint and --check agree.
 const formatted = (content: string) =>

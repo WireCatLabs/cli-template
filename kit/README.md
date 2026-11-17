@@ -88,9 +88,11 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
 
 - `pnpm generate` first writes `src/generated/wirecat-config.ts` from the config (`scripts/from-config.ts`): the
   token check, the source and the hooks, which `src/` reads; the config stays the one file to edit.
+- A CRM `source` needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
+  holds at `new`, and `pnpm generate` then reads their values again.
 - With `auth.verify`, `session start` is cli-core's `tokenSessionCommand`: it checks a token with that operation and
   keeps the account's id from the answer.
-- With a `source`, `src/commands/crm.ts` mounts cli-core's CRM commands (`sync`, `store status`, `deals`, `people`…)
+- With a `source`, `src/commands/crm.ts` mounts cli-core's CRM commands (`sync`, `store status`, `deals`, `search`…)
   over `crmSourceFromManifest`, the store keyed by the account `session start` checked.
 - Tests come with them: `src/commands/session.test.ts` signs in against a fake of the API, and
   `src/crm-contracts.test.ts` runs `crmSourceContract` and `crmSyncContract`. `lint/contract-exceptions.json` excepts

@@ -92,7 +92,7 @@ describe("new --from-config", () => {
     expect(read(dir, "src/commands/session.test.ts")).toContain("recalledAccount(")
     expect(read(dir, "src/identity.ts")).toContain('  syncs: "your people",')
     const runScope = read(dir, "src/run-scope.test.ts")
-    expect(runScope).toContain("fetch: withServiceApi(fakeComments()).fetch")
+    expect(runScope).toContain("fetch: withServiceApi(fakeComments(), FAKE_TOKEN).fetch")
     expect(runScope).toContain("sync: \"cli-core's addCrmCommands runs it in its run")
     expect(read(dir, "src/program.ts")).toMatch(/apiCommand\(\),\n +\.\.\.crmCommands\(\),/)
     expect(read(dir, "src/crm-contracts.test.ts")).toContain("crmSourceContract(")
@@ -110,6 +110,16 @@ describe("new --from-config", () => {
     writeFileSync(join(cwd, "wirecat.config.ts"), CONFIG.replace('"WCACME"', '"wc-acme"'))
 
     await expect(loadCliConfig(join(cwd, "wirecat.config.ts"))).rejects.toThrow("wirecat.config: identity.prefix")
+  })
+
+  it("refuses a CRM source without a token check that names the account", async () => {
+    const cwd = tempDir("from-config-crm-unverified")
+    writeFileSync(
+      join(cwd, "wirecat.config.ts"),
+      CONFIG.replace('category: "other",', 'category: "crm",\n  source: { provider: "acme" },'),
+    )
+
+    await expect(loadCliConfig(join(cwd, "wirecat.config.ts"))).rejects.toThrow("a CRM source needs auth")
   })
 
   it("refuses a flag or a folder name the config already sets", async () => {

@@ -46,6 +46,12 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
     throw new Error(`${path}: export the config as default: export default defineCli({…})`)
   const config = parseCliConfig(module.default)
   const verifies = config.auth.preset === "token" && config.auth.verify !== undefined
+  // The CRM commands key the store by the account session start checked; the sample's session checks nothing real.
+  if (config.source && !verifies)
+    throw new Error(
+      'wirecat.config: auth: a CRM source needs auth: { preset: "token", verify: { … } } yet, so session start ' +
+        "checks the token and names the account",
+    )
   return { config, text: await readFile(full, "utf8"), pending: notWiredYet(config), verifies }
 }
 
@@ -56,7 +62,7 @@ const notWiredYet = (config: CliConfig): string[] => [
     ? ["auth: the oauth2-pkce sign-in; session keeps the template's sample"]
     : []),
   ...(config.auth.preset === "token" && !config.auth.verify
-    ? ["auth.verify: the call that checks a token; session keeps the template's sample until it is named"]
+    ? ["auth.verify: the call that checks a token; without it at new, session keeps the template's sample"]
     : []),
   ...(config.source
     ? ["source: the CRM's write commands (crmWriteContract is excepted in lint/contract-exceptions.json)"]

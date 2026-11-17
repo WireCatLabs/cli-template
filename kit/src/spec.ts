@@ -79,7 +79,7 @@ export const withSpecPackage = (
 
 export const replaceOnce = (file: string, text: string, from: string | RegExp, to: string): string => {
   const next = text.replace(from, to)
-  if (next === text) throw new Error(`${file}: no ${String(from)} to put the api group beside`)
+  if (next === text) throw new Error(`${file}: no ${String(from)} to change; the template moved it`)
   return next
 }
 

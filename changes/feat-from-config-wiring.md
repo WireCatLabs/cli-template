@@ -7,8 +7,10 @@
 - **Its tests cover that wiring.** `src/commands/session.test.ts` signs in against a fake of the API built from its
   description. `src/crm-contracts.test.ts` runs cli-core's `crmSourceContract` over `crmManifestFixture` and
   `crmSyncContract` over the store. `lint/contract-exceptions.json` excepts `crmWriteContract` with its reason, as the
-  source only reads. The CLI says what `sync` copies in (`syncs`), so `cli-dev ready` passes every row but the live
-  check, which the owner runs.
+  source only reads. The CLI says what `sync` copies in (`syncs`). On a fresh CLI `cli-dev ready` verifies every row
+  but two: the contracts row is partial for that exception, and the live check is the owner's to run.
+- **`new --from-config` refuses a CRM `source` without `auth: { preset: "token", verify }`**, the only sign-in that
+  names the account the store keeps the rows under; `pnpm source:check` checks that `auth.verify` is a read.
 
 ### Changed — may break callers
 
