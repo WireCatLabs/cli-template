@@ -119,7 +119,7 @@ describe("new --from-config", () => {
       CONFIG.replace('category: "other",', 'category: "crm",\n  source: { provider: "acme" },'),
     )
 
-    await expect(loadCliConfig(join(cwd, "wirecat.config.ts"))).rejects.toThrow("a CRM source needs auth")
+    await expect(loadCliConfig(join(cwd, "wirecat.config.ts"))).rejects.toThrow("a source needs auth")
   })
 
   it("refuses a flag or a folder name the config already sets", async () => {

@@ -17,7 +17,7 @@ new asks for every missing answer in a terminal; without one, a missing answer i
   --owner <owner>       the GitHub owner of the repository
   --tagline <line>      ${TAGLINE_QUESTION.text}; left out, it is made from the description
   --spec-url <url>      download the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML, for the api group;
-                        https only, or http from localhost
+                        with --spec graphql, ask that endpoint for its schema; https only, or http from localhost
   --from-config <file>  take the names, the API description's URL, the sign-in and the category from a
                         wirecat.config.ts (defineCli from @wirecat/cli-core/manifest), and copy it into the CLI with
                         pnpm source:check; leave out <name> and the flags it sets

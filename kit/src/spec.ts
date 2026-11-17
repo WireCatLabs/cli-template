@@ -6,7 +6,7 @@ import { renameContent, renamer } from "./rename.js"
 import type { TemplateSource } from "./source.js"
 import type { DownloadedSpec } from "./spec-url.js"
 
-export const SPEC_KINDS = ["openapi", "swagger", "discovery"] as const
+export const SPEC_KINDS = ["openapi", "swagger", "discovery", "graphql"] as const
 export type SpecKind = (typeof SPEC_KINDS)[number]
 
 export const specKindOf = (answer: string | undefined): SpecKind | undefined =>
@@ -28,7 +28,8 @@ const walk = async (dir: string): Promise<string[]> => {
 export const specSeeds = async (source: TemplateSource, names: Names, kind: SpecKind): Promise<Map<string, Buffer>> => {
   const rename = renamer(source.manifest.placeholders, names)
   const files = new Map<string, Buffer>()
-  for (const part of ["shared", kind === "discovery" ? "" : "openapi-scripts", kind].filter(Boolean)) {
+  const openapi = kind === "openapi" || kind === "swagger"
+  for (const part of ["shared", openapi ? "openapi-scripts" : "", kind].filter(Boolean)) {
     const dir = join(source.root, SEEDS, part)
     for (const full of await walk(dir)) {
       const path = relative(dir, full).split(sep).join("/")
@@ -63,7 +64,7 @@ export const withSpecPackage = (
   step("build", `${GENERATE} --if-missing`)
   step("typecheck", `${GENERATE} --if-missing`)
   scripts["spec:sync"] = "node --experimental-strip-types scripts/sync-spec.ts"
-  if (kind !== "discovery") {
+  if (kind === "openapi" || kind === "swagger") {
     if (!yaml) throw new Error("the template's package.json pins no yaml, which reads a YAML description")
     pkg.devDependencies = { ...(isRecord(pkg.devDependencies) ? pkg.devDependencies : {}), yaml }
   }
@@ -190,7 +191,7 @@ export const withApiSkill = (text: string): string =>
     ],
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("scripts/commands.ts", rest, from, to), text)
 
-const SAMPLE_DOCUMENTS = ["openapi.json", "swagger.json", "provenance.json"]
+const SAMPLE_DOCUMENTS = ["openapi.json", "swagger.json", "schema.json", "provenance.json"]
 
 /** The seeds with the downloaded description in place of the sample's, its corrections, and its own permission group. */
 export const withDownloadedSpec = (
@@ -206,12 +207,17 @@ export const withDownloadedSpec = (
     retrieved_at: now.toISOString(),
   }
   files.set(`${dir}/${spec.file}`, Buffer.from(spec.text))
-  files.set(`${dir}/provenance.json`, Buffer.from(`${JSON.stringify(provenance, null, 2)}\n`))
+  files.set(`${dir}/provenance.json`, Buffer.from(spec.provenance ?? `${JSON.stringify(provenance, null, 2)}\n`))
   const edit = (path: string, from: string, to: string) => {
     const text = files.get(path)?.toString("utf8") ?? ""
     files.set(path, Buffer.from(replaceOnce(path, text, from, to)))
   }
   edit("scripts/generate.ts", 'group: "comments"', `group: ${JSON.stringify(names.command)}`)
+  if (spec.kind === "graphql") {
+    const sample = '"https://comments.example.invalid/graphql"'
+    edit("scripts/spec-model.ts", sample, JSON.stringify(spec.url))
+    edit("scripts/sync-spec.ts", sample, JSON.stringify(spec.url))
+  }
   if (spec.prefix.length)
     edit(
       "scripts/generate.ts",

@@ -1,5 +1,6 @@
 import { crmManifestProblems, parseCrmManifest } from "@wirecat/cli-core/crm"
 import { parseCliConfig } from "@wirecat/cli-core/manifest"
+import { parseTrackerManifest } from "@wirecat/cli-core/tracker"
 import { definitions } from "../dist/generated/definitions.js"
 import * as api from "../dist/generated/manifest.js"
 import config from "../wirecat.config.ts"
@@ -21,6 +22,11 @@ const problemsOf = (): { problems: string[]; crm: boolean } => {
           ? [`auth.verify: ${verify.operation} is not a read, and session start sends only reads`]
           : []
     if (!cli.source) return { problems: verifying, crm: false }
+    if (cli.category === "tracker") {
+      // Refuses a map path the selection leaves out, which would read as "the tracker cleared it".
+      parseTrackerManifest(cli.source, api)
+      return { problems: verifying, crm: true }
+    }
     return {
       problems: [...verifying, ...crmManifestProblems(parseCrmManifest(cli.source, api), api, definitions)],
       crm: true,

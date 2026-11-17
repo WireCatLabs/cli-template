@@ -63,7 +63,8 @@ export const INTERVIEW: Question[] = [
     title: "Category",
     flag: "category",
     text: "What kind of tool is it?",
-    choices: Object.values(CATEGORIES),
+    // A tracker's items are not a kind a search reads yet, so it has no key in CATEGORIES.
+    choices: [...Object.values(CATEGORIES), { value: "tracker", label: "issue tracker (issues, projects, teams)" }],
   },
   {
     key: "contentLang",
@@ -105,6 +106,7 @@ export const INTERVIEW: Question[] = [
       { value: "openapi", label: "OpenAPI 3.0 or 3.1" },
       { value: "swagger", label: "Swagger 2.0" },
       { value: "discovery", label: "Google Discovery" },
+      { value: "graphql", label: "a GraphQL schema (introspection)" },
       { value: "none", label: "none" },
     ],
   },
@@ -145,6 +147,7 @@ export const INTERVIEW: Question[] = [
     choices: [
       { value: "messages", label: "messages from other people", categories: ["messenger", "mail"] },
       { value: "records", label: "deals, contacts and comments others entered", categories: ["crm"] },
+      { value: "issues", label: "issues and comments others wrote", categories: ["tracker"] },
       { value: "invitations", label: "invitations and event descriptions from others", categories: ["calendar"] },
       { value: "transcripts", label: "what other attendees said or wrote", categories: ["meetings"] },
       { value: "files", label: "files and attachments" },

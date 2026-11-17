@@ -35,6 +35,28 @@ describe("the --spec seeds", () => {
   })
 })
 
+it("graphql: the endpoint as its one server, one command per root field, a delete key, a key in a header", async () => {
+  const model = await modelOf("graphql", "graphql")
+  const [manifest] = generate(model, [manifestGenerator({ path: "manifest.ts" })], {
+    banner: ["test"],
+    names: { fromPath: true },
+    permissions: { group: "comments" },
+    auth: {
+      securitySchemes: { key: { type: "apiKey", in: "header", name: "Authorization" } },
+      security: [{ key: [] }],
+      reason: "test",
+    },
+  })
+
+  expect(model.servers?.map((one) => one.url)).toEqual(["https://comments.example.invalid/graphql"])
+  for (const command of ["comments", "comment", "comment-create", "comment-delete"])
+    expect(manifest?.content).toContain(`"command": "${command}"`)
+  expect(manifest?.content).toContain('"key": "comments.delete"')
+  expect(readFileSync(join(seeds, "graphql/scripts/generate.ts"), "utf8")).toContain(
+    'securitySchemes: { key: { type: "apiKey", in: "header", name: "Authorization" } }',
+  )
+})
+
 it("gives a CLI without sign-in an api group and a test fake with no token", () => {
   const seed = (path: string) => readFileSync(join(seeds, "shared", path), "utf8")
   const api = withoutApiSignIn("src/commands/api.ts", seed("src/commands/api.ts"))
@@ -44,4 +66,13 @@ it("gives a CLI without sign-in an api group and a test fake with no token", () 
   expect(test).not.toContain("FAKE_TOKEN")
   expect(withoutApiSignIn("src/config.ts", "as it was")).toBe("as it was")
   expect(() => withoutApiSignIn("src/commands/api.ts", "")).toThrow("src/commands/api.ts: no token to take out")
+})
+
+it("takes the key out of a GraphQL CLI without sign-in: the fake's header and the generator's auth", () => {
+  const seed = (path: string) => readFileSync(join(seeds, "graphql", path), "utf8")
+  const test = withoutApiSignIn("src/api.test.ts", seed("src/api.test.ts"))
+  const generator = withoutApiSignIn("scripts/generate.ts", seed("scripts/generate.ts"))
+  expect(test).not.toContain("FAKE_TOKEN")
+  expect(generator).not.toContain("auth:")
+  expect(generator).toContain("pagination: true,\n  },")
 })
