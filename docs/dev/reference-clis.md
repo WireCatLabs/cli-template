@@ -8,7 +8,7 @@ picked by the first question of the [design interview](skills/design-interview/S
 | --- | --- |
 | messenger | [whatsapp-cli](https://github.com/WireCatLabs/whatsapp-cli), then [tg-cli](https://github.com/WireCatLabs/tg-cli) and [max-cli](https://github.com/WireCatLabs/max-cli) |
 | mail | [mail-cli](https://github.com/WireCatLabs/mail-cli) |
-| files and documents | [yandex-disk-cli](https://github.com/WireCatLabs/yandex-disk-cli) for cli-core's `documentLibraryCommands` and the contracts, [drive-cli](https://github.com/WireCatLabs/drive-cli) for the command tree, [notion-cli](https://github.com/WireCatLabs/notion-cli) for a source with a change feed |
+| files and documents | [ydisk](https://github.com/WireCatLabs/ydisk) for cli-core's `documentLibraryCommands` and the contracts, [drive-cli](https://github.com/WireCatLabs/drive-cli) for the command tree, [notion-cli](https://github.com/WireCatLabs/notion-cli) for a source with a change feed |
 | calendar | [gcal-cli](https://github.com/WireCatLabs/gcal-cli) |
 | meetings | [zoom-cli](https://github.com/WireCatLabs/zoom-cli) |
 | notes | [cli-memo](https://github.com/WireCatLabs/cli-memo) |
