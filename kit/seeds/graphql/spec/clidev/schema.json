@@ -1,0 +1,414 @@
+{
+  "__schema": {
+    "mutationType": {
+      "name": "Mutation"
+    },
+    "queryType": {
+      "name": "Query"
+    },
+    "types": [
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": null,
+        "inputFields": null,
+        "kind": "SCALAR",
+        "name": "Boolean",
+        "possibleTypes": null
+      },
+      {
+        "description": "A comment",
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "body",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "createdAt",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "Comment",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "nodes",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Comment",
+                    "ofType": null
+                  }
+                }
+              }
+            }
+          },
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "pageInfo",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "PageInfo",
+                "ofType": null
+              }
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "CommentConnection",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "defaultValue": null,
+            "description": "The comment's text",
+            "name": "body",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          }
+        ],
+        "kind": "INPUT_OBJECT",
+        "name": "CommentCreateInput",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "success",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "comment",
+            "type": {
+              "kind": "OBJECT",
+              "name": "Comment",
+              "ofType": null
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "CommentPayload",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "success",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "DeletePayload",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": null,
+        "inputFields": null,
+        "kind": "SCALAR",
+        "name": "ID",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": null,
+        "inputFields": null,
+        "kind": "SCALAR",
+        "name": "Int",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [
+              {
+                "defaultValue": null,
+                "description": null,
+                "name": "input",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CommentCreateInput",
+                    "ofType": null
+                  }
+                }
+              }
+            ],
+            "description": "Adds a comment",
+            "isDeprecated": false,
+            "name": "commentCreate",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CommentPayload",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "args": [
+              {
+                "defaultValue": null,
+                "description": null,
+                "name": "id",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                }
+              }
+            ],
+            "description": "Deletes a comment",
+            "isDeprecated": false,
+            "name": "commentDelete",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "DeletePayload",
+                "ofType": null
+              }
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "Mutation",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "hasNextPage",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "args": [],
+            "description": null,
+            "isDeprecated": false,
+            "name": "endCursor",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "PageInfo",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": [
+          {
+            "args": [
+              {
+                "defaultValue": null,
+                "description": "How many comments on one page",
+                "name": "first",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                }
+              },
+              {
+                "defaultValue": null,
+                "description": "The cursor of the page before",
+                "name": "after",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            ],
+            "description": "Every comment, newest first",
+            "isDeprecated": false,
+            "name": "comments",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CommentConnection",
+                "ofType": null
+              }
+            }
+          },
+          {
+            "args": [
+              {
+                "defaultValue": null,
+                "description": "The comment's id",
+                "name": "id",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "ID",
+                    "ofType": null
+                  }
+                }
+              }
+            ],
+            "description": "One comment by its id",
+            "isDeprecated": false,
+            "name": "comment",
+            "type": {
+              "kind": "OBJECT",
+              "name": "Comment",
+              "ofType": null
+            }
+          }
+        ],
+        "inputFields": null,
+        "kind": "OBJECT",
+        "name": "Query",
+        "possibleTypes": null
+      },
+      {
+        "description": null,
+        "enumValues": null,
+        "fields": null,
+        "inputFields": null,
+        "kind": "SCALAR",
+        "name": "String",
+        "possibleTypes": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "source": "https://comments.example.invalid/graphql",
+  "sha256": "d7edcd7d435219f677916dab06fcf56423250500bb933183ce43458be2fd9685",
+  "retrieved_at": "2026-11-17T00:00:00.000Z",
+  "normalization": "types sorted by name, object keys sorted, 2-space JSON"
+}

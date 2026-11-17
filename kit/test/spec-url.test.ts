@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { runNew } from "../src/new.js"
@@ -187,5 +187,33 @@ describe("a CLI made with --spec", () => {
     for (const key of ["build", "typecheck"])
       expect(scripts[key], key).toMatch(/^node --experimental-strip-types scripts\/generate\.ts --if-missing && /)
     expect(read(join(cwd, "cal-cli"), "scripts/generate.ts")).toContain('process.argv.includes("--if-missing")')
+  })
+})
+
+describe("new --spec graphql --spec-url", () => {
+  const root = join(import.meta.dirname, "../..")
+  const schema = readFileSync(join(import.meta.dirname, "../seeds/graphql/spec/clidev/schema.json"), "utf8")
+  const flags = { ...NOTES_FLAGS, spec: "graphql", "spec-url": "https://api.notes.example/graphql" }
+
+  it("asks the endpoint for its schema as spec:sync does, and points the scripts at it", async () => {
+    const cwd = tempDir("spec-graphql")
+    const { fetch, asked } = serve({ body: JSON.stringify({ data: JSON.parse(schema) }) })
+
+    const out = await runNew(cwd, await loadSource(root), { name: "cal-cli", flags }, io(), fetch)
+
+    const dir = join(cwd, "cal-cli")
+    expect(asked.map((one) => [one.url, one.init.method])).toEqual([["https://api.notes.example/graphql", "POST"]])
+    expect(read(dir, "spec/cal/schema.json")).toBe(schema)
+    const provenance = JSON.parse(read(dir, "spec/cal/provenance.json"))
+    expect(provenance).toMatchObject({
+      source: "https://api.notes.example/graphql",
+      sha256: createHash("sha256").update(schema).digest("hex"),
+    })
+    expect(read(dir, "scripts/spec-model.ts")).toContain('const URL = "https://api.notes.example/graphql"')
+    expect(read(dir, "scripts/sync-spec.ts")).toContain('url: "https://api.notes.example/graphql"')
+    expect(read(dir, "scripts/generate.ts")).toContain('group: "cal"')
+    expect(read(dir, "src/identity.ts")).toContain('"api.notes.example"')
+    expect(JSON.parse(read(dir, "package.json")).devDependencies.yaml).toBeUndefined()
+    expect(out).toContain("Downloaded api.notes.example, 4 operations, into spec/cal/schema.json")
   })
 })

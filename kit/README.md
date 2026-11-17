@@ -89,16 +89,22 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
 
 - `pnpm generate` first writes `src/generated/wirecat-config.ts` from the config (`scripts/from-config.ts`): the
   token check, the source and the hooks, which `src/` reads; the config stays the one file to edit.
-- A CRM `source` needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
+- A `source` (a `crm` or a `tracker` category) needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
   holds at `new`, and `pnpm generate` then reads their values again.
 - With `auth.verify`, `session start` is cli-core's `tokenSessionCommand`: it checks a token with that operation and
   keeps the account's id from the answer.
 - With a `source`, `src/commands/crm.ts` mounts cli-core's CRM commands (`sync`, `store status`, `deals`, `search`…)
-  over `crmSourceFromManifest`, the store keyed by the account `session start` checked.
+  over `crmSourceFromManifest`, the store keyed by the account `session start` checked. A `tracker` source gets
+  `src/commands/tracker.ts` in its place: cli-core's tracker commands (`sync`, `issues`, `projects`…) over
+  `trackerSourceFromManifest`, usually with `spec: { kind: "graphql", from: "<endpoint>" }`. `new` asks the endpoint
+  for its schema by introspection; a GraphQL schema names no sign-in, so the header the key travels in is `auth` in
+  `scripts/generate.ts`, the sample's `Authorization` until you check the service's documentation.
 - Tests come with them: `src/commands/session.test.ts` signs in against a fake of the API, and
   `src/crm-contracts.test.ts` runs `crmSourceContract` and `crmSyncContract`. `lint/contract-exceptions.json` excepts
   `crmWriteContract`, as the source only reads. A list the generator finds no paging for fails the contract's
-  cut-list case on purpose: describe the paging in the API description or an override.
+  cut-list case on purpose: describe the paging in the API description or an override. A tracker's
+  `src/tracker-contracts.test.ts` checks the source against the generated API and syncs through the CLI over a fake
+  of the schema.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
 
@@ -112,15 +118,15 @@ choices. Nothing is guessed.
 | `--package` | the npm package name |
 | `--owner` | the GitHub owner |
 | `--tagline` | the line WireCat Desktop shows, at most 55 characters; left out, it is made from the description |
-| `--category` | one for each of cli-core's kinds: `messenger`, `mail`, `notes`, `files`, `meetings`, `calendar`, `crm` |
+| `--category` | one for each of cli-core's kinds: `messenger`, `mail`, `notes`, `files`, `meetings`, `calendar`, `crm`; and `tracker` |
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |
-| `--spec` | `openapi`, `swagger`, `discovery`, `none`; left out with `--spec-url`, it is the downloaded description's |
-| `--spec-url` | the URL of the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML |
+| `--spec` | `openapi`, `swagger`, `discovery`, `graphql`, `none`; left out with `--spec-url`, it is the downloaded description's |
+| `--spec-url` | the URL of the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML; with `--spec graphql`, the endpoint |
 | `--filters` | several of `time`, `person`, `container`, `text`, `status` |
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |
-| `--untrusted` | several of `files`, `links`, `names`, and for its category `messages` (messenger, mail), `records` (crm), `invitations` (calendar), `transcripts` (meetings); or `none` alone |
+| `--untrusted` | several of `files`, `links`, `names`, and for its category `messages` (messenger, mail), `records` (crm), `issues` (tracker), `invitations` (calendar), `transcripts` (meetings); or `none` alone |
 
 Every question except the names, `--tagline` and `--content-lang` also takes `other:<your answer>`. `--tagline` is the
 one answer with a default: left out, it is the description cut on a word at 55 characters, and in a terminal an empty

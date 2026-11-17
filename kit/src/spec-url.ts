@@ -1,4 +1,7 @@
 import { createHash } from "node:crypto"
+import { mkdtemp, readFile, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { isRecord } from "./manifest.js"
 import type { SpecKind } from "./spec.js"
 
@@ -16,6 +19,8 @@ export type DownloadedSpec = {
   kind: Exclude<SpecKind, "discovery">
   file: string
   text: string
+  /** provenance.json as written; absent, new writes it from `url` and `sha256`. */
+  provenance?: string
   sha256: string
   title: string
   operations: number
@@ -167,5 +172,41 @@ export const downloadSpec = async (
     operations: countOperations(document),
     prefix: sharedPrefix(document),
     ...serversOf(kind, document, url),
+  }
+}
+
+const rootFields = (schema: unknown): number => {
+  const inner = isRecord(schema) && isRecord(schema.__schema) ? schema.__schema : {}
+  const roots = [inner.queryType, inner.mutationType].flatMap((root) => (isRecord(root) ? [root.name] : []))
+  const types = Array.isArray(inner.types) ? inner.types.filter(isRecord) : []
+  return types
+    .filter((type) => roots.includes(type.name))
+    .reduce((sum, type) => sum + (Array.isArray(type.fields) ? type.fields.length : 0), 0)
+}
+
+/** The endpoint's schema, asked by introspection as `pnpm spec:sync` asks it, so the first sync is no diff. */
+export const introspectSpec = async (raw: string, fetch: SpecFetch = globalThis.fetch): Promise<DownloadedSpec> => {
+  const url = checkSpecUrl(raw)
+  const dir = await mkdtemp(join(tmpdir(), "clidev-graphql-"))
+  try {
+    const { syncGraphql } = await import("@wirecat/cli-base/codegen")
+    const provenance = await syncGraphql({ url: url.href, dir, fetch: fetch as typeof globalThis.fetch })
+    const text = await readFile(join(dir, "schema.json"), "utf8")
+    if (text.length > SPEC_MAX_BYTES) throw new Error(`${url.href}'s schema is larger than 20 MB; check it by hand`)
+    return {
+      url: url.href,
+      kind: "graphql",
+      file: "schema.json",
+      text,
+      provenance: await readFile(join(dir, "provenance.json"), "utf8"),
+      sha256: provenance.sha256,
+      title: url.hostname,
+      operations: rootFields(JSON.parse(text)),
+      hosts: [url.hostname],
+      patches: [],
+      prefix: [],
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true })
   }
 }

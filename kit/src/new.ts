@@ -37,7 +37,7 @@ import {
   withServicePage,
   withSpecPackage,
 } from "./spec.js"
-import { type DownloadedSpec, downloadSpec, type SpecFetch } from "./spec-url.js"
+import { type DownloadedSpec, downloadSpec, introspectSpec, type SpecFetch } from "./spec-url.js"
 
 const run = promisify(execFile)
 
@@ -515,10 +515,11 @@ export const withoutSignInCheck = (text: string): string => {
 export const withoutApiSignIn = (path: string, text: string): string => {
   const cuts: Record<string, RegExp[]> = {
     "src/commands/api.ts": [/^ \* The token is the profile's own.*\n/m, /^ {4}token: tokenOf,\n/m, /, tokenOf(?= \})/],
-    "src/api.test.ts": [/^import \{ FAKE_TOKEN \} from .*\n/m, /^ {4}token: FAKE_TOKEN,\n/m],
+    "src/api.test.ts": [/^import \{ FAKE_TOKEN \} from .*\n/m, /^ {4}(token: FAKE_TOKEN|auth: \{ .* \}),\n/m],
+    "scripts/generate.ts": [/^ {4}\/\/ SAMPLE: a GraphQL schema names no sign-in[\s\S]*?\n {4}\},\n/m],
   }
   const own = cuts[path]
-  if (!own) return text
+  if (!own || (path === "scripts/generate.ts" && !text.includes("auth: {"))) return text
   if (own.some((cut) => !cut.test(text))) throw new Error(`${path}: no token to take out of the api group`)
   return own.reduce((rest, cut) => rest.replace(cut, ""), text)
 }
@@ -715,8 +716,9 @@ export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTi
 const specFromUrl = async (args: NewArgs, fetch: SpecFetch | undefined): Promise<DownloadedSpec | undefined> => {
   const url = args.flags["spec-url"]
   if (url === undefined) return undefined
-  const downloaded = await downloadSpec(url, fetch)
   const given = args.flags.spec
+  if (given === "graphql") return introspectSpec(url, fetch)
+  const downloaded = await downloadSpec(url, fetch)
   if (given !== undefined && given !== downloaded.kind)
     throw new Error(
       `--spec ${given}: ${downloaded.url} is ${downloaded.kind === "swagger" ? "Swagger 2.0" : "OpenAPI 3"}`,
@@ -729,28 +731,38 @@ const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
 const SESSION = ["src/commands/session.ts", "src/commands/session.test.ts", "src/testing/fake-api.ts"]
 const CRM = ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"]
+const TRACKER = ["src/commands/tracker.ts", "src/tracker-contracts.test.ts"]
 
-/** cli-core's CRM commands over the config's source, beside the api group. */
-export const withCrmCommands = (text: string): string =>
+const sourceKind = (config: LoadedConfig["config"]): "crm" | "tracker" =>
+  config.category === "tracker" ? "tracker" : "crm"
+
+const sourceSeeds = (config: LoadedConfig["config"]): string[] =>
+  !config.source ? [] : sourceKind(config) === "tracker" ? TRACKER : CRM
+
+/** cli-core's commands for the config's source (`crm` or `tracker`), beside the api group. */
+export const withSourceCommands = (text: string, kind: "crm" | "tracker" = "crm"): string =>
   replaceOnce(
     "src/program.ts",
     replaceOnce(
       "src/program.ts",
       text,
       'import { apiCommand } from "./commands/api.js"\n',
-      'import { apiCommand } from "./commands/api.js"\nimport { crmCommands } from "./commands/crm.js"\n',
+      `import { apiCommand } from "./commands/api.js"\nimport { ${kind}Commands } from "./commands/${kind}.js"\n`,
     ),
     /^( +)apiCommand\(\),\n/m,
-    "$1apiCommand(),\n$1...crmCommands(),\n",
+    `$1apiCommand(),\n$1...${kind}Commands(),\n`,
   )
 
 const RUN_SCOPE = "src/run-scope.test.ts"
 
 /**
  * run-scope over a config's wiring: `session start` checks the token with the API, so the answering fake answers the
- * API's host too; `sync` is cli-core's, run in its own run and tested by crmSyncContract.
+ * API's host too; `sync` is cli-core's, run in its own run and tested by the source's contracts test.
  */
-export const withConfigRunScope = (text: string, { verifies, crm }: { verifies: boolean; crm: boolean }): string => {
+export const withConfigRunScope = (
+  text: string,
+  { verifies, source }: { verifies: boolean; source?: "crm" | "tracker" },
+): string => {
   const answering = verifies
     ? replaceOnce(
         RUN_SCOPE,
@@ -764,16 +776,16 @@ export const withConfigRunScope = (text: string, { verifies, crm }: { verifies: 
         "fetch: withServiceApi(fakeComments(), FAKE_TOKEN).fetch, stdin: stdin()",
       )
     : text
-  return crm
+  const sync = {
+    crm: '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
+    tracker: '      sync: "cli-core\'s addTrackerCommands runs it in its run; src/tracker-contracts.test.ts syncs",',
+  }
+  return source
     ? replaceOnce(
         RUN_SCOPE,
         answering,
         '      "mcp serve": "listens until stopped",\n',
-        [
-          '      "mcp serve": "listens until stopped",',
-          '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
-          "",
-        ].join("\n"),
+        ['      "mcp serve": "listens until stopped",', sync[source], ""].join("\n"),
       )
     : answering
 }
@@ -839,14 +851,14 @@ export const runNew = async (
             loaded
               ? withConfigRunScope(withApiRunScope(text), {
                   verifies: loaded.verifies,
-                  crm: Boolean(loaded.config.source),
+                  ...(loaded.config.source ? { source: sourceKind(loaded.config) } : {}),
                 })
               : withApiRunScope(text),
         }
       : {}),
     "src/program.ts": (text: string) => {
       const api = spec ? withApiCommand(text) : text
-      const program = loaded?.config.source ? withCrmCommands(api) : api
+      const program = loaded?.config.source ? withSourceCommands(api, sourceKind(loaded.config)) : api
       return answers.signIn?.[0] === "none" ? withoutSignInCheck(program) : program
     },
     "README.md": () =>
@@ -914,7 +926,7 @@ export const runNew = async (
   }
   if (loaded) {
     await writeOut(target, CONFIG_FILE, loaded.text)
-    const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? SESSION : []), ...(loaded.config.source ? CRM : [])]
+    const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? SESSION : []), ...sourceSeeds(loaded.config)]
     for (const path of seeds) await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", path)))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
