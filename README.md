@@ -29,11 +29,11 @@
 <!-- cspell:words amo amoCRM bitrix Kommo beeline gcal hubspot ydisk openclaw -->
 
 - **Your agent gets the whole API on day one.** Every operation of an OpenAPI 3, Swagger 2.0 or Google Discovery
-  description becomes a command, an MCP tool and a page of the agent skill.
+  description becomes a command that the MCP server and the agent skill run, with a page in the skill.
 - **You stay in charge of what it does.** Each command and each API operation has a permission, every delete has its
   own, and the token stays in your system keyring.
-- **The CLI keeps up after you edit it.** `upgrade` merges each template fix into your copy, and your own commands are
-  never touched.
+- **The CLI keeps up after you edit it.** `upgrade` merges the template's CI, release and agent files into your copy,
+  and updates of cli-core bring the fixes to the code. Your own commands are never touched.
 
 From PokeAPI's published description to 102 commands, a real answer and a working MCP server took 16 seconds with an
 empty pnpm store and 12 with a warm one, not counting npx's own download. Nine of WireCat's own CLIs are made from
@@ -47,7 +47,7 @@ There are two ways in. Pick the one that fits what you have.
 | --- | --- | --- |
 | The address of the service's API description | `new --spec-url <url>` | A CLI with one command per operation, the MCP server and the skill |
 | An API description and a few lines saying how its records map to people and companies | `new --from-config wirecat.config.ts` | The same, plus sign-in, `sync` into a local copy and the category's contract tests (CRM today) |
-| An agent and no time | `npx skills add WireCatLabs/cli-template` | Your agent finds the description and runs one of the two above |
+| An agent and no time | `npx skills add WireCatLabs/cli-template` | Your agent finds the description and runs `new --spec-url` for you |
 
 ### From an API description
 
@@ -56,12 +56,14 @@ npx @wirecat/cli-template new poke-cli --preset generic --owner example --sign-i
   --spec-url https://raw.githubusercontent.com/PokeAPI/pokeapi/d19c710/openapi.yml
 cd poke-cli && pnpm install && pnpm generate
 node dist/bin/poke.js personal api pokemon-get --id pikachu --json=name,height,weight
-node dist/bin/poke.js personal mcp add claude-code
+node dist/bin/poke.js personal mcp add claude-code --allow-writes
 ```
 
 Put your own GitHub name in `--owner` and the address of your service's description in `--spec-url`, JSON or YAML.
 `--preset generic` answers the questions only WireCat's own tools need, and any flag you give wins. Without it, `new`
-asks for every missing answer and never guesses one.
+asks for every missing answer and never guesses one. `--allow-writes` is there because the template's sample
+`comments` commands can write, and `mcp add` refuses a profile with writes until you say so.
+`npx @wirecat/cli-template remove-sample` drops the sample.
 
 ### From a config
 
@@ -88,8 +90,11 @@ node dist/bin/acme.js work session start    # takes the token and checks it with
 node dist/bin/acme.js work sync             # copies the records in, then only what changed
 ```
 
-This path needs a real account and its token, since `session start` checks the token against the service. The fields
-of `source` are in the [kit reference](kit/README.md#new-name).
+In a terminal, `new` asks for the answers the config does not hold, such as the content languages. A script or an
+agent passes them as flags, listed in the [kit reference](kit/README.md#new-name). Outside WireCat, use your own
+scope in `package` and your own name in `owner`. This path needs a real account and its token, since
+`session start` checks the token against the service. The shape of `source` is `CrmManifest` in
+`@wirecat/cli-core/manifest`.
 
 ## Why a CLI and MCP
 
@@ -102,7 +107,7 @@ of `source` are in the [kit reference](kit/README.md#new-name).
 
 | Agent | How to connect |
 | --- | --- |
-| Claude Code, Codex | `<cli> <profile> mcp add claude-code` or `mcp add codex`, and `<cli> skill install` |
+| Claude Code, Codex | `<cli> <profile> mcp add claude-code` or `mcp add codex` (`--allow-writes` for a profile that may write), and `<cli> skill install` |
 | Claude Desktop, Cursor | `<cli> <profile> mcp config` prints the entry to paste |
 | ChatGPT, Claude in the browser | `<cli> <profile> mcp serve --http --public-url <your tunnel>` |
 | Gemini CLI, OpenClaw, Hermes | `<cli> skill install --for agents` (or `--for hermes`) |
@@ -111,8 +116,8 @@ of `source` are in the [kit reference](kit/README.md#new-name).
 
 | What goes wrong with an API wrapper | What the template does |
 | --- | --- |
-| You edit the generated code, and the next run of the generator writes over it | `upgrade` merges each template change file by file and asks before it touches a file you changed |
-| An agent deletes something you did not mean it to | Each profile sets `allow`, `ask`, `readonly` or `deny` per command and per API operation. A delete needs its own permission key, and the api group refuses to build without one. `--dry-run` shows what would run |
+| A one-time generator leaves you to copy its later fixes by hand | `upgrade` merges each template change file by file and asks before it touches a file you changed. `src/`, `scripts/` and `docs/` are yours and never touched |
+| An agent deletes something you did not mean it to | Each profile sets `allow`, `ask`, `readonly` or `deny` per command and per API operation. A delete needs its own permission key, and the api group refuses to start without one. `--dry-run` shows what would run. Over MCP nobody can answer `ask`, so it runs: give the profile you serve `readonly` or `deny` where it matters |
 | The token sits in a `.env` file | It stays in the OS keyring, under a profile you name, such as `personal` or `work`. No profile is ever assumed: a command without one stops and lists the profiles |
 | The service changes its API | `pnpm spec:sync` downloads the description again, and `pnpm generate` follows |
 | "It worked on my machine" | `src/api.test.ts` sends every operation to a fake built from the description, which refuses a request the description does not allow |
@@ -125,7 +130,7 @@ poke-cli/
 ├── wirecat.config.ts            with --from-config: the one file to edit
 ├── src/generated/               types, schemas and a manifest of every operation
 ├── src/commands/                the api group, the sign-in and your own commands
-├── src/hooks.ts                 with --from-config: the service's own logic the config cannot say
+├── src/hooks.ts                 yours to add, named by `hooks` in the config: what the config cannot say
 ├── src/api.test.ts              every operation sent to a strict fake of the API
 ├── src/crm-contracts.test.ts    with a CRM config: cli-core's contracts for the category
 ├── contracts/wirecat.json       what WireCat Desktop reads to show and run the tool
@@ -135,9 +140,9 @@ poke-cli/
 ```
 
 A CLI with a source, such as a CRM made from a config, also gets what cli-core gives every WireCat tool. It keeps a
-local copy that `sync` updates with only the changes, so lists and search answer with no request to the service, also
-offline. Its people and companies join the same people from your other WireCat tools, and `search all` finds them
-together. A CLI made only from a description has no store and no search, it calls the service live.
+local copy that `sync` updates with only the changes, so its lists and search can answer from the copy, also
+offline. A contact joins a person from your other WireCat tools by the same email, and `search all` finds them
+together. A CLI made only from a description has no store and no search. It calls the service live.
 
 ## How it works
 
@@ -150,14 +155,16 @@ flowchart LR
   live --> release["bin/release<br/>npm"]
 ```
 
-1. **The description.** `new --spec-url` downloads it (https only, at most 20 MB), puts its servers into the hosts
+1. **The description.** `new --spec-url` downloads an OpenAPI 3 or Swagger 2.0 description (https, or http from
+   localhost, at most 20 MB), puts its servers into the hosts
    the CLI may reach, and records the address and a hash in `spec/<command>/provenance.json`. `pnpm generate` writes
    one command per operation, its permission, its test and the skill's page. When the generator stops on part of the
    description, it names the place. Add a patch with its reason in `scripts/spec-model.ts`, as the
-   [OpenAPI guide](kit/skills/new-cli/references/openapi.md) shows.
+   [OpenAPI guide](kit/skills/new-cli/references/openapi.md) shows. A Google Discovery document goes in with
+   `--spec discovery` and a line in `scripts/sync-spec.ts`.
 2. **The config.** `wirecat.config.ts` says how to check a token and how the service's answers map to people,
-   companies and deals. `pnpm generate` turns it into code that cli-core runs, so paging, cursors, the request budget and the store come from
-   cli-core, not from code you write.
+   companies and deals. `pnpm generate` turns it into code that cli-core runs, so paging, cursors, the request budget
+   and the store come from cli-core, not from code you write.
 3. **The hooks.** What only this service does goes into `src/hooks.ts`, such as dropping old values of a field that
    keeps its history. The config names the file, and `pnpm source:check` checks every operation and path the config
    reads against the generated API.
@@ -168,15 +175,16 @@ flowchart LR
    the pass. `bin/release` publishes to npm through GitHub.
 
 How much of a source a config could cover, we estimated by reading the code of five WireCat CLIs written by hand
-before the config existed (an estimate, give or take 10 points): about 60% of HubSpot's, 75% of Yandex Disk's and 87%
-of Google Drive's. The rest is the service's own logic, and it stays in hooks.
+before the config existed (an estimate, give or take 10 points): between 42% (Bitrix24) and 87% (Google Drive),
+with HubSpot at about 60%. The rest is the service's own logic, and it stays in hooks. Drive and Yandex Disk are
+document sources, which a config does not cover yet.
 
 ## Tests that come with it
 
 | Layer | What it proves | Where |
 | --- | --- | --- |
 | Every operation | The request each command sends is one the description allows, and a denied delete stops before anything is sent | `src/api.test.ts` |
-| Sign-in | `session start` checks the token with the operation the config names, and keeps nothing when the service refuses it | `src/commands/session.test.ts` |
+| Sign-in, with `auth.verify` | `session start` checks the token with the operation the config names, and keeps nothing when the service refuses it | `src/commands/session.test.ts` |
 | Category contracts | The source behaves like every CRM in WireCat, faults included. For example "a full list cut after its first page goes on from that page in a new run, nothing lost or repeated" and "a clock off by ten minutes either way loses no change" | `src/crm-contracts.test.ts`, from cli-core |
 | Ready | Every check before a release ran and passed on this code | `pnpm exec cli-dev ready` |
 | Live | The CLI works against the real service | `bin/live`, on a test account |
@@ -210,8 +218,8 @@ All of them are WireCat's own, public, and made from this template.
   you test is what the agent runs.
 - **Shared work lives in one place.** The store, search, MCP and permissions come from cli-core, so a fix there
   reaches every CLI with its next update. A CLI does not write them again.
-- **Proven, not assumed.** A check counts when its script passed on this code, and the live check runs on a real
-  account before a release.
+- **Proven, not assumed.** A check counts when its script passed on this code. WireCat's own CLIs also pass the live
+  check on a real account before each release.
 
 ## Have an agent build it
 
@@ -259,8 +267,8 @@ Checked on the tools' own pages in November 2026. "Not documented" means the pag
 
 ## Roadmap
 
-- **GraphQL in `new`.** cli-core and cli-base already send GraphQL operations through the api group. `new` does not
-  take a GraphQL schema yet.
+- **GraphQL in `new`.** cli-base already generates commands from a GraphQL schema, and cli-core's next release
+  sends the calls. `new` does not take a GraphQL schema yet.
 - **Configs for more categories,** starting with files and documents, where Drive and Yandex Disk show the most to
   gain.
 - **OAuth from the description.** The sign-in built from the description's `securitySchemes`, not by hand.
