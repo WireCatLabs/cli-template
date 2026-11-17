@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { type ApiModel, generate, manifestGenerator } from "@wirecat/cli-base/codegen"
 import { describe, expect, it } from "vitest"
+import { withoutApiSignIn } from "../src/new.js"
 
 const seeds = join(import.meta.dirname, "../seeds")
 
@@ -31,4 +33,15 @@ describe("the --spec seeds", () => {
       expect(manifest?.content).toContain(`"command": "${command}"`)
     expect(manifest?.content).toContain('"key": "comments.delete"')
   })
+})
+
+it("gives a CLI without sign-in an api group and a test fake with no token", () => {
+  const seed = (path: string) => readFileSync(join(seeds, "shared", path), "utf8")
+  const api = withoutApiSignIn("src/commands/api.ts", seed("src/commands/api.ts"))
+  const test = withoutApiSignIn("src/api.test.ts", seed("src/api.test.ts"))
+  expect(api).not.toContain("tokenOf")
+  expect(api).toContain('import { contextOf, PACE } from "../context.js"')
+  expect(test).not.toContain("FAKE_TOKEN")
+  expect(withoutApiSignIn("src/config.ts", "as it was")).toBe("as it was")
+  expect(() => withoutApiSignIn("src/commands/api.ts", "")).toThrow("src/commands/api.ts: no token to take out")
 })

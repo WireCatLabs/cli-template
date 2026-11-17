@@ -100,16 +100,16 @@ export const withApiPermissions = (text: string, service = "Example Comments"): 
   [
     [
       'import { type Configuration, commandPermissions, settingsFor } from "@wirecat/cli-core/cli"\n',
-      'import { type Configuration, commandPermissions, serviceApiPermissions, settingsFor } from "@wirecat/cli-core/cli"\nimport * as manifest from "./generated/manifest.js"\n',
+      'import {\n  type Configuration,\n  commandPermissions,\n  serviceApiOperations,\n  serviceApiPermissions,\n  settingsFor,\n} from "@wirecat/cli-core/cli"\nimport * as manifest from "./generated/manifest.js"\n',
     ],
     [
       "export const permissions = commandPermissions()\n",
       [
         "// SAMPLE: your service's name. The keys a delete or a share checks come from `permissions` in",
-        "// scripts/generate.ts. An operation that answers with a credential is left out: the CLI signs in through",
-        "// `session`, and the api group would drop it anyway.",
+        "// scripts/generate.ts. The operations the api group cannot offer are left out: one that answers with a",
+        "// credential (the CLI signs in through `session`) and a body it cannot send, such as a multipart form.",
         "export const API = {",
-        "  manifest: { ...manifest, operations: manifest.operations.filter((operation) => !operation.response?.sensitive) },",
+        "  manifest: { ...manifest, operations: serviceApiOperations(manifest).offered },",
         `  service: ${JSON.stringify(service)},`,
         "}",
         "",
