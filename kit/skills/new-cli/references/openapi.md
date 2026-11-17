@@ -8,7 +8,7 @@ this page is the order of work.
 
 | File | What it is | What you change |
 |---|---|---|
-| `spec/<cli>/` | The made-up Example Comments service's description and `provenance.json` (the source URL and SHA-256 of each file) | Replace with the service's, through `pnpm spec:sync` |
+| `spec/<cli>/` | The made-up Example Comments service's description and `provenance.json` (the source URL and SHA-256 of each file). With `--spec-url`, the service's own, downloaded | Replace with the service's, through `pnpm spec:sync`, unless `new` downloaded it |
 | `scripts/sync-spec.ts` | Downloads each source `provenance.json` lists and records its hash | For OpenAPI and Swagger: nothing, the sources are listed in `provenance.json`. For Discovery: the documents in the script |
 | `scripts/spec-model.ts` | Checks the hashes, upgrades Swagger to OpenAPI 3, joins several sources with `mergeOpenApi`, applies `patchSpec` | The `PATCHES`, each with its reason |
 | `scripts/generate.ts` | Writes `src/generated/` and `docs/dev/API_COVERAGE.md`; `--check` fails on stale files | `overrides`, `readingPosts`, `names`, `permissions`, `pagination`, `auth` |
@@ -17,8 +17,23 @@ this page is the order of work.
 | `scripts/commands.ts` | Also writes the agent skill's API pages, `references/api.md` and one `references/api/api-<group>.md` per tag, with `apiSkillFiles`; the skill's `SKILL.md` links `references/api.md` | The tags in the spec, if a group comes out too large |
 | `src/api.test.ts` | Runs every operation against `fakeApi`, a strict fake built from the spec, and checks that a denied delete key refuses before anything is sent | The fake's `auth` header, when the spec signs in by something other than a Bearer token (an `apiKey` header) |
 
-`pnpm generate` and `pnpm generate:check` run the API step before the build. Every line marked `SAMPLE:` is replaced
-before the first release.
+`pnpm generate` and `pnpm generate:check` run the API step before the build, and `pnpm build` and `pnpm typecheck` run
+it once when `src/generated/` is missing. Every line marked `SAMPLE:` is replaced before the first release.
+
+## `new --spec-url <url>`
+
+`new` downloads the description, OpenAPI 3 or Swagger 2.0, JSON or YAML, and puts it in place of the sample's, with
+its URL and SHA-256 in `provenance.json`; `--spec` can be left out. It takes https only, or http from localhost, no
+redirect, and at most 20 MB. It also writes:
+
+- the description's servers into `hosts` in `src/identity.ts`, beside the sample's;
+- a patch in `scripts/spec-model.ts`, with its reason, when the servers are relative to the description's own URL;
+- the description's title as `service` in `src/config.ts`, and the command word as the permission group;
+- `segments` that leave out the path prefix every operation shares, such as `/api/v2`.
+
+Read the downloaded description's diff and the coverage page all the same: the adapter stops on a keyword it does
+not understand, and each correction is a patch with its reason. A Discovery document is refused: use `--spec
+discovery` and list it in `scripts/sync-spec.ts`.
 
 ## Order of work
 
@@ -28,8 +43,8 @@ before the first release.
    lands in `docs/dev/API_COVERAGE.md`.
 2. **Swagger 1.2** (Yandex Disk) is a resource listing plus one declaration per API. `new --spec swagger` sets up
    2.0; for 1.2, add cli-base's pinned `swagger-converter` to `devDependencies`, change `scripts/sync-spec.ts` to fetch the listing and each declaration, and call
-   `upgradeToOpenApi3(listing, declarations)` in `scripts/spec-model.ts`, as the Kit surface describes. The sync reads
-   JSON only: a service that publishes YAML needs a YAML parser there.
+   `upgradeToOpenApi3(listing, declarations)` in `scripts/spec-model.ts`, as the Kit surface describes. The sync and the
+   spec model read JSON and YAML.
 3. **Correct the source only with a reason** from the documentation or a captured answer: a missing server, a wrong
    type, an undefined schema (`stubMissingSchemas`). Each patch is listed under "Spec corrections" on the coverage page.
 4. **Fill the options in `scripts/generate.ts`**, each from the documentation:

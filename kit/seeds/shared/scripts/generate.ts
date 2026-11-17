@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process"
-import { resolve } from "node:path"
+import { existsSync } from "node:fs"
+import { join, resolve } from "node:path"
 import {
   coverageGenerator,
   definitionsGenerator,
@@ -14,6 +15,8 @@ import { specModel } from "./spec-model.ts"
 // The service's API description → src/generated/ and docs/dev/API_COVERAGE.md. Each correction below is read from
 // the service's documentation, never guessed; cli-base docs/standards/kit-surface.md says what each one does.
 const root = resolve(import.meta.dirname, "..")
+// A fresh CLI has no src/generated/ yet and cannot build without it, so build runs this with --if-missing first.
+if (process.argv.includes("--if-missing") && existsSync(join(root, "src/generated/manifest.ts"))) process.exit(0)
 const { model, notes } = await specModel(root)
 const artifacts = generate(
   model,

@@ -48,6 +48,12 @@ puts the API step in front of `pnpm generate` and `generate:check`, and prints t
 contracts. Swagger 2.0 adds cli-base's converter, `@scalar/openapi-upgrader`, to `devDependencies`. The order of work is in the new-cli skill's
 [references/openapi.md](skills/new-cli/references/openapi.md).
 
+`--spec-url <url>` downloads the service's own description, OpenAPI 3 or Swagger 2.0, JSON or YAML, instead of the
+sample: https only, or http from localhost, at most 20 MB. It writes the description's servers into the identity's
+`hosts`, and its title and the command word into the api group; the new-cli skill's
+[references/openapi.md](skills/new-cli/references/openapi.md#new---spec-url-url) lists what it writes. The first
+`pnpm build` or `pnpm generate` then makes one command of each operation.
+
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
 
@@ -62,7 +68,8 @@ choices. Nothing is guessed.
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |
-| `--spec` | `openapi`, `swagger`, `discovery`, `none` |
+| `--spec` | `openapi`, `swagger`, `discovery`, `none`; left out with `--spec-url`, it is the downloaded description's |
+| `--spec-url` | the URL of the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML |
 | `--filters` | several of `time`, `person`, `container`, `text`, `status` |
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |
 | `--untrusted` | several of `files`, `links`, `names`, and for its category `messages` (messenger, mail), `records` (crm), `invitations` (calendar), `transcripts` (meetings); or `none` alone |

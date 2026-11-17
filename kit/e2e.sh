@@ -26,6 +26,12 @@ build() {
   pnpm install
   # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
   pnpm lint:fix
+  if [ "$4" != none ]; then
+    # A fresh CLI builds and runs before its first pnpm generate.
+    pnpm build
+    env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" \
+      DBUS_SESSION_BUS_ADDRESS=disabled: node "dist/bin/$2.js" doctor >/dev/null
+  fi
   pnpm generate
   if [ "$4" != none ]; then
     pnpm exec cli-contract contracts/plan.json --update

@@ -9,9 +9,19 @@ import {
   type SpecPatch,
   upgradeToOpenApi3,
 } from "@wirecat/cli-base/codegen"
+import { parse } from "yaml"
 
 interface Provenance {
   sources: { name: string; url: string; file: string; sha256: string }[]
+}
+
+// JSON first: it is the common case and much faster to read than YAML, which also reads JSON.
+export const parseSpec = (text: string): unknown => {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return parse(text)
+  }
 }
 
 // SAMPLE: corrections to the service's document, each with the reason from its documentation or a captured answer.
@@ -29,7 +39,7 @@ export const specModel = async (root: string): Promise<{ model: ApiModel; notes:
       const text = readFileSync(join(dir, source.file), "utf8")
       if (createHash("sha256").update(text).digest("hex") !== source.sha256)
         throw new Error(`spec/clidev/${source.file} does not match provenance.json; run pnpm spec:sync`)
-      const document = JSON.parse(text) as { openapi?: unknown }
+      const document = parseSpec(text) as { openapi?: unknown }
       return {
         name: source.name,
         url: source.url,
