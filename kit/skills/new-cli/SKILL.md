@@ -34,7 +34,8 @@ choice: never pick a profile, and never run the CLI on a real account without th
 1. **The category** decides the reference CLI, the store writer and the contracts `cli-dev ready` expects. The
    reference for each, from [Reference CLIs](https://github.com/WireCatLabs/cli-template/blob/main/docs/dev/reference-clis.md):
    meetings → zoom-cli; messenger → whatsapp-cli, then tg-cli; mail → mail-cli; calendar → gcal-cli;
-   files and documents → **notion-cli** for the sync and the contracts, drive-cli only for the command tree;
+   files and documents → **yandex-disk-cli** for the wiring, drive-cli for the command tree, notion-cli for a
+   source with a change feed;
    CRM → bitrix24-cli; notes → cli-memo. Read its `README.md`, `docs/dev/DESIGN.md`, `commands --json`, the store
    writes and the sync. Write down the command tree you will mirror.
 2. **What cli-core and cli-base export**: their `package.json` exports and the type declarations in `node_modules`
