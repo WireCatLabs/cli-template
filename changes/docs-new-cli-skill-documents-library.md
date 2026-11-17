@@ -1,6 +1,6 @@
 ### Fixed
 
-- **The new-cli skill points a documents CLI at cli-core's `documentLibraryCommands`** and at ydisk as the
+- **The new-cli skill points a documents CLI at cli-core's `documentLibraryCommands`** and at ydisk-cli as the
   reference for its wiring, with drive-cli for the command tree and notion-cli for a source with a change feed. It
   said drive-cli predates the shared commands; drive-cli runs them now. It also names `FeedlessDocumentSource` and
   `fileText` ([sources](../kit/skills/new-cli/references/sources.md)).
