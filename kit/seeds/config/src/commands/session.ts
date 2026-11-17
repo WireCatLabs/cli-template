@@ -34,6 +34,9 @@ export const sessionCommand = (): Command =>
         token: () => token,
       })
       const answer = await call(VERIFY.operation, { path: {}, query: {}, headers: {}, fields: {} })
+      // A service such as Attio answers a revoked key with 200 and `active: false`, not with 401.
+      if (VERIFY.active && valueAt(answer, VERIFY.active) !== true)
+        throw new CliError("authentication_error", `${API.service} does not accept this token; sign in again`)
       const id = valueAt(answer, VERIFY.id)
       if (typeof id !== "string" && typeof id !== "number")
         throw new CliError("provider_error", `${API.service} answered ${VERIFY.operation} without ${VERIFY.id}`, {

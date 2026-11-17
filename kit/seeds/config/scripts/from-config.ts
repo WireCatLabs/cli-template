@@ -11,6 +11,19 @@ const out = join(root, "src/generated/wirecat-config.ts")
 if (process.argv.includes("--if-missing") && existsSync(out)) process.exit(0)
 
 const cli = parseCliConfig(config)
+// The source is written out as JSON, which drops a function without a word: a rule that is code belongs in the hooks.
+const functionsIn = (value: unknown, path: string): string[] =>
+  typeof value === "function"
+    ? [path]
+    : value !== null && typeof value === "object"
+      ? Object.entries(value).flatMap(([key, inner]) => functionsIn(inner, `${path}.${key}`))
+      : []
+const functions = functionsIn(cli.source, "source")
+if (functions.length)
+  throw new Error(
+    `wirecat.config: ${functions.join(", ")}: a function cannot be written into the CLI; ` +
+      "move it into the hooks module the config names in hooks (./src/hooks.ts)",
+  )
 const verify = cli.auth.preset === "none" ? undefined : cli.auth.verify
 const literal = (value: unknown) => (value === undefined ? "undefined" : JSON.stringify(value, null, 2))
 // The hooks module is imported from src/generated/, inside the bundle: it must live under src/.
@@ -36,7 +49,7 @@ const text = formatted(
   [
     "// Generated from wirecat.config.ts by scripts/from-config.ts; run pnpm generate",
     "",
-    `export const VERIFY: { operation: string; id: string; name?: string } | undefined = ${literal(verify)}`,
+    `export const VERIFY: { operation: string; id: string; name?: string; active?: string } | undefined = ${literal(verify)}`,
     "",
     `export const SOURCE: Readonly<Record<string, unknown>> | undefined = ${literal(cli.source)}`,
     "",

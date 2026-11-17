@@ -72,6 +72,31 @@ describe("downloadSpec", () => {
     ])
   })
 
+  it("lists the hosts an OAuth sign-in in the description reaches beside the API's", async () => {
+    const attio = JSON.stringify({
+      openapi: "3.1.0",
+      info: { title: "Attio", version: "2" },
+      servers: [{ url: "https://api.attio.example" }],
+      paths: {},
+      components: {
+        securitySchemes: {
+          oauth2: {
+            type: "oauth2",
+            flows: {
+              authorizationCode: {
+                authorizationUrl: "https://app.attio.example/authorize",
+                tokenUrl: "https://app.attio.example/oauth/token",
+                scopes: {},
+              },
+            },
+          },
+        },
+      },
+    })
+    const spec = await downloadSpec("https://api.attio.example/openapi.json", serve({ body: attio }).fetch)
+    expect(spec.hosts).toEqual(["api.attio.example", "app.attio.example"])
+  })
+
   it("reads a JSON Swagger 2.0 description and takes its host", async () => {
     const spec = await downloadSpec("https://notes.example/swagger.json", serve({ body: JSON_SPEC }).fetch)
 

@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs"
+import { existsSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { configArgs, loadCliConfig } from "../src/from-config.js"
@@ -26,6 +26,20 @@ const SPEC = JSON.stringify({
   openapi: "3.0.3",
   info: { title: "Acme Public API v2", version: "1" },
   servers: [{ url: "https://api.acme.example/v1" }],
+  components: {
+    securitySchemes: {
+      oauth: {
+        type: "oauth2",
+        flows: {
+          authorizationCode: {
+            authorizationUrl: "https://app.acme.example/authorize",
+            tokenUrl: "https://app.acme.example/token",
+            scopes: {},
+          },
+        },
+      },
+    },
+  },
   paths: { "/notes": { get: { operationId: "listNotes", responses: { "200": { description: "ok" } } } } },
 })
 
@@ -92,7 +106,21 @@ describe("new --from-config", () => {
     expect(read(dir, "src/commands/session.test.ts")).toContain("recalledAccount(")
     expect(read(dir, "src/identity.ts")).toContain('  syncs: "your people",')
     const runScope = read(dir, "src/run-scope.test.ts")
-    expect(runScope).toContain("fetch: withServiceApi(fakeComments(), FAKE_TOKEN).fetch")
+    expect(runScope).toContain("fetch: fakeServiceApi().fetch")
+    expect(runScope).not.toContain("comments")
+    // The sample is left out, and nothing the CLI keeps reaches for it.
+    expect(existsSync(join(dir, "src/sample"))).toBe(false)
+    expect(existsSync(join(dir, "src/testing/fake-comments.ts"))).toBe(false)
+    for (const path of [
+      "src/context.ts",
+      "src/program.ts",
+      "src/testing/harness.ts",
+      "src/mcp.test.ts",
+      "src/api.test.ts",
+    ])
+      expect(read(dir, path), path).not.toMatch(/sample\/|fake-comments|commentsCommand/)
+    expect(read(dir, "src/identity.ts")).toContain('hosts: ["api.acme.example", "app.acme.example"],')
+    expect(read(dir, "src/commands/crm.ts")).toContain('live: ["user"]')
     expect(runScope).toContain("sync: \"cli-core's addCrmCommands runs it in its run")
     expect(read(dir, "src/program.ts")).toMatch(/apiCommand\(\),\n +\.\.\.crmCommands\(\),/)
     expect(read(dir, "src/crm-contracts.test.ts")).toContain("crmSourceContract(")

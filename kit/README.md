@@ -92,15 +92,22 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
 - A `source` (a `crm` or a `tracker` category) needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
   holds at `new`, and `pnpm generate` then reads their values again.
 - With `auth.verify`, `session start` is cli-core's `tokenSessionCommand`: it checks a token with that operation and
-  keeps the account's id from the answer.
+  keeps the account's id from the answer. `verify.active` names a field that must be `true`, for a service that
+  answers a revoked key with 200 and `active: false`, as Attio does; anything else is "sign in again".
+- With `auth.verify` and a spec, the CLI starts without the template's sample: its wiring and tests reach the API and
+  its fake, so there is nothing for `remove-sample` to do. The hosts an OAuth sign-in in the description reaches join
+  `hosts`.
 - With a `source`, `src/commands/crm.ts` mounts cli-core's CRM commands (`sync`, `store status`, `deals`, `search`…)
-  over `crmSourceFromManifest`, the store keyed by the account `session start` checked. A `tracker` source gets
+  over `crmSourceFromManifest`, the store keyed by the account `session start` checked; with `source.users`, also
+  `users list|show`, read live. A function in `source` stops `pnpm generate`: the source is written out as JSON, so
+  code goes into the hooks module. A `tracker` source gets
   `src/commands/tracker.ts` in its place: cli-core's tracker commands (`sync`, `issues`, `projects`…) over
   `trackerSourceFromManifest`, usually with `spec: { kind: "graphql", from: "<endpoint>" }`. `new` asks the endpoint
   for its schema by introspection; a GraphQL schema names no sign-in, so the header the key travels in is `auth` in
   `scripts/generate.ts`, the sample's `Authorization` until you check the service's documentation.
 - Tests come with them: `src/commands/session.test.ts` signs in against a fake of the API, and
-  `src/crm-contracts.test.ts` runs `crmSourceContract` and `crmSyncContract`. `lint/contract-exceptions.json` excepts
+  `src/crm-contracts.test.ts` runs `crmSourceContract` and `crmSyncContract`, and a sync through the CLI over
+  `crmManifestFake`, which pages the rows to their end. `lint/contract-exceptions.json` excepts
   `crmWriteContract`, as the source only reads. A list the generator finds no paging for fails the contract's
   cut-list case on purpose: describe the paging in the API description or an override. A tracker's
   `src/tracker-contracts.test.ts` checks the source against the generated API and syncs through the CLI over a fake
