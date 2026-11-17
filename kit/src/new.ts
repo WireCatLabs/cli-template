@@ -29,8 +29,10 @@ import {
   withApiRunScope,
   withApiSkill,
   withApiSkillLink,
+  withDownloadedSpec,
   withSpecPackage,
 } from "./spec.js"
+import { type DownloadedSpec, downloadSpec, type SpecFetch } from "./spec-url.js"
 
 const run = promisify(execFile)
 
@@ -363,6 +365,9 @@ export const cliPackageJson = (text: string, names: Names): string => {
   }
   if (isRecord(next.scripts)) next.scripts = withManifestSteps(next.scripts)
   // The template converts Swagger only to test its seed; new adds the converter back for --spec swagger.
+  // The kit reads a YAML description with it; a CLI needs it only to generate, so withSpecPackage adds it there.
+  if (isRecord(pkg.dependencies))
+    next.dependencies = Object.fromEntries(Object.entries(pkg.dependencies).filter(([name]) => name !== "yaml"))
   if (isRecord(pkg.devDependencies))
     next.devDependencies = Object.fromEntries(
       Object.entries(pkg.devDependencies).filter(([name]) => !SWAGGER_PEERS.includes(name)),
@@ -425,6 +430,16 @@ export const withDesktopTexts = (text: string, command: string, tagline: string,
   return text.replace(taglineLine, `  tagline: ${JSON.stringify(tagline)},`).replace(block, signInBlock)
 }
 const IDENTITY_FILE = "src/identity.ts"
+
+// The downloaded description's servers, beside the sample's while the sample stays (WC-CMD-32).
+export const withHosts = (text: string, hosts: readonly string[]): string => {
+  if (!hosts.length) return text
+  const line = /^( {2}hosts: )\[(.*)\],$/m
+  const match = line.exec(text)
+  if (!match) throw new Error(`${IDENTITY_FILE}: no hosts to add the API's servers to`)
+  const listed = JSON.parse(`[${match[2] ?? ""}]`) as string[]
+  return text.replace(line, `$1${JSON.stringify([...new Set([...listed, ...hosts])]).replaceAll(",", ", ")},`)
+}
 
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {
   const match = /export const IDENTITY: AppIdentity = \{\n[\s\S]*?\n\}/.exec(text)
@@ -570,8 +585,30 @@ export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTi
   ]
 }
 
-export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs, io: Io): Promise<string> => {
-  const { names, answers } = await collect(args, io)
+const specFromUrl = async (args: NewArgs, fetch: SpecFetch | undefined): Promise<DownloadedSpec | undefined> => {
+  const url = args.flags["spec-url"]
+  if (url === undefined) return undefined
+  const downloaded = await downloadSpec(url, fetch)
+  const given = args.flags.spec
+  if (given !== undefined && given !== downloaded.kind)
+    throw new Error(
+      `--spec ${given}: ${downloaded.url} is ${downloaded.kind === "swagger" ? "Swagger 2.0" : "OpenAPI 3"}`,
+    )
+  return downloaded
+}
+
+export const runNew = async (
+  cwd: string,
+  source: TemplateSource,
+  args: NewArgs,
+  io: Io,
+  fetch?: SpecFetch,
+): Promise<string> => {
+  const downloaded = await specFromUrl(args, fetch)
+  const { names, answers } = await collect(
+    downloaded ? { ...args, flags: { ...args.flags, spec: downloaded.kind } } : args,
+    io,
+  )
   const target = join(cwd, names.name)
   if (!(await isEmptyOrMissing(target))) throw new Error(`${target} already exists and is not empty`)
   const rendered = await renderTemplate(source, names)
@@ -585,12 +622,13 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
             cliPackageJson(text, names),
             spec,
             spec === "swagger" ? JSON.parse(cliBaseFile("package.json")) : {},
+            JSON.parse(text).dependencies?.yaml,
           )
         : cliPackageJson(text, names),
     ...(spec
       ? {
           "src/program.ts": withApiCommand,
-          "src/config.ts": withApiPermissions,
+          "src/config.ts": (text: string) => withApiPermissions(text, downloaded?.title),
           "scripts/commands.ts": withApiSkill,
           "src/run-scope.test.ts": withApiRunScope,
         }
@@ -601,11 +639,14 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
     [IDENTITY_FILE]: (text) =>
-      withDesktopTexts(
-        withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
-        names.command,
-        answers.tagline?.[0] ?? "",
-        answers.signIn?.[0] ?? "none",
+      withHosts(
+        withDesktopTexts(
+          withMessenger(withContentLanguages(text, answers.contentLang ?? []), category),
+          names.command,
+          answers.tagline?.[0] ?? "",
+          answers.signIn?.[0] ?? "none",
+        ),
+        downloaded?.hosts ?? [],
       ),
     "AGENTS.md": (text) => withReference(text, category),
     "cspell.json": withReferenceWords,
@@ -625,12 +666,14 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
     if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)
   }
-  if (spec)
-    for (const [path, content] of await specSeeds(source, names, spec)) {
+  if (spec) {
+    const seeds = await specSeeds(source, names, spec)
+    for (const [path, content] of downloaded ? withDownloadedSpec(seeds, names, downloaded) : seeds) {
       if (rendered.has(path)) throw new Error(`the ${spec} seed ${path} would replace a template file`)
       if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
       await writeOut(target, path, content)
     }
+  }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
   await writeOut(target, "config/parity-groups.json", `${JSON.stringify(parityGroups(names.command), null, 2)}\n`)
@@ -651,6 +694,12 @@ export const runNew = async (cwd: string, source: TemplateSource, args: NewArgs,
   const clashes = nameClashes(names, prefixed)
   return [
     `Created ${target} from ${source.name}@${source.version}.`,
+    ...(downloaded
+      ? [
+          `Downloaded ${downloaded.title}, ${downloaded.operations} operations, into spec/${names.command}/${downloaded.file}; pnpm generate makes one command of each.`,
+          ...downloaded.patches.map((patch) => `  Recorded in scripts/spec-model.ts: ${patch.reason}.`),
+        ]
+      : []),
     ...(clashes.length ? ["", "Names the service's own tools use:", ...clashes.map((clash) => `  ${clash}`)] : []),
     ...(warnings.length ? ["", "Content languages:", ...warnings.map((warning) => `  ${warning}`)] : []),
     "",

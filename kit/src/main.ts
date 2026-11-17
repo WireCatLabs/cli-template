@@ -16,6 +16,8 @@ new asks for every missing answer in a terminal; without one, a missing answer i
   --package <name>      the npm package name
   --owner <owner>       the GitHub owner of the repository
   --tagline <line>      ${TAGLINE_QUESTION.text}; left out, it is made from the description
+  --spec-url <url>      download the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML, for the api group;
+                        https only, or http from localhost
 ${INTERVIEW.map((question) => `  --${question.flag.padEnd(20)}${question.title ?? question.text}`).join("\n")}
 Any interview answer also takes "other:<your answer>"; several answers are comma-separated.
 
@@ -31,7 +33,10 @@ a change while any other file still imports the sample.
 `
 
 const answerFlags = Object.fromEntries(
-  [...NAME_QUESTIONS, TAGLINE_QUESTION, ...INTERVIEW].map((question) => [question.flag, { type: "string" as const }]),
+  [...NAME_QUESTIONS, TAGLINE_QUESTION, ...INTERVIEW, { flag: "spec-url" }].map((question) => [
+    question.flag,
+    { type: "string" as const },
+  ]),
 )
 
 const main = async (argv: string[], io: Io): Promise<string> => {

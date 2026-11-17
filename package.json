@@ -92,7 +92,8 @@
     "@wirecat/cli-base": "0.109.0",
     "@wirecat/cli-core": "0.687.0",
     "commander": "15.0.0",
-    "valibot": "1.5.0"
+    "valibot": "1.5.0",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",

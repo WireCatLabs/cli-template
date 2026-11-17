@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import { readFileSync, writeFileSync } from "node:fs"
 import { join, resolve } from "node:path"
+import { parseSpec } from "./spec-model.ts"
 
 interface Source {
   name: string
@@ -17,7 +18,7 @@ for (const { name, url, file } of listed.sources) {
   const response = await fetch(url, { signal: AbortSignal.timeout(30_000), redirect: "error" })
   if (!response.ok) throw new Error(`${url} answered HTTP ${response.status}`)
   const text = await response.text()
-  const document = JSON.parse(text) as { openapi?: unknown; swagger?: unknown }
+  const document = parseSpec(text) as { openapi?: unknown; swagger?: unknown }
   if (!String(document.openapi ?? "").startsWith("3.") && document.swagger !== "2.0")
     throw new Error(`${url} is neither an OpenAPI 3 nor a Swagger 2.0 document`)
   writeFileSync(join(dir, file), text)

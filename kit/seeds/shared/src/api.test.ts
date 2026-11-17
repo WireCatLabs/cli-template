@@ -17,7 +17,11 @@ afterEach(() => rmSync(configFile, { force: true }))
 
 const fake = () =>
   fakeApi({
-    operations: API.manifest.operations,
+    // fakeApi reads only each operation's own security; the CLI falls back to the document's, as `security: []`.
+    operations: API.manifest.operations.map((operation) => ({
+      ...operation,
+      security: operation.security ?? API.manifest.security,
+    })),
     definitions,
     baseUrl: manifestBaseUrl(API.manifest),
     // SAMPLE: the header the spec's sign-in names; an `apiKey` scheme sends the bare token in its own header.
@@ -44,27 +48,36 @@ const argsOf = (operation: Operation) => [
   ...(operation.effect === "destructive" ? ["--yes"] : []),
 ]
 
-it("sends every operation the spec offers as the spec describes it, with the profile's token", async () => {
-  withPermissions({ api: "allow", ...Object.fromEntries(deleteKeys.map((key) => [key, "allow"])) })
-  const service = fake()
+it("the spec offers operations", () => {
   expect(API.manifest.operations.length).toBeGreaterThan(0)
-  for (const operation of API.manifest.operations) {
-    const ran = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--json"], { service })
-    expect(ran.code, `${operation.command}: ${ran.err}`).toBe(0)
-  }
-  expect(service.refusals).toEqual([])
-  expect(service.calls).toHaveLength(API.manifest.operations.length)
 })
 
-it("a delete through api checks the manifest's delete key too, before anything is sent", async () => {
-  expect(deleteKeys.length).toBeGreaterThan(0)
-  withPermissions({ api: "allow", ...Object.fromEntries(deleteKeys.map((key) => [key, "deny"])) })
-  const service = fake()
-  const destructive = API.manifest.operations.filter((operation) => operation.effect === "destructive")
-  expect(destructive.length).toBeGreaterThan(0)
-  for (const operation of destructive) {
+// One test each, so a large API stays inside the per-test timeout and a failure names its operation.
+it.each(API.manifest.operations.map((operation) => [operation.command, operation] as const))(
+  "sends %s as the spec describes it, with the profile's token",
+  async (_, operation) => {
+    withPermissions({ api: "allow", ...Object.fromEntries(deleteKeys.map((key) => [key, "allow"])) })
+    const service = fake()
     const ran = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--json"], { service })
-    expect(ran.json()).toMatchObject({ error: { code: "permission_error" } })
-  }
-  expect(service.calls).toEqual([])
-})
+    expect(ran.code, ran.err).toBe(0)
+    expect(service.refusals).toEqual([])
+    expect(service.calls).toHaveLength(1)
+  },
+)
+
+const destructive = API.manifest.operations.filter((operation) => operation.effect === "destructive")
+
+// A service whose API only reads has no delete to check.
+it.runIf(destructive.length > 0)(
+  "a delete through api checks the manifest's delete key too, before anything is sent",
+  async () => {
+    expect(deleteKeys.length).toBeGreaterThan(0)
+    withPermissions({ api: "allow", ...Object.fromEntries(deleteKeys.map((key) => [key, "deny"])) })
+    const service = fake()
+    for (const operation of destructive) {
+      const ran = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--json"], { service })
+      expect(ran.json()).toMatchObject({ error: { code: "permission_error" } })
+    }
+    expect(service.calls).toEqual([])
+  },
+)

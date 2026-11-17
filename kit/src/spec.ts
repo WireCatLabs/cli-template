@@ -4,6 +4,7 @@ import type { Names } from "./manifest.js"
 import { isRecord } from "./manifest.js"
 import { renameContent, renamer } from "./rename.js"
 import type { TemplateSource } from "./source.js"
+import type { DownloadedSpec } from "./spec-url.js"
 
 export const SPEC_KINDS = ["openapi", "swagger", "discovery"] as const
 export type SpecKind = (typeof SPEC_KINDS)[number]
@@ -43,7 +44,12 @@ const GENERATE = "node --experimental-strip-types scripts/generate.ts"
 // Swagger 1.2 also needs swagger-converter, which the new-cli skill's openapi reference names.
 export const SWAGGER_PEERS = ["@scalar/openapi-upgrader"]
 
-export const withSpecPackage = (text: string, kind: SpecKind, cliBase: Record<string, unknown>): string => {
+export const withSpecPackage = (
+  text: string,
+  kind: SpecKind,
+  cliBase: Record<string, unknown>,
+  yaml: string | undefined,
+): string => {
   const pkg: unknown = JSON.parse(text)
   if (!isRecord(pkg) || !isRecord(pkg.scripts)) throw new Error("package.json must have scripts")
   const scripts = pkg.scripts
@@ -53,7 +59,14 @@ export const withSpecPackage = (text: string, kind: SpecKind, cliBase: Record<st
   }
   step("generate", GENERATE)
   step("generate:check", `${GENERATE} --check`)
+  // src/ imports src/generated/, which a fresh CLI does not have until it generates once.
+  step("build", `${GENERATE} --if-missing`)
+  step("typecheck", `${GENERATE} --if-missing`)
   scripts["spec:sync"] = "node --experimental-strip-types scripts/sync-spec.ts"
+  if (kind !== "discovery") {
+    if (!yaml) throw new Error("the template's package.json pins no yaml, which reads a YAML description")
+    pkg.devDependencies = { ...(isRecord(pkg.devDependencies) ? pkg.devDependencies : {}), yaml }
+  }
   if (kind === "swagger") {
     const pinned = isRecord(cliBase.devDependencies) ? cliBase.devDependencies : {}
     const peers = Object.fromEntries(SWAGGER_PEERS.map((name) => [name, pinned[name]]))
@@ -83,7 +96,7 @@ export const withApiCommand = (text: string): string =>
     "$1sessionCommand(),\n$1apiCommand(),\n",
   )
 
-export const withApiPermissions = (text: string): string =>
+export const withApiPermissions = (text: string, service = "Example Comments"): string =>
   [
     [
       'import { type Configuration, commandPermissions, settingsFor } from "@wirecat/cli-core/cli"\n',
@@ -97,7 +110,7 @@ export const withApiPermissions = (text: string): string =>
         "// `session`, and the api group would drop it anyway.",
         "export const API = {",
         "  manifest: { ...manifest, operations: manifest.operations.filter((operation) => !operation.response?.sensitive) },",
-        '  service: "Example Comments",',
+        `  service: ${JSON.stringify(service)},`,
         "}",
         "",
         "export const permissions = commandPermissions(serviceApiPermissions(API))",
@@ -176,3 +189,40 @@ export const withApiSkill = (text: string): string =>
       ].join("\n"),
     ],
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("scripts/commands.ts", rest, from, to), text)
+
+const SAMPLE_DOCUMENTS = ["openapi.json", "swagger.json", "provenance.json"]
+
+/** The seeds with the downloaded description in place of the sample's, its corrections, and its own permission group. */
+export const withDownloadedSpec = (
+  seeds: Map<string, Buffer>,
+  names: Names,
+  spec: DownloadedSpec,
+  now = new Date(),
+): Map<string, Buffer> => {
+  const dir = `spec/${names.command}`
+  const files = new Map([...seeds].filter(([path]) => !SAMPLE_DOCUMENTS.some((file) => path === `${dir}/${file}`)))
+  const provenance = {
+    sources: [{ name: names.command, url: spec.url, file: spec.file, sha256: spec.sha256 }],
+    retrieved_at: now.toISOString(),
+  }
+  files.set(`${dir}/${spec.file}`, Buffer.from(spec.text))
+  files.set(`${dir}/provenance.json`, Buffer.from(`${JSON.stringify(provenance, null, 2)}\n`))
+  const edit = (path: string, from: string, to: string) => {
+    const text = files.get(path)?.toString("utf8") ?? ""
+    files.set(path, Buffer.from(replaceOnce(path, text, from, to)))
+  }
+  edit("scripts/generate.ts", 'group: "comments"', `group: ${JSON.stringify(names.command)}`)
+  if (spec.prefix.length)
+    edit(
+      "scripts/generate.ts",
+      "names: { fromPath: true }",
+      `names: { fromPath: true, segments: { ${spec.prefix.map((segment) => `${JSON.stringify(segment)}: ""`).join(", ")} } }`,
+    )
+  if (spec.patches.length)
+    edit(
+      "scripts/spec-model.ts",
+      "const PATCHES: SpecPatch[] = []",
+      `const PATCHES: SpecPatch[] = ${JSON.stringify(spec.patches, null, 2)}`,
+    )
+  return files
+}
