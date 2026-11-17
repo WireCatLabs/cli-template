@@ -5,6 +5,88 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.25.0 — 17.11.2026
+
+### Added
+
+- The `new-cli` skill (`kit/skills/new-cli/SKILL.md`): the order of work for an agent building a whole CLI, from
+  research to the first release, with a shared-code-first step, a review of every slice and a prompt to fill in.
+- **The `new-cli` skill asks for a short agent skill**: about 8 KB of core in `skills/<cli>/SKILL.md`, the main user
+  job first, and the rest in `references/` files, each named on one line that says when to read it.
+- **The owner's scripts, template-owned**, each one readable file that prints its plan and asks first:
+  - `bin/setup-github` creates the public repository, main's ruleset with the checks `cli-dev repo-check` requires (a
+    test keeps the list equal to cli-base's) and the npm environment limited to main; a step already done is skipped.
+  - `bin/live <keyring account>` prints the `# Needs:` lines of `scripts/live.sh`, reads the token from the keyring
+    entry `service <app>-live`, passes it to `scripts/live.sh` on stdin, records the pass, and on a release branch
+    commits the record and adds its line to the pull request's Conformance section (WC-REL-17).
+  - `bin/release --first` publishes a package npm has never seen from the owner's computer, then says how to set npm
+    trusted publishing (WC-REL-11).
+- **`new` warns about a name the service's own tools use**: an environment prefix such as `NOTION_` or `GH_`, or the
+  keyring service `notion-cli`, with the files to change. The steps it prints name the scripts by their absolute
+  paths, and `scripts/live.sh` starts with `# Needs:` lines.
+
+  A CLI made earlier that has its own `bin/setup-github` gets a conflict for it from `upgrade`: take the template's
+  (`replace`). `bin/live` reads `service <app>-live`; store the test account's token there once with
+  `secret-tool store`, or keep running your own script.
+- **`new --spec openapi|swagger|discovery|none`** builds the `api` group from the service's API description, beside
+  `--api`, which stays what the service offers. A CLI gets a sample description of the made-up Example Comments service
+  in `spec/<command>/` with `provenance.json` (each source's URL and SHA-256), `scripts/sync-spec.ts`,
+  `scripts/spec-model.ts` (hash check, Swagger upgraded with `upgradeToOpenApi3`, several sources joined with
+  `mergeOpenApi`, corrections through `patchSpec`) and `scripts/generate.ts` with the `overrides`, `readingPosts`,
+  `names`, `permissions` and `pagination` options marked `SAMPLE:` (and where `auth` goes). `src/commands/api.ts` is
+  cli-core's `serviceApiCommand` over the generated manifest (its server, sign-in, paging and delete and share keys)
+  with the profile's token and pace and the CLI's hosts; `src/config.ts` merges `serviceApiPermissions`;
+  `src/api.test.ts` runs every operation against `fakeApi`. `scripts/commands.ts` writes the agent skill's API pages
+  with `apiSkillFiles`, and the agent skill links `references/api.md`. `pnpm generate` and `generate:check` run the API
+  step first.
+- **The `new-cli` skill follows the new order**: category → spec → generate → source → `cli-dev ready`. It lists every
+  value each `new` flag takes (a test keeps the list equal to the interview's), keeps at most two builder agents per
+  repository, each with its own files, and moves the details into references: the API description path, document
+  and CRM sources with cli-core's contracts, the first release and live check, and the reviewer's brief, in which the
+  reviewer checks the builder's report against the code.
+- **notion-cli is the reference for files and documents** in `AGENTS.md` and the reference CLIs page, for the sync and
+  cli-core's document contracts; drive-cli stays the reference for the command tree.
+- **`npx @wirecat/cli-template remove-sample`** removes the `comments` sample once your own commands replace it, and
+  regenerates `docs/commands.md`, `contracts/` and `contracts/mcp-catalogue.json`, so no test still pins the sample's
+  commands. It changes nothing while another file imports the sample, and names each one.
+- **`pnpm deps:check`**, in `ci:quick` and `release:check`: `pnpm peers check` and one copy of `@wirecat/cli-base` in
+  `pnpm-lock.yaml` (`scripts/one-cli-base.ts`, template-owned, which CI also runs). A CLI made earlier gets the script
+  from `upgrade`; add the `deps:check` line to its `package.json` by hand.
+- **`src/test-timeouts.test.ts`**, template-owned, fails a test that passes `--timeout` between 1 s and 10 s: too short
+  for a slow Windows runner to finish, too long to be a deliberate cut. After `upgrade`, a CLI with such a test raises
+  it to 10 s or cuts at 1 s or less.
+
+### Changed — may break callers
+
+- cli-core 0.687.0, so a CLI made from the template starts on it.
+- **Built on cli-core 0.651.0** (was 0.650.0) and cli-base 0.99.0. A stale meeting project fingerprint fails with
+  `conflict`, not `configuration_error` (reason `meeting-project.stale`), and the first screen lists `pbx`, the
+  Asterisk tool. `doctor reports create` gives a pre-filled issue link when package.json names a GitHub repository. What
+  changed is in [cli-core's changelog](https://github.com/WireCatLabs/cli-core/blob/main/CHANGELOG.md) and
+  [cli-base's](https://github.com/WireCatLabs/cli-base/blob/main/CHANGELOG.md).
+- **The family audit is cli-base's `cli-dev audit --family`**, in CI and in `pnpm audit:commands`, as mail, gcal and
+  beeline run it. `scripts/audit.sh` is gone, and `template.json` no longer lists it. It installs the published CLIs
+  of the parity groups, reads every CLI's `commands info` and fails only on a finding that names this CLI.
+  Known differences go in the new `lint/audit-differences.json` (`--differences`), each with its group and
+  `review_after`; a new CLI starts with an empty list. A CLI that still has `scripts/audit.sh` deletes it once CI
+  runs the new command.
+- **The shared workflows run cli-base 0.99.0's** `node-ci.yml`, `changelog-guard.yml`, `release-checks.yml` and
+  `release-start.yml` (the last two were on 0.85.1).
+- cli-core 0.686.0, cli-base 0.109.0 and cli-testing 0.7.3. `scripts/commands.ts` (a seed) collects its files in
+  `artifacts` and names every stale one; an existing CLI keeps its own copy.
+
+### Fixed
+
+- **Every test has 15 s, not vitest's default 5 s** (`testTimeout: 15_000` in `vitest.config.ts`), so a test that
+  passes on your machine does not fail on a slow CI runner; twice that failed a WireCat release. It is the limit the
+  handbook's new rule WC-TEST-20 sets for every WireCat repository: a test that builds big data still runs within
+  3 s on a developer machine, so shrink its data and never raise its own timeout. `vitest.config.ts` is copied only
+  into a new CLI, so an existing CLI adds the line by hand.
+- **`new` sets up a WireCat CLI fully**, so CI's `repo-setup` passes from the first pull request. A `@wirecat/` CLI
+  now gets a free monthly minute inside WC-CI-9's window and `config/parity-groups.json`, as a CLI outside WireCat
+  already did, and `new` prints the entries for cli-base's minute table, cli-core's `WIRECAT_TOOLS` and cli-docs'
+  `tools.json`.
+
 ## 0.24.0 — 13.11.2026
 
 ### Changed — may break callers
