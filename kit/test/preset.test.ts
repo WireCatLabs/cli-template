@@ -27,7 +27,9 @@ describe("new --preset generic", () => {
     expect(JSON.parse(read(dir, "template.json")).preset).toBe("generic")
     expect(read(dir, "src/identity.ts")).toContain('  tagline: "A CLI and MCP server, started from cli-template",\n')
     expect(read(dir, "docs/dev/DESIGN.md")).toContain("**Category:** other: api\n")
-    expect(out).toContain("2. Optional, since bin/release does not ask for it outside WireCat")
+    expect(out).toContain("To publish:\n  1. After the first commit, run node bin/setup-github")
+    expect(out).toContain("2. Once the first release pull request is merged, run node bin/release --first.")
+    expect(out).not.toContain(dir)
     expect(out).not.toContain("Entries for step 4")
   })
 

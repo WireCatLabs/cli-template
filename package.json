@@ -78,6 +78,7 @@
     "audit:commands": "pnpm build && node --experimental-strip-types scripts/sandboxed.ts cli-dev audit --family --cli dist/bin/clidev.js --differences lint/audit-differences.json",
     "deps:check": "pnpm peers check && node --experimental-strip-types scripts/one-cli-base.ts",
     "ci:quick": "pnpm typecheck && pnpm deps:check && pnpm lint:commands",
+    "bootstrap": "pnpm lint:fix && pnpm generate && cli-contract contracts/plan.json --update && vitest run src/mcp.test.ts --update && pnpm lint:fix && pnpm generate && pnpm ci:quick",
     "release:check": "pnpm standards:check && pnpm deps:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm lint:commands && pnpm audit:commands && pnpm contracts:check && pnpm test:matrix:check && pnpm docs:check && pnpm generate:check && pnpm version:check && pnpm security:no-leak && pnpm package:check",
     "prepare": "lefthook install || true",
     "prepack": "pnpm build",

@@ -19,7 +19,7 @@ import {
   type Question,
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { appNameOf, prefixOf } from "./rename.js"
+import { appNameOf, isWireCat, nameClashes, prefixOf, withFreePrefix } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 import {
   replaceOnce,
@@ -64,7 +64,7 @@ export const withReferenceWords = (text: string): string => {
   return `${JSON.stringify({ ...config, words: [...new Set([...words, ...REFERENCE_NAMES])] }, null, 2)}\n`
 }
 
-export const isWireCat = (names: Names): boolean => names.package.startsWith("@wirecat/")
+export { isWireCat }
 
 // The MCP Registry takes dev.wirecat/ names only from wirecat.dev's DNS key, which only WireCatLabs holds; anyone
 // else signs in with GitHub, which grants io.github.<owner>/.
@@ -652,50 +652,27 @@ export const markExecutable = async (cwd: string, paths: string[]): Promise<void
   if (paths.length) await run("git", ["add", "--chmod=+x", "--", ...paths], { cwd })
 }
 
-export const manualSteps = (names: Names, dir: string, preset?: string): string[] => [
-  `1. After the first commit, run node ${join(dir, "bin/setup-github")}: it creates ${names.owner}/${names.name}, main's ruleset and the npm environment, and asks first. Add any secrets CI needs.`,
-  `2. ${preset ? "Optional, since bin/release does not ask for it outside WireCat: before a release," : "Before each release, the first too:"} replace the sample's reads and its "# Needs:" lines in scripts/live.sh, store the test account's token once with secret-tool store --label="${names.command} live check" service ${appNameOf(names)}-live account <account>, and run ${join(dir, "bin/live")} <account> on the release pull request's branch: it commits the record there and names it under Conformance (WC-REL-17).`,
-  `3. Once the first release pull request is merged, publish it from main with ${join(dir, "bin/release")} --first; it then says how to set npm trusted publishing (WC-REL-11). Every later release is bin/release.`,
-  ...(isWireCat(names)
-    ? [
-        "4. Join WireCat's shared lists with the entries below: one pull request to cli-base (the monthly minute in WC-CI-9's table, the command in PARITY_GROUPS' all group), one to cli-core's WIRECAT_TOOLS, and after the first release one to cli-docs' tools.json.",
-      ]
-    : []),
+const presetSteps = (names: Names): string[] => [
+  `1. After the first commit, run node bin/setup-github: it creates ${names.owner}/${names.name} on GitHub, and asks first.`,
+  "2. Once the first release pull request is merged, run node bin/release --first.",
+  "Optional before a release: node bin/live <account> records a check against the real service.",
   "CI's repo-setup job (cli-dev repo-check) fails until step 1 is done.",
 ]
 
-// Names the service's own tools already use. A CLI with the same environment prefix reads their token as its own; one
-// with the same keyring service overwrites their sign-in. Each entry names where it was seen.
-const TAKEN_PREFIXES: Record<string, string> = {
-  // notion-cli BUG-759 (cli-factory plan, notion lessons).
-  NOTION: "Notion's MCP server reads NOTION_TOKEN",
-  // The cli-factory plan, 6.3.6.
-  HUBSPOT: "HubSpot's own tools read HUBSPOT_ variables",
-  // https://cli.github.com/manual/gh_help_environment
-  GH: "GitHub's gh reads GH_TOKEN",
-  GITHUB: "GitHub's gh reads GITHUB_TOKEN",
-}
-const TAKEN_SERVICES: Record<string, string> = {
-  // notion-cli RISK-2303 (cli-factory plan, notion lessons).
-  "notion-cli": "Notion's ntn keeps its sign-in under the keyring service notion-cli",
-}
-
-export const nameClashes = (names: Names, files: string[]): string[] => {
-  const prefix = prefixOf(names)
-  const app = appNameOf(names)
-  return [
-    ...(TAKEN_PREFIXES[prefix]
-      ? [
-          `${prefix}_: ${TAKEN_PREFIXES[prefix]}, so ${names.command} would take its token. Pick another prefix (notion-cli uses WCNOTION): envPrefix in src/identity.ts and ${prefix}_ in ${files.join(", ")}. upgrade merges the template's own files, scripts/sandboxed.ts and docs/dev/TESTING.md, with ${prefix}_ in them: check them after each upgrade.`,
-        ]
-      : []),
-    ...(TAKEN_SERVICES[app]
-      ? [
-          `keyring service ${app}: ${TAKEN_SERVICES[app]}, so a sign-in would replace it. Pick another name: appName in src/identity.ts.`,
-        ]
-      : []),
-  ]
-}
+export const manualSteps = (names: Names, dir: string, preset?: string): string[] =>
+  preset
+    ? presetSteps(names)
+    : [
+        `1. After the first commit, run node ${join(dir, "bin/setup-github")}: it creates ${names.owner}/${names.name}, main's ruleset and the npm environment, and asks first. Add any secrets CI needs.`,
+        `2. ${preset ? "Optional, since bin/release does not ask for it outside WireCat: before a release," : "Before each release, the first too:"} replace the sample's reads and its "# Needs:" lines in scripts/live.sh, store the test account's token once with secret-tool store --label="${names.command} live check" service ${appNameOf(names)}-live account <account>, and run ${join(dir, "bin/live")} <account> on the release pull request's branch: it commits the record there and names it under Conformance (WC-REL-17).`,
+        `3. Once the first release pull request is merged, publish it from main with ${join(dir, "bin/release")} --first; it then says how to set npm trusted publishing (WC-REL-11). Every later release is bin/release.`,
+        ...(isWireCat(names)
+          ? [
+              "4. Join WireCat's shared lists with the entries below: one pull request to cli-base (the monthly minute in WC-CI-9's table, the command in PARITY_GROUPS' all group), one to cli-core's WIRECAT_TOOLS, and after the first release one to cli-docs' tools.json.",
+            ]
+          : []),
+        "CI's repo-setup job (cli-dev repo-check) fails until step 1 is done.",
+      ]
 
 // Ready to paste; the TODO values are the ones only a person can write.
 export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTime, service?: string): string[] => {
@@ -827,7 +804,7 @@ export const runNew = async (
     io,
   )
   const answers = collected.answers
-  const names = loaded ? { ...collected.names, prefix: loaded.config.identity.prefix } : collected.names
+  const names = withFreePrefix(loaded ? { ...collected.names, prefix: loaded.config.identity.prefix } : collected.names)
   const service = loaded?.config.identity.service ?? downloaded?.title
   if (preset && isWireCat(names))
     throw new Error(`--preset ${preset} is for a CLI outside WireCat; ${names.package} is a WireCat package`)
@@ -944,7 +921,7 @@ export const runNew = async (
   const warnings = languageWarnings(answers.contentLang ?? [], category === "messenger")
   const clashes = nameClashes(names, prefixed)
   return [
-    `Created ${target} from ${source.name}@${source.version}.`,
+    `Created ${names.name} from ${source.name}@${source.version}.`,
     ...(downloaded
       ? [
           `Downloaded ${downloaded.title}, ${downloaded.operations} operations, into spec/${names.command}/${downloaded.file}; pnpm generate makes one command of each.`,
@@ -957,27 +934,20 @@ export const runNew = async (
     ...(clashes.length ? ["", "Names the service's own tools use:", ...clashes.map((clash) => `  ${clash}`)] : []),
     ...(warnings.length ? ["", "Content languages:", ...warnings.map((warning) => `  ${warning}`)] : []),
     "",
-    "Next:",
+    "Try it:",
     `  cd ${names.name}`,
     "  pnpm install",
-    "  pnpm lint:fix",
     "  pnpm generate",
+    `  node dist/bin/${names.command}.js ${spec ? "api list" : "--help"}`,
+    "",
+    "Before the first commit:",
+    "  pnpm bootstrap",
     ...(loaded ? ["  pnpm source:check"] : []),
-    ...(spec
-      ? [
-          "  pnpm exec cli-contract contracts/plan.json --update",
-          "  pnpm exec vitest run src/mcp.test.ts --update",
-          "  pnpm lint:fix",
-          // The first generate writes the skill's parts, which the commands page lists only from the second.
-          "  pnpm generate",
-        ]
-      : []),
-    "  pnpm ci:quick",
     "  git add -A",
     '  git commit -m "chore: start from @wirecat/cli-template"',
     `  then give the agent docs/dev/DESIGN.md; every account command passes a profile, e.g. ${names.command} personal config show`,
     "",
-    "Steps that need a person:",
+    preset ? "To publish:" : "Steps that need a person:",
     ...manualSteps(names, target, preset).map((step) => `  ${step}`),
     ...(isWireCat(names)
       ? [

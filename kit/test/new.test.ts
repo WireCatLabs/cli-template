@@ -76,7 +76,7 @@ describe("new", () => {
     const { out } = await makeNew(NOTES_FLAGS)
 
     expect(out).toContain(
-      "\n  cd cal-cli\n  pnpm install\n  pnpm lint:fix\n  pnpm generate\n  pnpm ci:quick\n  git add -A\n",
+      "\n  cd cal-cli\n  pnpm install\n  pnpm generate\n  node dist/bin/cal.js --help\n\nBefore the first commit:\n  pnpm bootstrap\n  git add -A\n",
     )
     expect(out).not.toContain("&&")
   })
@@ -302,7 +302,8 @@ describe("new from this repository", () => {
     expect(pkg.scripts.generate).toMatch(/^node --experimental-strip-types scripts\/generate.ts && /)
     expect(pkg.scripts["generate:check"]).toContain("scripts/generate.ts --check && ")
     expect(Boolean(pkg.devDependencies["@scalar/openapi-upgrader"])).toBe(spec === "swagger")
-    expect(out).toContain("cli-contract contracts/plan.json --update")
+    expect(pkg.scripts.bootstrap).toContain("cli-contract contracts/plan.json --update")
+    expect(out).toContain("  pnpm bootstrap\n")
   })
 
   it("--spec none adds no api group", async () => {
@@ -470,9 +471,9 @@ describe("new from this repository", () => {
   })
 
   it.each([
-    ["@wirecat/notion-cli", "notion", "NOTION_: Notion's MCP server reads NOTION_TOKEN"],
+    ["@wirecat/notion-cli", "notion", "NOTION_: Notion's MCP server reads NOTION_TOKEN, so this CLI reads WCNOTION_"],
     ["@wirecat/notion-cli", "wcnotion", "keyring service notion-cli: Notion's ntn"],
-    ["@example/gh-tool", "gh", "GH_: GitHub's gh reads GH_TOKEN"],
+    ["@example/gh-tool", "gh", "GH_: GitHub's gh reads GH_TOKEN, so this CLI reads GH_CLI_"],
   ])("warns when %s with the command %s takes a name the service's own tools use", async (pkg, command, warning) => {
     const cwd = tempDir("clash")
     const name = pkg.split("/")[1] ?? ""
@@ -485,6 +486,19 @@ describe("new from this repository", () => {
 
     expect(out).toContain("Names the service's own tools use:")
     expect(out).toContain(warning)
+  })
+
+  it("writes the free prefix into the files, so no file reads the service's own variables", async () => {
+    const cwd = tempDir("clash")
+    await runNew(
+      cwd,
+      await loadSource(root),
+      { name: "gh-tool", flags: { ...NOTES_FLAGS, package: "@example/gh-tool", command: "gh" } },
+      io(),
+    )
+
+    expect(read(join(cwd, "gh-tool"), "src/identity.ts")).toContain('"GH_CLI"')
+    expect(read(join(cwd, "gh-tool"), "docs/configuration.md")).toContain("GH_CLI_")
   })
 
   it("makes the owner the copyright holder of an outside package, under the same Apache-2.0 text", async () => {
