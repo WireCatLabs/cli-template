@@ -1,21 +1,136 @@
-# clidev
+<p align="center">
+  <img src="https://raw.githubusercontent.com/WireCatLabs/cli-template/main/kit/images/banner.png" alt="cli-template: turn an API into a CLI for AI agents" width="100%">
+</p>
 
-`clidev` is a placeholder. `npx @wirecat/cli-template new` replaces it with your CLI's command word, and
-`clidev-cli` with your CLI's name. It is not `cli-dev`, the developer tool in cli-base.
+# cli-template: turn an API into a CLI for AI agents
 
-`clidev` is a command-line tool started from [cli-template](https://github.com/WireCatLabs/cli-template), the kit for
-new WireCat CLIs. It is a working skeleton: the shared root commands, the settings, the agent skill and the MCP
-server run, and every check of the WireCat standards passes. Its one service is a sample, Example Comments, made up
-to show how a command reaches a service; its address never resolves. Replace this page with the tool's own
-introduction once the CLI reaches its real service.
+<p align="center">
+  Turn an API description into a CLI your agent can use in Claude Code, Codex or any app that speaks MCP. One
+  command gives you the CLI, an MCP server, an agent skill and a test for every operation. When the template
+  improves, its upgrade command merges the change into the CLI you already edited.
+</p>
 
-To start a new CLI from the template:
+<p align="center">
+  <a href="https://wirecat.dev/en/docs/build-create-cli">Docs</a> ·
+  <a href="https://github.com/WireCatLabs/cli-template/blob/main/kit/README.md">Reference</a> ·
+  <a href="https://discord.gg/DebENqbRrJ">Discord</a>
+</p>
 
-```sh
-npx @wirecat/cli-template new gcal-cli --command gcal --package @wirecat/gcal-cli --owner WireCatLabs
-```
+<p align="center">
+  <a href="https://www.npmjs.com/package/@wirecat/cli-template"><img src="https://img.shields.io/npm/v/@wirecat/cli-template" alt="npm"></a>
+  <a href="https://github.com/WireCatLabs/cli-template/actions/workflows/main.yml"><img src="https://github.com/WireCatLabs/cli-template/actions/workflows/main.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/WireCatLabs/cli-template/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache 2.0"></a>
+</p>
 
 ## Quick start
+
+```sh
+npx @wirecat/cli-template new acme-cli --spec openapi   # asks for the command word (acme) and the other answers
+cd acme-cli && pnpm install && pnpm generate
+node dist/bin/acme.js personal api list                 # one command for each operation of the API
+```
+
+`new` asks for every answer it is missing and never guesses one. It starts you on a sample API description of a
+made-up service, Example Comments, so the CLI builds and runs before you pick your own service.
+[From your API description](#from-your-api-description) shows how to swap it in.
+
+```mermaid
+flowchart LR
+  spec["API description<br/>OpenAPI 3, Swagger 2.0<br/>or Google Discovery"] -->|new, generate| cli["Your CLI<br/>one command per operation"]
+  cli --> mcp["MCP server"]
+  cli --> skill["Agent skill"]
+  mcp --> apps["Claude Code, Codex<br/>or any app that speaks MCP"]
+  skill --> apps
+```
+
+## What you get
+
+```text
+acme-cli/
+├── spec/acme/openapi.json   the API description, and where it came from
+├── src/generated/           types, schemas and a manifest of every operation
+├── src/commands/            the api group, the sign-in and your own commands
+├── src/api.test.ts          every operation sent to a strict fake of the API
+├── skills/                  the agent skill, with pages for the API
+├── .github/workflows/       CI, the release and a monthly check
+└── bin/release              publishes each version to npm through GitHub
+```
+
+- **Your agent gets the API the day you start.** `acme personal mcp serve` serves every command to an agent over MCP,
+  and `acme skill install` teaches Claude Code, Codex or Gemini CLI how to use the tool.
+- **The token stays in the OS keyring**, under a profile you name, such as `personal` or `work`. No profile is ever
+  assumed: a command without one stops and lists the profiles.
+
+## Why cli-template
+
+- **It keeps up after you edit.** `upgrade` merges each template change into your CLI file by file, and asks before
+  it touches a file you changed. A one-time generator leaves you to copy its later fixes by hand.
+- **One set of commands, three ways in.** The same commands are the CLI, the MCP tools and the skill, so what you
+  test is what the agent runs.
+- **You decide what an agent may do.** Each profile sets `allow`, `readonly` or `deny` per command and per API
+  operation. An operation that deletes needs its own permission key, and the api group refuses to build without one.
+- **Tests come with the API.** `src/api.test.ts` sends every operation to a fake built from the description, which
+  refuses a request the description does not allow. It also checks that a denied delete stops before anything is sent.
+- **Google APIs too.** Besides OpenAPI 3 and Swagger 2.0 it reads Google's Discovery documents.
+
+## How it compares
+
+Checked on the tools' own pages in November 2026. "Not documented" means the page does not say.
+
+| | What it makes | For agents | After you edit it | Tests in the project | License |
+| --- | --- | --- | --- | --- | --- |
+| **cli-template** | A TypeScript CLI project | MCP server (stdio and HTTP) and a skill, from the same commands | `upgrade` merges template changes | One per operation, against a strict fake | Apache-2.0 |
+| [Speakeasy](https://www.speakeasy.com/docs/cli-generation/create-cli.md) | A Go CLI, and an [MCP server](https://www.speakeasy.com/docs/standalone-mcp/build-server) as a separate product | Agent mode for Claude Code, Cursor and others | Not documented | Contract tests, offered as a separate product | Vendor service, the CLI generator labelled alpha in its docs |
+| [openapi-mcp-generator](https://github.com/harsha-iiiv/openapi-mcp-generator) | A TypeScript MCP server | MCP only | `--force` writes over your edits | Not documented | MIT |
+| [FastMCP `from_openapi`](https://gofastmcp.com/integrations/openapi) | An MCP server built at run time, in Python | MCP only | No code is generated | Not documented | Apache-2.0 |
+| [api2cli](https://github.com/alexknowshtml/api2cli) | A Commander.js CLI and a skill, written by a Claude Code skill | A Claude Code skill | A one-time result | None shown | MIT |
+
+What cli-template does not do. It is Node and TypeScript only (Node 22.16 or 24 and later, with pnpm), and it
+builds no single binary. It reads JSON descriptions, so convert a YAML one first, and the api group calls one base
+URL. The CLI signs in with a token: OAuth is yours to wire up, from cli-core's `oauth` module. The skeleton keeps
+no data of its own and has no search.
+
+## From your API description
+
+`new --spec openapi` (or `swagger`, `discovery`) writes the sample description to `spec/<command>/` with a
+`provenance.json` that says where it came from. To switch to your service:
+
+1. Put the address of its JSON description in `spec/<command>/provenance.json`.
+2. `pnpm spec:sync` downloads it, then `pnpm generate` writes one command per operation, its permissions, its tests
+   and the skill's API pages.
+3. Read the [OpenAPI guide](kit/skills/new-cli/references/openapi.md) for what to set in `scripts/generate.ts`, such
+   as which operations delete.
+
+Run the same two steps when the service changes its API.
+
+## Keep it current
+
+Run `npx @wirecat/cli-template upgrade` in your CLI, with a clean git working tree. For each file the template
+changed it offers to merge the change, take the template's file, skip it or show the diff. `--dry-run` lists what
+each file would get and writes nothing. The files that are yours from the start, such as your commands in
+`src/commands/`, `README.md` and `package.json`, are never touched. The details are in the
+[kit reference](kit/README.md#upgrade).
+
+## Have an agent build it
+
+The [new-cli skill](kit/skills/new-cli/SKILL.md) takes an agent from research to the first release, and has a fresh
+agent review every part it builds. Its last section is the prompt to fill in. Parts of it assume WireCat's own
+repositories, such as where the research is kept.
+
+## Publishing outside WireCat
+
+A CLI made outside WireCat publishes under its own npm scope, such as `@example/acme-cli`. `new` sets it up for that,
+with its own MCP Registry name and its own monthly CI run. `bin/setup-github` creates the
+repository, and `bin/release --first` publishes the first version from your computer. The steps, with npm trusted
+publishing, are in [Publishing outside WireCat](kit/README.md#publishing-outside-wirecat).
+
+## This repository is also the skeleton
+
+`new` copies this repository into your CLI. Its command word is the placeholder `clidev`, which `new` replaces with
+yours. It is not `cli-dev`, the developer tool in cli-base. `new` writes a fresh README for each new CLI, so this
+page never reaches one.
+
+To work on the template itself:
 
 ```sh
 pnpm install
@@ -23,92 +138,10 @@ pnpm build
 node dist/bin/clidev.js doctor
 ```
 
-`doctor` needs no profile. Every command that uses an account starts with one, a name you choose for that account,
-such as `personal` in `clidev personal config show`; none is ever assumed. `CLIDEV_PROFILE=personal` does the same for a whole shell session.
+The skeleton's own pages describe `clidev` as a user sees it: [install](docs/installation.md),
+[use it](docs/usage.md), [settings](docs/configuration.md), [commands](docs/commands.md),
+[when something goes wrong](docs/troubleshooting.md) and [security](docs/security.md). The working rules for people
+and agents are in [AGENTS.md](AGENTS.md), how `new` and `upgrade` read this repository is in
+[kit/DEVELOPING.md](kit/DEVELOPING.md), and `pnpm release:check` runs every check before a release.
 
-## What you can do
-
-| Command | What it does |
-| --- | --- |
-| `clidev doctor` | Checks this installation: version, paths, settings and profiles, without the network |
-| `clidev personal session start` | Signs the profile in with the service's token, kept in the OS keyring |
-| `clidev personal comments list` | The sample: lists, shows, creates and updates comments in Example Comments |
-| `clidev commands --json` | Prints every command as JSON, for agents and scripts |
-| `clidev personal config show` | Shows each setting and where it came from |
-| `clidev skill install` | Installs the agent skill for Claude Code, Codex, Gemini CLI and OpenClaw; `--for hermes` for Hermes Agent |
-| `clidev personal mcp serve` | Serves the profile's commands to an AI agent over MCP; `--http` for agents in the browser |
-| `clidev runs list` | Lists recorded runs, newest first: every command that failed is kept |
-| `clidev upgrade --check` | Says whether a newer version is on npm |
-
-## For AI agents
-
-`clidev skill show` prints the rules an agent follows with this tool. `clidev personal mcp serve` serves every
-command to an agent, writes included: the profile's permissions decide what runs. See
-[MCP and permissions](docs/usage.md#agents).
-
-## Why this template
-
-A new WireCat CLI must meet the same standards as the others from its first commit: the shared commands, the
-settings, the agent skill, MCP, the checks and the release. Built by hand, that is days of copying and some of it
-is missed. `new` gives a CLI that already passes every check, so the work starts on the service itself. `upgrade`
-keeps the shared files in step later, so a CLI made today does not drift from one made next year.
-
-## Main features
-
-- **`new`** copies the skeleton, renames `clidev` to your command word, and writes the design answers into
-  `docs/dev/DESIGN.md`. It asks for each missing answer and never guesses one.
-- **`upgrade`** merges each template change into your CLI file by file, and asks before it touches a file you changed.
-- **The skeleton runs.** The shared root commands, settings with permissions, the agent skill and the MCP server
-  work before a line of your own code.
-- **A sample shows every pattern.** `comments` reaches a made-up service the way a real command must: the token in
-  the keyring, every request inside cli-core's run, writes behind the guard, and a strict fake in the tests.
-  `AGENTS.md` lists what to keep and what to replace.
-- **Every check is wired in:** lint, types, tests with a coverage floor, command contracts, the docs checks and the
-  release script.
-
-The copy tool is described in [kit/README.md](https://github.com/WireCatLabs/cli-template/blob/main/kit/README.md).
-
-## Profiles
-
-A profile is a name you choose for one account, such as `personal` or `work`. It is the first word of every command
-that uses an account. No profile is ever assumed: a command without one stops and lists the profiles on this
-computer. `session start` signs a profile in; its token goes to the OS keyring, or to a private file where no
-keyring works.
-
-## Settings and permissions
-
-`clidev personal config show` lists each setting and where it came from. A profile's `permissions` say what a command
-may do: `allow`, `ask`, `readonly` or `deny`. `CLIDEV_READ_ONLY=1` refuses every write. See
-[Settings](docs/configuration.md).
-
-## Limits
-
-The skeleton reaches only the sample's service, Example Comments, whose address never resolves, and stores none of
-its data.
-
-## Security
-
-`clidev` keeps its settings and state on this computer, and its token in the OS keyring. Its only service is the
-sample's, whose address never resolves. See
-[Security](docs/security.md), and report a vulnerability privately as [SECURITY.md](SECURITY.md) says.
-
-## When it does not work
-
-Run `clidev doctor` first: it checks the installation without the network.
-[When something goes wrong](docs/troubleshooting.md) lists the usual symptoms.
-
-## Documentation
-
-- [Install](docs/installation.md)
-- [Use it](docs/usage.md)
-- [Settings](docs/configuration.md)
-- [Commands](docs/commands.md)
-- [When something goes wrong](docs/troubleshooting.md)
-- [Security](docs/security.md)
-
-## Development
-
-The working rules for people and agents are in [AGENTS.md](AGENTS.md). `pnpm release:check` runs the checks
-before a release; its command audit installs the published WireCat CLIs from npm to compare with them.
-`pnpm package:check` installs the packed package and checks what it ships, and
-`pnpm security:no-leak` checks that nothing private reaches the output. The changes are in [CHANGELOG.md](CHANGELOG.md).
+Report a vulnerability privately as [SECURITY.md](SECURITY.md) says. The changes are in [CHANGELOG.md](CHANGELOG.md).
