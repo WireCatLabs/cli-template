@@ -85,6 +85,7 @@
     "kit:build": "tsc -p kit && node -e \"require('node:fs').copyFileSync('.gitignore', 'gitignore')\"",
     "kit:typecheck": "tsc -p kit/tsconfig.test.json",
     "kit:e2e": "bash kit/e2e.sh",
+    "kit:images": "node --experimental-strip-types kit/images/render.ts",
     "kit:docs": "cspell lint --config cspell.json --no-progress --no-summary kit/*.md && rumdl check --config config/wirecat/rumdl.toml kit/*.md"
   },
   "dependencies": {
