@@ -60,8 +60,9 @@ if [ -n "$first" ] && [ -n "$(npm view "$package" version --prefer-online 2>/dev
   exit 1
 fi
 # The code released is the code a person checked against the real service (WC-REL-17). Only the template has kit/,
-# and no service to check; every CLI made from it has a template.json too, so that file cannot tell them apart.
-[ -d kit ] || pnpm exec cli-dev live check --version "$version"
+# and no service to check; every CLI made from it has a template.json too, so that file cannot tell them apart. A CLI
+# made with --preset generic is outside WireCat, and WC-REL-17 leaves its live check to its owner.
+[ -d kit ] || grep -qs '"preset": "generic"' template.json || pnpm exec cli-dev live check --version "$version"
 # A 404 for a package npm has never seen is "not published", like any other failure of `npm view`.
 published() {
   npm view "$package@$version" version --prefer-online >/dev/null 2>&1

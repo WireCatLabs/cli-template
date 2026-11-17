@@ -11,6 +11,10 @@
 </p>
 
 <p align="center">
+  <img src="https://raw.githubusercontent.com/WireCatLabs/cli-template/main/kit/images/new.gif" alt="new --spec-url turns PokeAPI's description into 102 commands, answers a real call and starts an MCP server" width="700">
+</p>
+
+<p align="center">
   <a href="https://wirecat.dev/en/docs/build-create-cli">Docs</a> ·
   <a href="https://github.com/WireCatLabs/cli-template/blob/main/kit/README.md">Reference</a> ·
   <a href="https://discord.gg/DebENqbRrJ">Discord</a>
@@ -22,21 +26,28 @@
   <a href="https://github.com/WireCatLabs/cli-template/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache 2.0"></a>
 </p>
 
+From PokeAPI's published description to 102 commands, a real answer and a working MCP server took 16 seconds with an
+empty pnpm store and 12 with a warm one, not counting npx's own download. Nine of WireCat's own CLIs, among them
+[mail-cli](https://github.com/WireCatLabs/mail-cli) and [notion-cli](https://github.com/WireCatLabs/notion-cli), are
+made from it and kept current with its upgrade.
+
 ## Quick start
 
 ```sh
-npx @wirecat/cli-template new acme-cli --spec openapi   # asks for the command word (acme) and the other answers
-cd acme-cli && pnpm install && pnpm generate
-node dist/bin/acme.js personal api list                 # one command for each operation of the API
+npx @wirecat/cli-template new poke-cli --preset generic --owner example --sign-in none \
+  --spec-url https://raw.githubusercontent.com/PokeAPI/pokeapi/d19c710/openapi.yml
+cd poke-cli && pnpm install && pnpm generate
+node dist/bin/poke.js personal api pokemon-get --id pikachu --json=name,height,weight
+node dist/bin/poke.js personal mcp add claude-code
 ```
 
-`new` asks for every answer it is missing and never guesses one. It starts you on a sample API description of a
-made-up service, Example Comments, so the CLI builds and runs before you pick your own service.
-[From your API description](#from-your-api-description) shows how to swap it in.
+Put your own GitHub name in `--owner` and the address of your service's description in `--spec-url`, JSON or YAML.
+`--preset generic` answers the questions only WireCat's own tools need, and any flag you give wins. Without it, `new`
+asks for every missing answer and never guesses one.
 
 ```mermaid
 flowchart LR
-  spec["API description<br/>OpenAPI 3, Swagger 2.0<br/>or Google Discovery"] -->|new, generate| cli["Your CLI<br/>one command per operation"]
+  spec["API description<br/>OpenAPI 3 or Swagger 2.0, JSON or YAML,<br/>or Google Discovery"] -->|new, generate| cli["Your CLI<br/>one command per operation"]
   cli --> mcp["MCP server"]
   cli --> skill["Agent skill"]
   mcp --> apps["Claude Code, Codex<br/>or any app that speaks MCP"]
@@ -46,8 +57,8 @@ flowchart LR
 ## What you get
 
 ```text
-acme-cli/
-├── spec/acme/openapi.json   the API description, and where it came from
+poke-cli/
+├── spec/poke/openapi.yaml   the API description, and where it came from
 ├── src/generated/           types, schemas and a manifest of every operation
 ├── src/commands/            the api group, the sign-in and your own commands
 ├── src/api.test.ts          every operation sent to a strict fake of the API
@@ -56,8 +67,8 @@ acme-cli/
 └── bin/release              publishes each version to npm through GitHub
 ```
 
-- **Your agent gets the API the day you start.** `acme personal mcp serve` serves every command to an agent over MCP,
-  and `acme skill install` teaches Claude Code, Codex or Gemini CLI how to use the tool.
+- **Your agent gets the API the day you start.** `poke personal mcp serve` serves every command to an agent over MCP,
+  and `poke skill install` teaches Claude Code, Codex or Gemini CLI how to use the tool.
 - **The token stays in the OS keyring**, under a profile you name, such as `personal` or `work`. No profile is ever
   assumed: a command without one stops and lists the profiles.
 
@@ -86,22 +97,20 @@ Checked on the tools' own pages in November 2026. "Not documented" means the pag
 | [api2cli](https://github.com/alexknowshtml/api2cli) | A Commander.js CLI and a skill, written by a Claude Code skill | A Claude Code skill | A one-time result | None shown | MIT |
 
 What cli-template does not do. It is Node and TypeScript only (Node 22.16 or 24 and later, with pnpm), and it
-builds no single binary. It reads JSON descriptions, so convert a YAML one first, and the api group calls one base
-URL. The CLI signs in with a token: OAuth is yours to wire up, from cli-core's `oauth` module. The skeleton keeps
+builds no single binary. The api group calls one base URL, and its generator stops on a keyword it does not
+understand, so some descriptions need a patch with its reason before they generate. The CLI signs in with a token: OAuth is yours to wire up, from cli-core's `oauth` module. The skeleton keeps
 no data of its own and has no search.
 
 ## From your API description
 
-`new --spec openapi` (or `swagger`, `discovery`) writes the sample description to `spec/<command>/` with a
-`provenance.json` that says where it came from. To switch to your service:
+`new --spec-url <url>` downloads the description (https only, at most 20 MB), puts its servers into the hosts the
+CLI may reach, and records the address and a hash in `spec/<command>/provenance.json`. `pnpm generate` then writes
+one command per operation, its permissions, its tests and the skill's API pages.
 
-1. Put the address of its JSON description in `spec/<command>/provenance.json`.
-2. `pnpm spec:sync` downloads it, then `pnpm generate` writes one command per operation, its permissions, its tests
-   and the skill's API pages.
-3. Read the [OpenAPI guide](kit/skills/new-cli/references/openapi.md) for what to set in `scripts/generate.ts`, such
-   as which operations delete.
-
-Run the same two steps when the service changes its API.
+When the generator stops on part of the description, it names the place. Add a patch with its reason in
+`scripts/spec-model.ts`, or set what to treat as a delete in `scripts/generate.ts`, as the
+[OpenAPI guide](kit/skills/new-cli/references/openapi.md) shows. When the service changes its API, `pnpm spec:sync`
+downloads it again and `pnpm generate` follows.
 
 ## Keep it current
 
@@ -113,14 +122,20 @@ each file would get and writes nothing. The files that are yours from the start,
 
 ## Have an agent build it
 
-The [new-cli skill](kit/skills/new-cli/SKILL.md) takes an agent from research to the first release, and has a fresh
-agent review every part it builds. Its last section is the prompt to fill in. Parts of it assume WireCat's own
-repositories, such as where the research is kept.
+```sh
+npx skills add WireCatLabs/cli-template
+```
+
+This installs the [api-to-cli skill](SKILL.md) for Claude Code, Codex and other agents. Ask your agent for a CLI for
+a service, and it finds the description, runs `new`, fixes what the generator stops on, and wires the MCP server. It
+never runs the CLI against your account without asking. WireCat's own CLIs use the longer
+[new-cli skill](kit/skills/new-cli/SKILL.md), which also keeps the research and reviews in WireCat's repositories.
 
 ## Publishing outside WireCat
 
-A CLI made outside WireCat publishes under its own npm scope, such as `@example/acme-cli`. `new` sets it up for that,
-with its own MCP Registry name and its own monthly CI run. `bin/setup-github` creates the
+A CLI made outside WireCat publishes under its own npm scope, such as `@example/poke-cli`. `new --preset generic`
+sets it up for that, with its own MCP Registry name and its own monthly CI run, and no recorded live check before a
+release. `bin/setup-github` creates the
 repository, and `bin/release --first` publishes the first version from your computer. The steps, with npm trusted
 publishing, are in [Publishing outside WireCat](kit/README.md#publishing-outside-wirecat).
 

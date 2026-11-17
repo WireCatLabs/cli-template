@@ -18,6 +18,8 @@ export type Names = { name: string; command: string; package: string; owner: str
 export type CliManifest = {
   template: string
   version: string
+  // "generic": made with --preset generic, outside WireCat; bin/release then needs no live check.
+  preset?: string
   names: Names
   files: Record<string, string>
   seeds: string[]
@@ -89,15 +91,24 @@ export const parseTemplateManifest = (file: string, raw: unknown): TemplateManif
 
 export const parseCliManifest = (file: string, raw: unknown): CliManifest => {
   if (!isRecord(raw)) return fail(file, "must be a JSON object")
-  const { template, version, names, files, seeds, pending } = raw
+  const { template, version, preset, names, files, seeds, pending } = raw
   if (typeof template !== "string") return fail(file, `"template" must be the template's package name`)
   if (typeof version !== "string") return fail(file, `"version" must be the template version this CLI is on`)
   if (!isNames(names)) return fail(file, `"names" must hold name, command, package and owner`)
   if (!isHashes(files)) return fail(file, `"files" must map each template-owned path to its sha256`)
   if (!isStringList(seeds)) return fail(file, `"seeds" must be a list of paths`)
+  if (preset !== undefined && typeof preset !== "string") return fail(file, `"preset" must be the preset new used`)
   if (pending !== undefined && !isPending(pending))
     return fail(file, `"pending" must hold version, files and conflicts`)
-  return { template, version, names, files, seeds, ...(pending ? { pending } : {}) }
+  return {
+    template,
+    version,
+    ...(preset === undefined ? {} : { preset }),
+    names,
+    files,
+    seeds,
+    ...(pending ? { pending } : {}),
+  }
 }
 
 export const readJson = async (path: string): Promise<unknown> => {

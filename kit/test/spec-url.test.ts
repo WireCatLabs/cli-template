@@ -148,6 +148,9 @@ describe("new --spec-url", () => {
     expect(JSON.parse(read(dir, "package.json")).devDependencies.yaml).toBeTruthy()
     expect(read(dir, "docs/dev/DESIGN.md")).toContain("**API description:** OpenAPI 3.0 or 3.1")
     expect(out).toContain("Downloaded Acme Notes, 2 operations, into spec/cal/openapi.yaml")
+    const readme = read(dir, "README.md")
+    expect(readme.split("\n")[0]).toBe("# cal: Acme Notes CLI for AI agents")
+    expect(readme).toContain("**Every operation of the Acme Notes API is a command.**")
   })
 
   it("refuses a --spec the description contradicts, before writing anything", async () => {

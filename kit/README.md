@@ -54,6 +54,17 @@ sample: https only, or http from localhost, at most 20 MB. It writes the descrip
 [references/openapi.md](skills/new-cli/references/openapi.md#new---spec-url-url) lists what it writes. The first
 `pnpm build` or `pnpm generate` then makes one command of each operation.
 
+`--preset generic` is for a CLI outside WireCat. It needs only `<name>` and `--owner`: the command word is `<name>`
+without `-cli`, the package `@<owner>/<name>`, and the questions about WireCat's store, search and Desktop get neutral
+answers (category `other:api`, content in `en`, a token sign-in, untrusted names and links). Any flag given wins.
+It refuses a `@wirecat/` package. `template.json` records `"preset": "generic"`, and `bin/release` and
+`release-start.yml` then need no recorded live check (WC-REL-17's exception for a CLI outside WireCat).
+
+```sh
+npx @wirecat/cli-template new poke-cli --preset generic --owner example --sign-in none \
+  --spec-url https://raw.githubusercontent.com/PokeAPI/pokeapi/d19c710b7f101ea86e02989d23a152d231de98be/openapi.yml
+```
+
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
 
@@ -114,7 +125,8 @@ publishes no skill to ClawHub, whose `wirecat` owner is WireCat's.
 3. **Set the trusted publisher** on npmjs.com, as [Trusted publishing](https://docs.npmjs.com/trusted-publishers)
    says: your GitHub owner and repository, the workflow file `release.yml` (case matters), and the environment `npm`,
    which the template's publish job uses. Its first publish must follow within two days of setting it.
-4. **Record a live check.** `bin/release` refuses a version without one (WC-REL-17). `scripts/live.sh` signs in
+4. **Record a live check.** `bin/release` refuses a version without one (WC-REL-17), unless the CLI was made with
+   `--preset generic`; a check against a test account before each release is still worth it. `scripts/live.sh` signs in
    with a token read from stdin, in temporary folders and out of reach of the keyring, runs the CLI's reads, `doctor`
    and `--wcat-describe`, and signs out. Replace the sample's reads and `# Needs:` lines with your own, then run
    `bin/live <keyring account>` on the release branch.
