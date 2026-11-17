@@ -6,7 +6,7 @@ import { type CliConfig, parseCliConfig } from "@wirecat/cli-core/manifest"
 import type { NewArgs } from "./new.js"
 
 /** `pending`: what `new` keeps in the config for later and does not build from yet. */
-export type LoadedConfig = { config: CliConfig; text: string; pending: string[] }
+export type LoadedConfig = { config: CliConfig; text: string; pending: string[]; verifies: boolean }
 
 const CLI_CORE = /^@wirecat\/cli-core(\/|$)/
 
@@ -45,13 +45,19 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
   if (module.default === undefined)
     throw new Error(`${path}: export the config as default: export default defineCli({…})`)
   const config = parseCliConfig(module.default)
-  return { config, text: await readFile(full, "utf8"), pending: notWiredYet(config) }
+  const verifies = config.auth.preset === "token" && config.auth.verify !== undefined
+  return { config, text: await readFile(full, "utf8"), pending: notWiredYet(config), verifies }
 }
 
 const SIGN_IN: Record<CliConfig["auth"]["preset"], string> = { none: "none", token: "token", "oauth2-pkce": "oauth" }
 
 const notWiredYet = (config: CliConfig): string[] => [
-  ...(config.auth.preset === "oauth2-pkce" ? ["auth: scopes and the other oauth2-pkce options"] : []),
+  ...(config.auth.preset === "oauth2-pkce"
+    ? ["auth: the oauth2-pkce sign-in; session keeps the template's sample"]
+    : []),
+  ...(config.auth.preset === "token" && !config.auth.verify
+    ? ["auth.verify: the call that checks a token; session keeps the template's sample until it is named"]
+    : []),
   ...(config.source ? ["source: the CRM commands (pnpm source:check checks it)"] : []),
   ...(config.hooks ? ["hooks"] : []),
 ]

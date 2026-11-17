@@ -730,10 +730,21 @@ const specFromUrl = async (args: NewArgs, fetch: SpecFetch | undefined): Promise
 
 const CONFIG_FILE = "wirecat.config.ts"
 const SOURCE_CHECK = "scripts/source-check.ts"
+const FROM_CONFIG = "scripts/from-config.ts"
+const SESSION = "src/commands/session.ts"
 
-const withSourceCheck = (text: string): string => {
+// pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
+const withConfigScripts = (text: string): string => {
   const pkg = JSON.parse(text)
-  pkg.scripts = { ...pkg.scripts, "source:check": `node --experimental-strip-types ${SOURCE_CHECK}` }
+  const step = `node --experimental-strip-types ${FROM_CONFIG}`
+  const first = (key: string, command: string) => {
+    if (typeof pkg.scripts[key] === "string") pkg.scripts[key] = `${command} && ${pkg.scripts[key]}`
+  }
+  first("generate", step)
+  first("generate:check", `${step} --check`)
+  first("build", `${step} --if-missing`)
+  first("typecheck", `${step} --if-missing`)
+  pkg.scripts["source:check"] = `node --experimental-strip-types ${SOURCE_CHECK}`
   return `${JSON.stringify(pkg, null, 2)}\n`
 }
 
@@ -773,7 +784,7 @@ export const runNew = async (
             JSON.parse(text).dependencies?.yaml,
           )
         : cliPackageJson(text, names, description)
-      return loaded ? withSourceCheck(pkg) : pkg
+      return loaded ? withConfigScripts(pkg) : pkg
     },
     ...(spec
       ? {
@@ -836,7 +847,8 @@ export const runNew = async (
   }
   if (loaded) {
     await writeOut(target, CONFIG_FILE, loaded.text)
-    await writeOut(target, SOURCE_CHECK, await readFile(join(source.root, "kit/seeds/config", SOURCE_CHECK)))
+    const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? [SESSION] : [])]
+    for (const path of seeds) await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", path)))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
@@ -882,6 +894,8 @@ export const runNew = async (
           "  pnpm exec cli-contract contracts/plan.json --update",
           "  pnpm exec vitest run src/mcp.test.ts --update",
           "  pnpm lint:fix",
+          // The first generate writes the skill's parts, which the commands page lists only from the second.
+          "  pnpm generate",
         ]
       : []),
     "  pnpm ci:quick",
