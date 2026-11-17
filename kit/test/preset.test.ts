@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { afterAll, describe, expect, it } from "vitest"
 import { parseCliManifest } from "../src/manifest.js"
@@ -70,7 +71,7 @@ describe("new --preset generic", () => {
 })
 
 describe("the new CLI's README", () => {
-  it("leads with the gains and why, then the quick start, as WC-DOC-7 asks, with no placeholder in a command", async () => {
+  it("opens with the Docs, Install and Usage row, the gains and why before the quick start, no placeholder", async () => {
     const { dir } = await makeGeneric({ owner: "example" })
 
     const readme = read(dir, "README.md")
@@ -82,6 +83,17 @@ describe("the new CLI's README", () => {
     expect(at("Quick start")).toBeGreaterThan(at("Why acme"))
     expect(at("Use it with your agent")).toBeGreaterThan(at("Quick start"))
     expect(readme).toContain("acme personal session start")
+    const row = readme.indexOf('<p align="center">')
+    expect(row).toBeGreaterThan(0)
+    expect(at("What you get")).toBeGreaterThan(row)
+    for (const [label, page] of [
+      ["Docs", "index"],
+      ["Install", "installation"],
+      ["Usage", "usage"],
+    ]) {
+      expect(readme).toContain(`<a href="https://github.com/example/acme-cli/blob/main/docs/${page}.md">${label}</a>`)
+      expect(existsSync(join(dir, `docs/${page}.md`))).toBe(true)
+    }
     for (const block of readme.match(/```sh\n[\s\S]*?```/g) ?? []) expect(block).not.toMatch(/<[a-z]/)
   })
 })

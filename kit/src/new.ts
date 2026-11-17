@@ -499,15 +499,24 @@ export const withMessenger = (text: string, category: string): string =>
 export type ReadmeFacts = { tagline: string; service?: string; signIn: string; api: boolean }
 
 // WC-DOC-7's order, tg-cli's: the gain first, then why, then the steps. Every command in it runs as written.
+// The links row is WC-DOC-24's, with full GitHub links because npm ships the README without docs/. No community
+// link: only the owner knows where the tool's audience talks.
 export const cliReadme = (names: Names, facts: ReadmeFacts): string => {
   const cli = names.command
   const service = facts.service ?? cli
   const signsIn = facts.signIn !== "none"
   const npm = `https://www.npmjs.com/package/${names.package}`
+  const docs = `https://github.com/${names.owner}/${names.name}/blob/main/docs`
   return [
     `# ${cli}: ${service} CLI for AI agents`,
     "",
     `${facts.tagline.replace(/\.$/, "")}. One tool for you and for Claude Code, Codex or any agent that speaks MCP.`,
+    "",
+    '<p align="center">',
+    `  <a href="${docs}/index.md">Docs</a> ·`,
+    `  <a href="${docs}/installation.md">Install</a> ·`,
+    `  <a href="${docs}/usage.md">Usage</a>`,
+    "</p>",
     "",
     ...(facts.api
       ? [
