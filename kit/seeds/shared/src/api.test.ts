@@ -15,20 +15,23 @@ const withPermissions = (permissions: Record<string, string>) => {
 }
 afterEach(() => rmSync(configFile, { force: true }))
 
+type Operation = (typeof API.manifest.operations)[number]
+
+// The generated manifest has no `security` when the spec declares none at the top; then nothing is signed.
+const documentSecurity = (API.manifest as { security?: Operation["security"] }).security
+
 const fake = () =>
   fakeApi({
     // fakeApi reads only each operation's own security; the CLI falls back to the document's, as `security: []`.
     operations: API.manifest.operations.map((operation) => ({
       ...operation,
-      security: operation.security ?? API.manifest.security,
+      security: operation.security ?? documentSecurity ?? [],
     })),
     definitions,
     baseUrl: manifestBaseUrl(API.manifest),
     // SAMPLE: the header the spec's sign-in names; an `apiKey` scheme sends the bare token in its own header.
     auth: { header: "authorization", value: `Bearer ${FAKE_TOKEN}` },
   })
-
-type Operation = (typeof API.manifest.operations)[number]
 
 const deleteKeys = [
   ...new Set(

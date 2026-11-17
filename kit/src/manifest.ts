@@ -13,7 +13,8 @@ export type TemplateManifest = {
   placeholders: Placeholders
 }
 
-export type Names = { name: string; command: string; package: string; owner: string }
+// `prefix` is the environment variables' prefix when it is not the command word in capitals (`B24` for bitrix24).
+export type Names = { name: string; command: string; package: string; owner: string; prefix?: string }
 
 export type CliManifest = {
   template: string
@@ -57,7 +58,9 @@ export const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isPlaceholder = (key: string): key is keyof Placeholders => key in DEFAULT_PLACEHOLDERS
 
 const isNames = (value: unknown): value is Names =>
-  isRecord(value) && ["name", "command", "package", "owner"].every((key) => typeof value[key] === "string")
+  isRecord(value) &&
+  ["name", "command", "package", "owner"].every((key) => typeof value[key] === "string") &&
+  (value.prefix === undefined || typeof value.prefix === "string")
 
 const isHashes = (value: unknown): value is Record<string, string> =>
   isRecord(value) && Object.values(value).every((hash) => typeof hash === "string")

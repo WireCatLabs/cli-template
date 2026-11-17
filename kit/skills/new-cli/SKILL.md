@@ -81,8 +81,28 @@ Bump the CLI to the latest cli-core and cli-base as its first commit; `pnpm deps
 
 ## 4. Spec and generate
 
-Start from the template. Every flag takes only the values listed; a flag left out is asked in a terminal, and is an
-error without one:
+A service with an OpenAPI or Swagger description at an https URL starts from one file, `wirecat.config.ts`: the names
+(command, package, environment prefix, service, owner), the description's URL, the sign-in preset, the category and,
+for a CRM, the source manifest
+([cli-core CRM.md](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/CRM.md)). Write it in an empty folder,
+then:
+
+```sh
+npx @wirecat/cli-template new --from-config wirecat.config.ts <the other answers>
+```
+
+The config sets the command, package, owner, category, sign-in and API description; the other answers are the flags
+below, or are asked. The CLI keeps the config and gets `pnpm source:check`. After `new`, only the
+config's `source` is read again: change the names, the URL or the sign-in in the CLI's own files. For a CRM, work in
+a loop: read the API's answers in `docs/dev/API_COVERAGE.md` and `src/generated/`, change `source`,
+`pnpm generate && pnpm source:check`, and the contract tests. `new` lists what the config holds that it does not
+build from yet (the CRM commands, the hooks, the OAuth options); wire those by hand until it does. When generation
+stops, the
+[api-to-cli skill](https://github.com/WireCatLabs/cli-template/blob/main/SKILL.md#3-when-generation-stops)
+says what to change.
+
+Without a config, every flag takes only the values listed; a flag left out is asked in a terminal, and is an error
+without one:
 
 ```sh
 npx @wirecat/cli-template new <name>-cli --command <word> --package @wirecat/<name>-cli --owner WireCatLabs \

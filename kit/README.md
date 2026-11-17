@@ -65,6 +65,28 @@ npx @wirecat/cli-template new poke-cli --preset generic --owner example --sign-i
   --spec-url https://raw.githubusercontent.com/PokeAPI/pokeapi/d19c710b7f101ea86e02989d23a152d231de98be/openapi.yml
 ```
 
+`--from-config wirecat.config.ts` takes the answers from one file instead of flags, and the CLI keeps it:
+
+```ts
+import { defineCli } from "@wirecat/cli-core/manifest"
+
+export default defineCli({
+  identity: { command: "acme", package: "@wirecat/acme-cli", prefix: "WCACME", service: "Acme", owner: "WireCatLabs" },
+  spec: { kind: "openapi", from: "https://acme.example/openapi.json" },
+  auth: { preset: "token" },
+  category: "crm",
+  source: { provider: "acme", kinds: ["person"], entities: { person: { … } } },
+})
+```
+
+The folder is the package's name without its scope. The config sets `--command`, `--package`, `--owner`,
+`--category` (`other` becomes `other:api`), `--sign-in` (`oauth2-pkce` becomes `oauth`), `--spec` and `--spec-url`;
+giving one of them as a flag too is an error. The other answers are flags or asked. `prefix` names the environment
+variables (`WCACME_…`) and is kept in `template.json`; `service` is the service's name in the README. The config is
+read before the CLI has `node_modules`: its import resolves to the kit's own cli-core, which checks it with
+`parseCliConfig`. The CLI gets `pnpm source:check`, which checks a CRM source's operations and every path its map
+reads against the generated API, after `pnpm generate`.
+
 In a terminal it asks for every missing answer. Without a terminal, a missing answer is an error that lists the
 choices. Nothing is guessed.
 

@@ -1,12 +1,13 @@
 import { execFile } from "node:child_process"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
-import { chmod, mkdir, readdir, writeFile } from "node:fs/promises"
+import { chmod, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
+import type { LoadedConfig } from "./from-config.js"
 import {
   ask,
   choiceList,
@@ -18,7 +19,7 @@ import {
   type Question,
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
-import { appNameOf, upperCommand } from "./rename.js"
+import { appNameOf, prefixOf } from "./rename.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 import {
   SWAGGER_PEERS,
@@ -644,7 +645,7 @@ const TAKEN_SERVICES: Record<string, string> = {
 }
 
 export const nameClashes = (names: Names, files: string[]): string[] => {
-  const prefix = upperCommand(names.command)
+  const prefix = prefixOf(names)
   const app = appNameOf(names)
   return [
     ...(TAKEN_PREFIXES[prefix]
@@ -661,12 +662,12 @@ export const nameClashes = (names: Names, files: string[]): string[] => {
 }
 
 // Ready to paste; the TODO values are the ones only a person can write.
-export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTime): string[] => {
+export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTime, service?: string): string[] => {
   const tool = [
     "{",
     `  command: ${JSON.stringify(names.command)},`,
     `  appName: ${JSON.stringify(appNameOf(names))},`,
-    `  envPrefix: ${JSON.stringify(upperCommand(names.command))},`,
+    `  envPrefix: ${JSON.stringify(prefixOf(names))},`,
     `  package: ${JSON.stringify(names.package)},`,
     `  does: ${JSON.stringify(tagline)},`,
     "},",
@@ -674,7 +675,7 @@ export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTi
   const docs = JSON.stringify(
     {
       name: names.command,
-      displayName: "TODO: the service's name",
+      displayName: service ?? "TODO: the service's name",
       repo: `${names.owner}/${names.name}`,
       package: names.package,
       lang: "en",
@@ -706,19 +707,32 @@ const specFromUrl = async (args: NewArgs, fetch: SpecFetch | undefined): Promise
   return downloaded
 }
 
+const CONFIG_FILE = "wirecat.config.ts"
+const SOURCE_CHECK = "scripts/source-check.ts"
+
+const withSourceCheck = (text: string): string => {
+  const pkg = JSON.parse(text)
+  pkg.scripts = { ...pkg.scripts, "source:check": `node --experimental-strip-types ${SOURCE_CHECK}` }
+  return `${JSON.stringify(pkg, null, 2)}\n`
+}
+
 export const runNew = async (
   cwd: string,
   source: TemplateSource,
   args: NewArgs,
   io: Io,
   fetch?: SpecFetch,
+  loaded?: LoadedConfig,
 ): Promise<string> => {
   const preset = presetOf(args.flags)
   const downloaded = await specFromUrl(args, fetch)
-  const { names, answers } = await collect(
+  const collected = await collect(
     withPreset(downloaded ? { ...args, flags: { ...args.flags, spec: downloaded.kind } } : args),
     io,
   )
+  const answers = collected.answers
+  const names = loaded ? { ...collected.names, prefix: loaded.config.identity.prefix } : collected.names
+  const service = loaded?.config.identity.service ?? downloaded?.title
   if (preset && isWireCat(names))
     throw new Error(`--preset ${preset} is for a CLI outside WireCat; ${names.package} is a WireCat package`)
   const description = preset ? GENERIC_DESCRIPTION : DESCRIPTION
@@ -729,18 +743,20 @@ export const runNew = async (
   const time = isWireCat(names) ? wirecatMonthlyTime(names.name, takenMinutes(ciPage())) : monthlyTime(names.package)
   const spec = specKindOf(answers.spec?.[0])
   const rewrites: Record<string, (text: string) => string> = {
-    "package.json": (text) =>
-      spec
+    "package.json": (text) => {
+      const pkg = spec
         ? withSpecPackage(
             cliPackageJson(text, names, description),
             spec,
             spec === "swagger" ? JSON.parse(cliBaseFile("package.json")) : {},
             JSON.parse(text).dependencies?.yaml,
           )
-        : cliPackageJson(text, names, description),
+        : cliPackageJson(text, names, description)
+      return loaded ? withSourceCheck(pkg) : pkg
+    },
     ...(spec
       ? {
-          "src/config.ts": (text: string) => withApiPermissions(text, downloaded?.title),
+          "src/config.ts": (text: string) => withApiPermissions(text, service),
           "scripts/commands.ts": withApiSkill,
           "src/run-scope.test.ts": withApiRunScope,
         }
@@ -752,7 +768,7 @@ export const runNew = async (
     "README.md": () =>
       cliReadme(names, {
         tagline: answers.tagline?.[0] ?? description,
-        ...(downloaded ? { service: downloaded.title } : {}),
+        ...(service ? { service } : {}),
         signIn: answers.signIn?.[0] ?? "none",
         api: Boolean(spec),
       }),
@@ -785,16 +801,20 @@ export const runNew = async (
     if (file.kind === "file") hashes[path] = sha256(file.content)
     const rewrite = rewrites[path] ?? (spec && path === agentSkill ? withApiSkillLink : undefined)
     const content = rewrite ? rewrite(file.content.toString("utf8")) : file.content
-    if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
+    if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)
   }
   if (spec) {
     const seeds = await specSeeds(source, names, spec)
     for (const [path, content] of downloaded ? withDownloadedSpec(seeds, names, downloaded) : seeds) {
       if (rendered.has(path)) throw new Error(`the ${spec} seed ${path} would replace a template file`)
-      if (content.includes(`${upperCommand(names.command)}_`)) prefixed.push(path)
+      if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
       await writeOut(target, path, content)
     }
+  }
+  if (loaded) {
+    await writeOut(target, CONFIG_FILE, loaded.text)
+    await writeOut(target, SOURCE_CHECK, await readFile(join(source.root, "kit/seeds/config", SOURCE_CHECK)))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))
@@ -823,6 +843,9 @@ export const runNew = async (
           ...downloaded.patches.map((patch) => `  Recorded in scripts/spec-model.ts: ${patch.reason}.`),
         ]
       : []),
+    ...(loaded?.pending.length
+      ? ["", "Kept in wirecat.config.ts, not built from yet:", ...loaded.pending.map((part) => `  ${part}`)]
+      : []),
     ...(clashes.length ? ["", "Names the service's own tools use:", ...clashes.map((clash) => `  ${clash}`)] : []),
     ...(warnings.length ? ["", "Content languages:", ...warnings.map((warning) => `  ${warning}`)] : []),
     "",
@@ -831,6 +854,7 @@ export const runNew = async (
     "  pnpm install",
     "  pnpm lint:fix",
     "  pnpm generate",
+    ...(loaded ? ["  pnpm source:check"] : []),
     ...(spec
       ? [
           "  pnpm exec cli-contract contracts/plan.json --update",
@@ -849,7 +873,9 @@ export const runNew = async (
       ? [
           "",
           "Entries for step 4:",
-          ...sharedListEntries(names, answers.tagline?.[0] ?? "", time).map((line) => `  ${line}`),
+          ...sharedListEntries(names, answers.tagline?.[0] ?? "", time, loaded?.config.identity.service).map(
+            (line) => `  ${line}`,
+          ),
         ]
       : []),
     "",

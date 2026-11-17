@@ -18,6 +18,9 @@ new asks for every missing answer in a terminal; without one, a missing answer i
   --tagline <line>      ${TAGLINE_QUESTION.text}; left out, it is made from the description
   --spec-url <url>      download the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML, for the api group;
                         https only, or http from localhost
+  --from-config <file>  take the names, the API description's URL, the sign-in and the category from a
+                        wirecat.config.ts (defineCli from @wirecat/cli-core/manifest), and copy it into the CLI with
+                        pnpm source:check; leave out <name> and the flags it sets
   --preset generic      for a CLI outside WireCat: only <name> and --owner are needed, the command word is <name>
                         without -cli, the package @<owner>/<name>, and the other answers neutral defaults; any flag
                         given wins. bin/release then needs no recorded live check.
@@ -36,10 +39,14 @@ a change while any other file still imports the sample.
 `
 
 const answerFlags = Object.fromEntries(
-  [...NAME_QUESTIONS, TAGLINE_QUESTION, ...INTERVIEW, { flag: "spec-url" }, { flag: "preset" }].map((question) => [
-    question.flag,
-    { type: "string" as const },
-  ]),
+  [
+    ...NAME_QUESTIONS,
+    TAGLINE_QUESTION,
+    ...INTERVIEW,
+    { flag: "spec-url" },
+    { flag: "preset" },
+    { flag: "from-config" },
+  ].map((question) => [question.flag, { type: "string" as const }]),
 )
 
 const main = async (argv: string[], io: Io): Promise<string> => {
@@ -55,7 +62,13 @@ const main = async (argv: string[], io: Io): Promise<string> => {
       strict: true,
     })
     if (positionals.length > 1) throw new Error(`new takes one folder name, got ${positionals.join(" ")}`)
-    return runNew(process.cwd(), source, { name: positionals[0], flags: values }, io)
+    const args = { name: positionals[0], flags: values }
+    const file = values["from-config"]
+    if (file === undefined) return runNew(process.cwd(), source, args, io)
+    // Loaded only here: it imports cli-core, which the other commands do without.
+    const { configArgs, loadCliConfig } = await import("./from-config.js")
+    const loaded = await loadCliConfig(file)
+    return runNew(process.cwd(), source, configArgs(loaded.config, args), io, undefined, loaded)
   }
   if (command === "upgrade") {
     const { values, positionals } = parseArgs({
