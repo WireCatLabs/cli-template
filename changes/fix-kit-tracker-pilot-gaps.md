@@ -13,3 +13,6 @@
   waited for real; the file is cleared after each case.
 - **Spell checking skips `skills/*/references/api/`,** written by `pnpm generate` from the service's own words, as it
   skips `docs/commands.md`. Linear's descriptions of its API stopped `pnpm docs:check` on twelve words.
+- **A tracker CLI from a config runs `trackerSourceContract`** over cli-core's `trackerManifestFixture`, a fake of
+  its API built from the source, so `cli-dev ready` verifies its category (cli-base 0.119.0 asks a tracker for that
+  contract). cli-core 0.701.0 and cli-base 0.119.0.
