@@ -115,6 +115,14 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   cut-list case on purpose: describe the paging in the API description or an override. A tracker's
   `src/tracker-contracts.test.ts` checks the source against the generated API and syncs through the CLI over a fake
   of the schema.
+- WordPress: `spec: { kind: "wp-json", from: "https://<plain install>/wp-json/", version: "6.9.4" }` with
+  `auth: { preset: "app-password", verify: { operation: "getWpV2UsersMe", id: "id", name: "name" } }`, the two only
+  together. `new` saves the index the way `pnpm spec:sync` does (cli-base `syncWpJson`), from a plain install, as the
+  CLI serves every site; its host is not the CLI's. `session start --site <address> --login <user>` keeps an
+  application password with its site, the `api` group sends every call there and nowhere else on that host, and
+  `--all` pages by `X-WP-TotalPages`. The keys: `<route>.publish` for a status of publish or future, a `date`,
+  `date_gmt` or `password` (unless the call keeps a draft, pending or private), and `<route>.delete.force` for
+  `force=true`. Only `wp/v2` is offered; `batch/v1` never is.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
 
@@ -132,7 +140,7 @@ choices. Nothing is guessed.
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |
-| `--spec` | `openapi`, `swagger`, `discovery`, `graphql`, `none`; left out with `--spec-url`, it is the downloaded description's |
+| `--spec` | `openapi`, `swagger`, `discovery`, `graphql`, `wp-json` (from `--from-config` only), `none`; left out with `--spec-url`, it is the downloaded description's |
 | `--spec-url` | the URL of the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML; with `--spec graphql`, the endpoint |
 | `--filters` | several of `time`, `person`, `container`, `text`, `status` |
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |

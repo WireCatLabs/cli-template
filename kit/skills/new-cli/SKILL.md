@@ -112,7 +112,7 @@ npx @wirecat/cli-template new <name>-cli --command <word> --package @wirecat/<na
   --content-lang <ISO 639-1 codes, comma-separated> \
   --sign-in oauth|token|session|none \
   --api official-client|official-docs|unofficial \
-  --spec openapi|swagger|discovery|graphql|none \
+  --spec openapi|swagger|discovery|graphql|wp-json|none \
   --filters time,person,container,text,status \
   --never-store tokens,codes,secret-links,content \
   --untrusted messages,records,issues,invitations,transcripts,files,links,names|none

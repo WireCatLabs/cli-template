@@ -73,6 +73,8 @@ build demo-cli demo notes openapi
 build acme-workspace-cli acme-workspace crm none
 from_config crm acme https://docs.acme.example/openapi.json openapi.json
 from_config tracker acmet https://api.acme-tracker.example/graphql schema.json
+# A WordPress CLI: the index from a site, an application password kept with its site, the publish and delete keys.
+from_config wordpress acmewp https://wp.acme.example/wp-json/ index.json
 
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')

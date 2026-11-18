@@ -4,8 +4,14 @@ import { API } from "../config.js"
 import { definitions } from "../generated/definitions.js"
 import { VERIFY } from "../generated/wirecat-config.js"
 
-/** The token fakeServiceApi takes; never a real one (WC-TEST-2). */
-export const FAKE_API_TOKEN = "fake0api0token"
+// A service on the owner's own site (WordPress) is answered at this one; its server names `{site}`.
+const sited = API.manifest.servers?.[0]?.url.includes("{site}") === true
+
+/** The site session start --site names in a test; a made-up address that never resolves. */
+export const FAKE_SITE = "blog.example.test"
+
+/** The token fakeServiceApi takes; never a real one (WC-TEST-2). On a site it is a user name and password, by Basic. */
+export const FAKE_API_TOKEN = sited ? "fake0user:fake0password" : "fake0api0token"
 
 const graphql = API.manifest.operations.some((operation) => operation.binding.kind === "graphql")
 
@@ -45,13 +51,13 @@ export const fakeServiceApi = (token = FAKE_API_TOKEN) =>
     ? graphqlFake({
         operations: API.manifest.operations,
         definitions,
-        url: manifestBaseUrl(API.manifest),
+        url: manifestBaseUrl(API.manifest, undefined, { site: FAKE_SITE }),
         auth: graphqlAuth(token),
       })
     : fakeApi({
         operations: API.manifest.operations,
         definitions,
-        baseUrl: manifestBaseUrl(API.manifest),
+        baseUrl: manifestBaseUrl(API.manifest, undefined, { site: FAKE_SITE }),
         security: API.manifest.security,
         securitySchemes: API.manifest.securitySchemes,
         token,

@@ -107,6 +107,7 @@ export const INTERVIEW: Question[] = [
       { value: "swagger", label: "Swagger 2.0" },
       { value: "discovery", label: "Google Discovery" },
       { value: "graphql", label: "a GraphQL schema (introspection)" },
+      { value: "wp-json", label: "a WordPress site's REST index (wp-json), from wirecat.config.ts only" },
       { value: "none", label: "none" },
     ],
   },

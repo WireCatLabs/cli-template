@@ -222,6 +222,44 @@ export const introspectSpec = async (raw: string, fetch: SpecFetch = globalThis.
   }
 }
 
+/**
+ * A WordPress site's REST index, as `pnpm spec:sync` asks it, so the first sync is no diff. The site is the one the
+ * CLI is made against, not one it serves: its host is not the CLI's; each profile's own site is added at run time.
+ */
+export const wpJsonSpec = async (
+  raw: string,
+  version: string,
+  fetch: SpecFetch = globalThis.fetch,
+): Promise<DownloadedSpec> => {
+  const url = checkSpecUrl(raw)
+  const dir = await mkdtemp(join(tmpdir(), "clidev-wp-json-"))
+  try {
+    const { syncWpJson } = await import("@wirecat/cli-base/codegen")
+    const provenance = await syncWpJson({ root: url.href, dir, version, fetch: fetch as typeof globalThis.fetch })
+    const text = await readFile(join(dir, "wp-json.json"), "utf8")
+    if (text.length > SPEC_MAX_BYTES) throw new Error(`${url.href}'s index is larger than 20 MB; check it by hand`)
+    const routes = (JSON.parse(text) as { routes: Record<string, { namespace?: string; endpoints?: unknown[] }> })
+      .routes
+    return {
+      url: url.href,
+      kind: "wp-json",
+      file: "wp-json.json",
+      text,
+      provenance: await readFile(join(dir, "provenance.json"), "utf8"),
+      sha256: provenance.sha256,
+      title: "WordPress",
+      operations: Object.values(routes)
+        .filter((route) => route.namespace === "wp/v2")
+        .reduce((sum, route) => sum + (route.endpoints?.length ?? 0), 0),
+      hosts: [],
+      patches: [],
+      prefix: [],
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+}
+
 const withSignInHosts = <T extends { hosts: string[] }>(servers: T, document: Record<string, unknown>): T => ({
   ...servers,
   hosts: [...new Set([...servers.hosts, ...signInHosts(document)])],
