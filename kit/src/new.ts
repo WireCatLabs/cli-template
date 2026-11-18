@@ -489,11 +489,21 @@ const KIND_WORDS: Readonly<Record<string, string>> = {
   lead: "leads",
 }
 
-/** A CLI with `sync` says what it copies in (contracts/wirecat.json): for a config's source, its kinds. */
+// The manifest's desktop.sync.what takes 40 characters at most.
+const SYNCS_MAX = 40
+
+const syncsOf = (words: readonly string[]): string =>
+  `your ${words.length > 1 ? `${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : (words[0] ?? "records")}`
+
+/**
+ * A CLI with `sync` says what it copies in (contracts/wirecat.json): for a config's source, its kinds. Kinds come
+ * in the order a sync reads them, the ones others refer to first, so a list too long keeps the last ones: a
+ * tracker's issues, projects and comments rather than its teams and states.
+ */
 export const withSyncs = (text: string, kinds: readonly string[]): string => {
-  const words = kinds.map((kind) => KIND_WORDS[kind] ?? `${kind}s`)
-  const list = words.length > 1 ? `${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : (words[0] ?? "records")
-  return replaceOnce(IDENTITY_FILE, text, /^( {2}tagline: .*\n)/m, `$1  syncs: ${JSON.stringify(`your ${list}`)},\n`)
+  let words = kinds.map((kind) => KIND_WORDS[kind] ?? `${kind}s`)
+  while (words.length > 1 && syncsOf(words).length > SYNCS_MAX) words = words.slice(1)
+  return replaceOnce(IDENTITY_FILE, text, /^( {2}tagline: .*\n)/m, `$1  syncs: ${JSON.stringify(syncsOf(words))},\n`)
 }
 
 export const withContentLanguages = (text: string, languages: readonly string[]): string => {

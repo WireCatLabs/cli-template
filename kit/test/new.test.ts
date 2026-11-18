@@ -15,6 +15,7 @@ import {
   takenMinutes,
   wirecatMonthlyTime,
   withContentLanguages,
+  withSyncs,
 } from "../src/new.js"
 import { renamer, stripKit } from "../src/rename.js"
 import { listTemplate, loadSource, renderTemplate } from "../src/source.js"
@@ -107,6 +108,15 @@ describe("new", () => {
       lang: "en",
       summary: { en: "Calendars offline", ru: "TODO", es: "TODO" },
     })
+  })
+
+  it("says what a config's sync copies within the manifest's 40 characters, keeping the kinds read last", () => {
+    const identity = '  tagline: "x",\n'
+    expect(withSyncs(identity, ["organization", "person", "deal"])).toContain(
+      'syncs: "your companies, people and deals"',
+    )
+    const tracker = ["team", "user", "state", "label", "project", "issue", "comment"]
+    expect(withSyncs(identity, tracker)).toContain('syncs: "your projects, issues and comments"')
   })
 
   it("picks a WireCat CLI's monthly minute inside WC-CI-9's window, from the free ones", () => {

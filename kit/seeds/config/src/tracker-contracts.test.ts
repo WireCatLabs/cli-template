@@ -22,8 +22,11 @@ it("sync through this CLI sends only calls the schema allows, under the account 
   expect(started.code, started.err).toBe(0)
   const synced = await runCli(["personal", "sync", "--json"], { keyring, service: fake })
   expect(synced.code, synced.err).toBe(0)
-  // A kind that failed is a partial answer with exit 0: its issues name it.
+  // A kind that failed is a partial answer with exit 0: its error is on its row, and a typo in a variable fails
+  // every kind before anything is sent.
   expect(synced.json().issues ?? []).toEqual([])
+  const failed = (synced.json().item.synced as { kind: string; error?: string }[]).filter((one) => one.error)
+  expect(failed).toEqual([])
   const listed = await runCli(["personal", "issues", "list", "--json"], { keyring, service: fake })
   expect(listed.code, listed.err).toBe(0)
   expect(fake.refusals).toEqual([])

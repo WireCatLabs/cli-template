@@ -1,6 +1,6 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { graphqlFake, sampleOf } from "@wirecat/cli-base/codegen"
+import { graphqlFake, type SchemaNode, sampleOf } from "@wirecat/cli-base/codegen"
 import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
@@ -38,13 +38,29 @@ const deleteKeys = [
   ),
 ]
 
+// Only what an operation requires. GraphQL inputs nest in each other (Linear's IssueFilter reaches TeamFilter and
+// back), so a sample of every optional field grows past memory and past what one argument can hold.
+const requiredSample = (node: SchemaNode, seen: ReadonlySet<string> = new Set()): unknown => {
+  if (node.type === "ref") {
+    const target = definitions[node.ref as keyof typeof definitions] as SchemaNode | undefined
+    return target && !seen.has(node.ref) ? requiredSample(target, new Set([...seen, node.ref])) : null
+  }
+  if (node.type === "object")
+    return Object.fromEntries(
+      node.required.map((name) => [name, requiredSample(node.properties[name] as SchemaNode, seen)]),
+    )
+  if (node.type === "array")
+    return Array.from({ length: Math.max(node.minItems ?? 1, 1) }, () => requiredSample(node.items, seen))
+  return sampleOf(node, definitions)
+}
+
 const argsOf = (operation: Operation) => [
   ...operation.parameters
     .filter((parameter) => parameter.required)
     .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, String(sampleOf(parameter.schema, definitions))]),
   ...(sendsBytes(operation) ? ["--body-file", upload] : []),
   ...(operation.request?.schema
-    ? ["--body", JSON.stringify(sampleOf({ type: "ref", ref: operation.request.schema }, definitions))]
+    ? ["--body", JSON.stringify(requiredSample({ type: "ref", ref: operation.request.schema }))]
     : []),
   ...(operation.effect === "destructive" ? ["--yes"] : []),
 ]
