@@ -3,20 +3,10 @@ import { existsSync } from "node:fs"
 import { readdir, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { readCliManifest } from "./manifest.js"
+import { inSample, withoutMount } from "./sample.js"
 import { requireCleanTree } from "./upgrade.js"
 
-const SAMPLE = [
-  "src/sample/",
-  "src/commands/comments.ts",
-  "src/comments.test.ts",
-  "src/records.test.ts",
-  "src/testing/fake-comments.ts",
-]
 const PROGRAM = "src/program.ts"
-const MOUNT = [
-  /^import \{ commentsCommand \} from "\.\/commands\/comments\.js"\r?\n/m,
-  /^[ \t]*commentsCommand\(\),\r?\n/m,
-]
 
 export type Step = { command: string; args: string[] }
 
@@ -44,17 +34,12 @@ const walk = async (root: string, dir: string): Promise<string[]> => {
   return nested.flat()
 }
 
-const inSample = (path: string): boolean =>
-  SAMPLE.some((entry) => (entry.endsWith("/") ? path.startsWith(entry) : path === entry))
-
 const IMPORT = /(?:from|import)\s*\(?\s*["'](\.{1,2}\/[^"']+)["']/g
 
 const importsOf = (path: string, text: string): string[] =>
   [...text.matchAll(IMPORT)].map(([, spec = ""]) =>
     join(dirname(path), spec).replaceAll("\\", "/").replace(/\.js$/, ".ts"),
   )
-
-export const withoutMount = (text: string): string => MOUNT.reduce((rest, line) => rest.replace(line, ""), text)
 
 export const runRemoveSample = async (cwd: string, runStep: Runner = spawnStep): Promise<string> => {
   await readCliManifest(cwd).catch(() => {

@@ -110,6 +110,17 @@ const withVariables = (server: Record<string, unknown>): string => {
 
 const isAbsolute = (url: string) => /^https?:\/\//i.test(url)
 
+/** The hosts an OAuth sign-in in the description reaches, such as Attio's app.attio.com: lint refuses one not listed. */
+const signInHosts = (document: Record<string, unknown>): string[] => {
+  const components = isRecord(document.components) ? document.components.securitySchemes : undefined
+  const schemes = [components, document.securityDefinitions].flatMap((one) => (isRecord(one) ? Object.values(one) : []))
+  const urls = schemes.filter(isRecord).flatMap((scheme) => {
+    const flows = isRecord(scheme.flows) ? Object.values(scheme.flows).filter(isRecord) : [scheme]
+    return flows.flatMap((flow) => [flow.authorizationUrl, flow.tokenUrl, flow.refreshUrl])
+  })
+  return urls.flatMap((url) => (typeof url === "string" && isAbsolute(url) ? [new URL(url).hostname] : []))
+}
+
 /** The hosts the CLI will call, and a recorded correction when the description names its server relative to itself. */
 const serversOf = (kind: DownloadedSpec["kind"], document: Record<string, unknown>, specUrl: URL) => {
   if (kind === "swagger") {
@@ -171,7 +182,7 @@ export const downloadSpec = async (
     title: typeof info.title === "string" && info.title.trim() ? info.title.trim() : url.hostname,
     operations: countOperations(document),
     prefix: sharedPrefix(document),
-    ...serversOf(kind, document, url),
+    ...withSignInHosts(serversOf(kind, document, url), document),
   }
 }
 
@@ -210,3 +221,8 @@ export const introspectSpec = async (raw: string, fetch: SpecFetch = globalThis.
     await rm(dir, { recursive: true, force: true })
   }
 }
+
+const withSignInHosts = <T extends { hosts: string[] }>(servers: T, document: Record<string, unknown>): T => ({
+  ...servers,
+  hosts: [...new Set([...servers.hosts, ...signInHosts(document)])],
+})

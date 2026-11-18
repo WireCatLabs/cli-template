@@ -7,6 +7,7 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
+import { OFF_SAMPLE, withConfigRunScope } from "./config-wiring.js"
 import type { LoadedConfig } from "./from-config.js"
 import {
   ask,
@@ -20,6 +21,7 @@ import {
 } from "./interview.js"
 import { type CliManifest, isRecord, MANIFEST, type Names, sha256 } from "./manifest.js"
 import { appNameOf, isWireCat, nameClashes, prefixOf, withFreePrefix } from "./rename.js"
+import { inSample } from "./sample.js"
 import { renderTemplate, type TemplateSource } from "./source.js"
 import {
   replaceOnce,
@@ -763,43 +765,6 @@ export const withSourceCommands = (text: string, kind: "crm" | "tracker" = "crm"
     `$1apiCommand(),\n$1...${kind}Commands(),\n`,
   )
 
-const RUN_SCOPE = "src/run-scope.test.ts"
-
-/**
- * run-scope over a config's wiring: `session start` checks the token with the API, so the answering fake answers the
- * API's host too; `sync` is cli-core's, run in its own run and tested by the source's contracts test.
- */
-export const withConfigRunScope = (
-  text: string,
-  { verifies, source }: { verifies: boolean; source?: "crm" | "tracker" },
-): string => {
-  const answering = verifies
-    ? replaceOnce(
-        RUN_SCOPE,
-        replaceOnce(
-          RUN_SCOPE,
-          text,
-          'import { signedIn } from "./testing/harness.js"\n',
-          'import { withServiceApi } from "./testing/fake-api.js"\nimport { signedIn } from "./testing/harness.js"\n',
-        ),
-        "fetch: fakeComments().fetch, stdin: stdin()",
-        "fetch: withServiceApi(fakeComments(), FAKE_TOKEN).fetch, stdin: stdin()",
-      )
-    : text
-  const sync = {
-    crm: '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
-    tracker: '      sync: "cli-core\'s addTrackerCommands runs it in its run; src/tracker-contracts.test.ts syncs",',
-  }
-  return source
-    ? replaceOnce(
-        RUN_SCOPE,
-        answering,
-        '      "mcp serve": "listens until stopped",\n',
-        ['      "mcp serve": "listens until stopped",', sync[source], ""].join("\n"),
-      )
-    : answering
-}
-
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
   const pkg = JSON.parse(text)
@@ -862,6 +827,7 @@ export const runNew = async (
               ? withConfigRunScope(withApiRunScope(text), {
                   verifies: loaded.verifies,
                   ...(loaded.config.source ? { source: sourceKind(loaded.config) } : {}),
+                  users: Boolean(loaded.config.source && "users" in loaded.config.source && loaded.config.source.users),
                 })
               : withApiRunScope(text),
         }
@@ -911,7 +877,11 @@ export const runNew = async (
   const hashes: Record<string, string> = {}
   const prefixed: string[] = []
   const agentSkill = `skills/${appNameOf(names)}/SKILL.md`
+  // The sample stays only where nothing replaces it: a config's token check brings a fake of the API itself.
+  const offSample = Boolean(spec && loaded?.verifies)
+  const own = (path: string, text: string) => (offSample && OFF_SAMPLE[path] ? OFF_SAMPLE[path](text) : text)
   for (const [path, file] of rendered) {
+    if (offSample && inSample(path)) continue
     if (file.kind === "file") hashes[path] = sha256(file.content)
     const rewrite =
       rewrites[path] ??
@@ -921,7 +891,8 @@ export const runNew = async (
             return service ? withServicePage(agentSkill, linked, service) : linked
           }
         : undefined)
-    const content = rewrite ? rewrite(file.content.toString("utf8")) : file.content
+    const rewritten = rewrite ? rewrite(file.content.toString("utf8")) : file.content
+    const content = OFF_SAMPLE[path] ? own(path, rewritten.toString()) : rewritten
     if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)
   }
@@ -929,7 +900,10 @@ export const runNew = async (
     const seeds = await specSeeds(source, names, spec)
     for (const [path, seed] of downloaded ? withDownloadedSpec(seeds, names, downloaded) : seeds) {
       if (rendered.has(path)) throw new Error(`the ${spec} seed ${path} would replace a template file`)
-      const content = answers.signIn?.[0] === "none" ? withoutApiSignIn(path, seed.toString("utf8")) : seed
+      const content = own(
+        path,
+        answers.signIn?.[0] === "none" ? withoutApiSignIn(path, seed.toString("utf8")) : seed.toString("utf8"),
+      )
       if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
       await writeOut(target, path, content)
     }

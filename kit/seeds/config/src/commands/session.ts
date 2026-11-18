@@ -1,19 +1,12 @@
 import { CliError } from "@wirecat/cli-base"
 import { hostFetch } from "@wirecat/cli-base/http"
 import { serviceApiCall, tokenSessionCommand } from "@wirecat/cli-core/cli"
+import { valueAt } from "@wirecat/cli-core/manifest"
 import type { Command } from "commander"
 import { API, configuration } from "../config.js"
 import { contextOf } from "../context.js"
 import { VERIFY } from "../generated/wirecat-config.js"
 import { DESKTOP, IDENTITY } from "../identity.js"
-
-const valueAt = (answer: unknown, path: string): unknown =>
-  path
-    .split(".")
-    .reduce<unknown>(
-      (at, key) => (at !== null && typeof at === "object" ? (at as Record<string, unknown>)[key] : undefined),
-      answer,
-    )
 
 /**
  * `session start | status | end | list` (WC-ACCT-12): the token is checked by the call `auth.verify` names in
@@ -34,6 +27,9 @@ export const sessionCommand = (): Command =>
         token: () => token,
       })
       const answer = await call(VERIFY.operation, { path: {}, query: {}, headers: {}, fields: {} })
+      // A service such as Attio answers a revoked key with 200 and `active: false`, not with 401.
+      if (VERIFY.active && valueAt(answer, VERIFY.active) !== true)
+        throw new CliError("authentication_error", `${API.service} does not accept this token; sign in again`)
       const id = valueAt(answer, VERIFY.id)
       if (typeof id !== "string" && typeof id !== "number")
         throw new CliError("provider_error", `${API.service} answered ${VERIFY.operation} without ${VERIFY.id}`, {
