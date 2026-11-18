@@ -16,3 +16,7 @@
 - **A tracker CLI from a config runs `trackerSourceContract`** over cli-core's `trackerManifestFixture`, a fake of
   its API built from the source, so `cli-dev ready` verifies its category (cli-base 0.119.0 asks a tracker for that
   contract). cli-core 0.701.0 and cli-base 0.119.0.
+- **A CLI from a config drives every command and option in its tests**, so its test matrix starts with nothing
+  untested: the session test covers `--credential-storage`, `session list` and `api list`; a tracker gets
+  `src/tracker-options.test.ts`, which runs each tracker command and option over a synced copy; the GraphQL `api`
+  test sends every variable, `--body` and `--body-file`, and `--all` on a paged list.

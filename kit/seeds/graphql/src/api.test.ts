@@ -66,10 +66,18 @@ const requiredSample = (node: SchemaNode, seen: ReadonlySet<string> = new Set())
 
 const flagValue = (value: unknown) => (typeof value === "object" ? JSON.stringify(value) : String(value))
 
+const bodyFileOf = (operation: Operation) => {
+  const path = join(upload, "..", `${operation.command}.json`)
+  writeFileSync(path, JSON.stringify(requiredSample({ type: "ref", ref: String(operation.request?.schema) })))
+  return path
+}
+
 const argsOf = (operation: Operation) => [
-  ...operation.parameters
-    .filter((parameter) => parameter.required)
-    .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, flagValue(requiredSample(parameter.schema))]),
+  // Every variable as its flag, so each flag is driven once; an optional input object goes as its required part.
+  ...operation.parameters.flatMap((parameter) => [
+    `--${apiFlagOf(parameter.name)}`,
+    flagValue(requiredSample(parameter.schema)),
+  ]),
   ...(sendsBytes(operation) ? ["--body-file", upload] : []),
   ...(operation.request?.schema
     ? ["--body", JSON.stringify(requiredSample({ type: "ref", ref: operation.request.schema }))]
@@ -101,6 +109,21 @@ it.each(API.manifest.operations.map((operation) => [operation.command, operation
     expect(ran.code, ran.err).toBe(0)
     expect(service.refusals).toEqual([])
     expect(service.calls).toHaveLength(1)
+    if (operation.request?.schema) {
+      const body = argsOf(operation)
+      body.splice(body.indexOf("--body"), 2, "--body-file", bodyFileOf(operation))
+      const fromFile = await runCli(["personal", "api", operation.command, ...body, "--json"], { service })
+      expect(fromFile.code, fromFile.err).toBe(0)
+      expect(service.calls[1]?.variables).toEqual(service.calls[0]?.variables)
+    }
+    if (!operation.pagination) return
+    // The fake's sample of pageInfo says no next page, so --all sends one more call and ends.
+    const all = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--all", "--json"], {
+      service,
+    })
+    expect(all.code, all.err).toBe(0)
+    expect(service.calls.at(-1)?.operation).toBe(operation.id)
+    expect(service.refusals).toEqual([])
   },
 )
 

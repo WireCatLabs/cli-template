@@ -753,7 +753,7 @@ const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
 const SESSION = ["src/commands/session.ts", "src/commands/session.test.ts", "src/testing/fake-api.ts"]
 const CRM = ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"]
-const TRACKER = ["src/commands/tracker.ts", "src/tracker-contracts.test.ts"]
+const TRACKER = ["src/commands/tracker.ts", "src/tracker-contracts.test.ts", "src/tracker-options.test.ts"]
 
 const sourceKind = (config: LoadedConfig["config"]): "crm" | "tracker" =>
   config.category === "tracker" ? "tracker" : "crm"
