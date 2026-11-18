@@ -39,7 +39,8 @@ The steps run the owner's scripts the CLI gets, each one readable file that prin
 - `bin/live <keyring account>` runs `scripts/live.sh` against a test account. It prints the script's `# Needs:`
   lines, reads the token from the keyring entry `service <app>-live account <keyring account>` and passes it on
   stdin, records the pass, and on a release branch commits the record and adds it to the pull request's Conformance
-  section (WC-REL-17).
+  section (WC-REL-17). A version whose shipped code already passed is not run again; `--again` runs it anyway, as
+  after a change to `scripts/live.sh` alone.
 
 With `--spec` other than `none`, `new` also builds the `api` group from the service's API description: one command
 per operation through cli-core's `serviceApiCommand`, its permissions, its tests against cli-base's `fakeApi`, and the
