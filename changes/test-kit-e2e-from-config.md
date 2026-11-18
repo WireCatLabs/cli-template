@@ -15,3 +15,7 @@
 - **`kit:e2e` makes two CLIs with `new --from-config`**, a CRM over an OpenAPI description and a tracker over a GraphQL
   schema, both with a token check and so without the sample, and runs the same checks as the others. The path was
   checked only by hand before.
+
+### Changed — may break callers
+
+- **A new CLI pins `@wirecat/cli-core` 0.699.0**, which has `manifestVerify` and `hostsFetch`.
