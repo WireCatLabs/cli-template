@@ -128,7 +128,9 @@ const main = async () => {
       process.stdout.write("main pushed\n")
     }
   } else {
-    gh(["repo", "create", REPO, "--public", "--description", description, "--source", ROOT, "--remote", "origin", "--push"])
+    // --push would send the branch checked out, which on a feature branch becomes the default and takes the ruleset.
+    gh(["repo", "create", REPO, "--public", "--description", description, "--source", ROOT, "--remote", "origin"])
+    git("push", "-q", "-u", "origin", "main")
     process.stdout.write(`${REPO} created and main pushed\n`)
   }
   gh(["repo", "edit", REPO, "--delete-branch-on-merge"])
