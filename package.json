@@ -90,8 +90,8 @@
     "kit:docs": "cspell lint --config cspell.json --no-progress --no-summary kit/*.md SKILL.md && rumdl check --config config/wirecat/rumdl.toml kit/*.md SKILL.md"
   },
   "dependencies": {
-    "@wirecat/cli-base": "0.119.0",
-    "@wirecat/cli-core": "0.701.0",
+    "@wirecat/cli-base": "0.121.0",
+    "@wirecat/cli-core": "file:/var/tmp/claude/claude-1000/-home-leemour-Projects-AI-cli-template/de832675-583b-4b84-91de-a51670ff9fca/scratchpad/wirecat-cli-core-0.703.0.tgz",
     "commander": "15.0.0",
     "valibot": "1.5.0",
     "yaml": "2.9.1"
