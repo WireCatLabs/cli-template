@@ -15,6 +15,7 @@ Works with:
   b24                     Bitrix24 CRM: deals, leads and pipelines, searchable with your other WireCat data
   pbx                     Asterisk PBX calls and recordings, searchable with your other WireCat data
   notion                  Notion pages and databases as local text, searchable with your other WireCat data
+  ydisk                   Yandex Disk folders as local text, searchable with your other WireCat data
 
 Next:         clidev commands      every command, by section
               clidev help options  output, offline, timeouts, dry run
