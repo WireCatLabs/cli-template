@@ -4,13 +4,14 @@
 // scripts/live.sh with the token on stdin, records the pass in docs/dev/live-checks.txt and, when the branch has an
 // open pull request, commits the record, pushes it and adds its line to the pull request's Conformance section.
 //
-//   bin/live <keyring account> [arguments for scripts/live.sh, such as the test page's link]
+//   bin/live <keyring account> [--again] [arguments for scripts/live.sh, such as the test page's link]
 //
 // Linux only: it reads the keyring with secret-tool and runs scripts/live.sh with bash.
 // The token is the keyring entry `service clidev-app-live account <keyring account>`, stored once with
 //   secret-tool store --label="clidev live check" service clidev-app-live account <keyring account>
 // It stays in this process and reaches scripts/live.sh on stdin only: never an argument, the environment or the
-// screen. A version whose shipped code already has a record is not checked again.
+// screen. A version whose shipped code already has a record is not checked again, and it says so; --again runs the
+// check anyway, as after a change to scripts/live.sh alone, which the record does not cover.
 import { execFileSync, spawnSync } from "node:child_process"
 import { existsSync, readFileSync, realpathSync } from "node:fs"
 import { join, resolve } from "node:path"
@@ -105,16 +106,26 @@ const check = async (account, version, args) => {
 }
 
 const main = async () => {
-  const [account, ...args] = process.argv.slice(2)
+  const [account, ...rest] = process.argv.slice(2)
+  const again = rest.includes("--again")
+  const args = rest.filter((arg) => arg !== "--again")
   if (!account || account === "--help" || account === "-h") {
-    process.stdout.write(`Usage: ${join(ROOT, "bin/live")} <keyring account> [arguments for scripts/live.sh]\n`)
+    const usage = "<keyring account> [--again] [arguments for scripts/live.sh]"
+    process.stdout.write(`Usage: ${join(ROOT, "bin/live")} ${usage}\n`)
     process.exitCode = account ? 0 : 2
     return
   }
   if (existsSync(KIT)) fail("this is cli-template itself, which has no service to check")
   const { version } = JSON.parse(readFileSync(PACKAGE_JSON, "utf8"))
   const current = run("pnpm", ["exec", "cli-dev", "live", "check", "--version", version], { stdio: "ignore" })
-  const record = current.status === 0 ? recordOf(version) : await check(account, version, args)
+  const checked = current.status === 0 && !again
+  if (checked) {
+    process.stdout.write(
+      `Not run: ${version}'s shipped code already passed. Run with --again to check it anyway, as after a change to ` +
+        "scripts/live.sh alone.\n",
+    )
+  }
+  const record = checked ? recordOf(version) : await check(account, version, args)
   if (!record) fail(`no record for ${version} in ${RECORDS}`)
 
   const view = run("gh", ["pr", "view", "--json", "url,state,body"], { stdio: ["ignore", "pipe", "ignore"] })
