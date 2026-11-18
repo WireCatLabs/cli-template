@@ -150,6 +150,18 @@ describe("new --from-config", () => {
     await expect(loadCliConfig(join(cwd, "wirecat.config.ts"))).rejects.toThrow("a source needs auth")
   })
 
+  it("refuses a tracker source over an OpenAPI description", async () => {
+    const cwd = tempDir("from-config-tracker-openapi")
+    writeFileSync(
+      join(cwd, "wirecat.config.ts"),
+      CONFIG.replace('category: "other",', 'category: "tracker",\n  source: { provider: "acme" },'),
+    )
+
+    await expect(loadCliConfig(join(cwd, "wirecat.config.ts"))).rejects.toThrow(
+      "a tracker source reads a GraphQL schema",
+    )
+  })
+
   it("refuses a flag or a folder name the config already sets", async () => {
     const cwd = tempDir("from-config-twice")
     writeFileSync(join(cwd, "wirecat.config.ts"), CONFIG)

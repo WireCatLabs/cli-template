@@ -1,10 +1,12 @@
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { graphqlFake, sampleOf } from "@wirecat/cli-base/codegen"
+import { graphqlFake, type SchemaNode, sampleOf } from "@wirecat/cli-base/codegen"
 import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
+import { pacePathFor } from "@wirecat/cli-core/sends"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
 import { definitions } from "./generated/definitions.js"
+import { IDENTITY } from "./identity.js"
 import { FAKE_TOKEN } from "./testing/fake-comments.js"
 import { runCli } from "./testing/harness.js"
 
@@ -14,9 +16,11 @@ const withPermissions = (permissions: Record<string, string>) => {
   mkdirSync(join(configFile, ".."), { recursive: true })
   writeFileSync(configFile, JSON.stringify({ profiles: { personal: { permissions } } }))
 }
+// Every case shares the profile's pace file, and a few hundred operations would wait for real past its burst.
 afterEach(() => {
   rmSync(configFile, { force: true })
   rmSync(upload, { force: true })
+  rmSync(pacePathFor(IDENTITY, "personal", process.env), { force: true })
 })
 
 type Operation = (typeof API.manifest.operations)[number]
@@ -38,13 +42,45 @@ const deleteKeys = [
   ),
 ]
 
+// What an operation requires, plus its optional fields that hold a plain value. GraphQL inputs nest in each other
+// (Linear's IssueFilter reaches TeamFilter and back), so sampling every optional object grows past memory and past
+// what one argument can hold.
+const NESTED = new Set(["ref", "object", "array", "union", "allOf"])
+const requiredSample = (node: SchemaNode, seen: ReadonlySet<string> = new Set()): unknown => {
+  if (node.type === "ref") {
+    const target = definitions[node.ref as keyof typeof definitions] as SchemaNode | undefined
+    return target && !seen.has(node.ref) ? requiredSample(target, new Set([...seen, node.ref])) : null
+  }
+  if (node.type === "object")
+    return Object.fromEntries(
+      Object.entries(node.properties)
+        .filter(([name, property]) => node.required.includes(name) || !NESTED.has(property.type))
+        .map(([name, property]) => [name, requiredSample(property, seen)]),
+    )
+  if (node.type === "array") {
+    const item = requiredSample(node.items, seen)
+    return item === null ? [] : Array.from({ length: Math.max(node.minItems ?? 1, 1) }, () => item)
+  }
+  return sampleOf(node, definitions)
+}
+
+const flagValue = (value: unknown) => (typeof value === "object" ? JSON.stringify(value) : String(value))
+
+const bodyFileOf = (operation: Operation) => {
+  const path = join(upload, "..", `${operation.command}.json`)
+  writeFileSync(path, JSON.stringify(requiredSample({ type: "ref", ref: String(operation.request?.schema) })))
+  return path
+}
+
 const argsOf = (operation: Operation) => [
-  ...operation.parameters
-    .filter((parameter) => parameter.required)
-    .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, String(sampleOf(parameter.schema, definitions))]),
+  // Every variable as its flag, so each flag is driven once; an optional input object goes as its required part.
+  ...operation.parameters.flatMap((parameter) => [
+    `--${apiFlagOf(parameter.name)}`,
+    flagValue(requiredSample(parameter.schema)),
+  ]),
   ...(sendsBytes(operation) ? ["--body-file", upload] : []),
   ...(operation.request?.schema
-    ? ["--body", JSON.stringify(sampleOf({ type: "ref", ref: operation.request.schema }, definitions))]
+    ? ["--body", JSON.stringify(requiredSample({ type: "ref", ref: operation.request.schema }))]
     : []),
   ...(operation.effect === "destructive" ? ["--yes"] : []),
 ]
@@ -73,6 +109,34 @@ it.each(API.manifest.operations.map((operation) => [operation.command, operation
     expect(ran.code, ran.err).toBe(0)
     expect(service.refusals).toEqual([])
     expect(service.calls).toHaveLength(1)
+    if (operation.request?.schema) {
+      // The body file alone: with the variables also given as flags, an ignored file would still send them.
+      const bodyFile = bodyFileOf(operation)
+      const fromFile = await runCli(
+        [
+          "personal",
+          "api",
+          operation.command,
+          "--body-file",
+          bodyFile,
+          ...(operation.effect === "destructive" ? ["--yes"] : []),
+          "--json",
+        ],
+        { service },
+      )
+      expect(fromFile.code, fromFile.err).toBe(0)
+      expect(service.calls[1]?.variables).toEqual(JSON.parse(readFileSync(bodyFile, "utf8")))
+    }
+    if (!operation.pagination) return
+    // The fake's sample of pageInfo says no next page, so --all sends one more call and ends.
+    const before = service.calls.length
+    const all = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--all", "--json"], {
+      service,
+    })
+    expect(all.code, all.err).toBe(0)
+    expect(service.calls).toHaveLength(before + 1)
+    expect(service.calls.at(-1)?.operation).toBe(operation.id)
+    expect(service.refusals).toEqual([])
   },
 )
 

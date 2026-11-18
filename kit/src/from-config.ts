@@ -46,6 +46,11 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
     throw new Error(`${path}: export the config as default: export default defineCli({…})`)
   const config = parseCliConfig(module.default)
   const verifies = config.auth.preset === "token" && config.auth.verify !== undefined
+  // cli-core's trackerManifestFake, which the tracker's contract test runs over, answers GraphQL only.
+  if (config.category === "tracker" && config.spec.kind !== "graphql")
+    throw new Error(
+      "wirecat.config: a tracker source reads a GraphQL schema yet; cli-core's tracker fake answers no other API",
+    )
   // The source's commands key the store by the account session start checked; the sample's session checks nothing.
   if (config.source && !verifies)
     throw new Error(
