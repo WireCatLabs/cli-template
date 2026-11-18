@@ -2,9 +2,11 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { graphqlFake, type SchemaNode, sampleOf } from "@wirecat/cli-base/codegen"
 import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
+import { pacePathFor } from "@wirecat/cli-core/sends"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
 import { definitions } from "./generated/definitions.js"
+import { IDENTITY } from "./identity.js"
 import { FAKE_TOKEN } from "./testing/fake-comments.js"
 import { runCli } from "./testing/harness.js"
 
@@ -14,9 +16,11 @@ const withPermissions = (permissions: Record<string, string>) => {
   mkdirSync(join(configFile, ".."), { recursive: true })
   writeFileSync(configFile, JSON.stringify({ profiles: { personal: { permissions } } }))
 }
+// Every case shares the profile's pace file, and a few hundred operations would wait for real past its burst.
 afterEach(() => {
   rmSync(configFile, { force: true })
   rmSync(upload, { force: true })
+  rmSync(pacePathFor(IDENTITY, "personal", process.env), { force: true })
 })
 
 type Operation = (typeof API.manifest.operations)[number]
@@ -38,8 +42,10 @@ const deleteKeys = [
   ),
 ]
 
-// Only what an operation requires. GraphQL inputs nest in each other (Linear's IssueFilter reaches TeamFilter and
-// back), so a sample of every optional field grows past memory and past what one argument can hold.
+// What an operation requires, plus its optional fields that hold a plain value. GraphQL inputs nest in each other
+// (Linear's IssueFilter reaches TeamFilter and back), so sampling every optional object grows past memory and past
+// what one argument can hold.
+const NESTED = new Set(["ref", "object", "array", "union", "allOf"])
 const requiredSample = (node: SchemaNode, seen: ReadonlySet<string> = new Set()): unknown => {
   if (node.type === "ref") {
     const target = definitions[node.ref as keyof typeof definitions] as SchemaNode | undefined
@@ -47,17 +53,23 @@ const requiredSample = (node: SchemaNode, seen: ReadonlySet<string> = new Set())
   }
   if (node.type === "object")
     return Object.fromEntries(
-      node.required.map((name) => [name, requiredSample(node.properties[name] as SchemaNode, seen)]),
+      Object.entries(node.properties)
+        .filter(([name, property]) => node.required.includes(name) || !NESTED.has(property.type))
+        .map(([name, property]) => [name, requiredSample(property, seen)]),
     )
-  if (node.type === "array")
-    return Array.from({ length: Math.max(node.minItems ?? 1, 1) }, () => requiredSample(node.items, seen))
+  if (node.type === "array") {
+    const item = requiredSample(node.items, seen)
+    return item === null ? [] : Array.from({ length: Math.max(node.minItems ?? 1, 1) }, () => item)
+  }
   return sampleOf(node, definitions)
 }
+
+const flagValue = (value: unknown) => (typeof value === "object" ? JSON.stringify(value) : String(value))
 
 const argsOf = (operation: Operation) => [
   ...operation.parameters
     .filter((parameter) => parameter.required)
-    .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, String(sampleOf(parameter.schema, definitions))]),
+    .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, flagValue(requiredSample(parameter.schema))]),
   ...(sendsBytes(operation) ? ["--body-file", upload] : []),
   ...(operation.request?.schema
     ? ["--body", JSON.stringify(requiredSample({ type: "ref", ref: operation.request.schema }))]

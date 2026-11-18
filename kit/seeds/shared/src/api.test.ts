@@ -2,9 +2,11 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { fakeApi, sampleOf } from "@wirecat/cli-base/codegen"
 import { apiFlagOf, manifestBaseUrl, type ServiceApiManifest, sendsBytes } from "@wirecat/cli-core/cli"
+import { pacePathFor } from "@wirecat/cli-core/sends"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
 import { definitions } from "./generated/definitions.js"
+import { IDENTITY } from "./identity.js"
 import { FAKE_TOKEN } from "./testing/fake-comments.js"
 import { runCli } from "./testing/harness.js"
 
@@ -14,9 +16,11 @@ const withPermissions = (permissions: Record<string, string>) => {
   mkdirSync(join(configFile, ".."), { recursive: true })
   writeFileSync(configFile, JSON.stringify({ profiles: { personal: { permissions } } }))
 }
+// Every case shares the profile's pace file, and a few hundred operations would wait for real past its burst.
 afterEach(() => {
   rmSync(configFile, { force: true })
   rmSync(upload, { force: true })
+  rmSync(pacePathFor(IDENTITY, "personal", process.env), { force: true })
 })
 
 type Operation = (typeof API.manifest.operations)[number]

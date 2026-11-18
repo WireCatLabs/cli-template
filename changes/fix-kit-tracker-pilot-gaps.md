@@ -4,9 +4,12 @@
   characters), and `pnpm generate` stopped on `desktop.sync.what`, which takes 40. The line now keeps the kinds a sync
   reads last: "your projects, issues and comments".
 - **A tracker's sync test fails when a kind fails.** A typo in a variable of the source failed every kind before a
-  request was sent, and the test passed: it read only the answer's `issues`, not each kind's `error`.
-- **The `api` test of a GraphQL CLI sends only the variables an operation requires.** A sample of every optional
-  field nests filter in filter (Linear's `IssueFilter` reaches `TeamFilter` and back): the test ran out of memory
-  before its first case.
+  request was sent, and the test passed: it read `issues` where the answer has none (they are under `meta`), and not each kind's `error`.
+- **The `api` test of a GraphQL CLI fits a large schema.** It sends what an operation requires plus its optional plain
+  fields, and an object flag as JSON. A sample of every optional field nests filter in filter (Linear's
+  `IssueFilter` reaches `TeamFilter` and back), and the worker ran out of memory; an object flag went as
+  `[object Object]`. Linear's 493 operations now pass in about 20 seconds.
+- **No `api` test waits for the pace.** Every case shared the profile's pace file, so past the burst each case
+  waited for real; the file is cleared after each case.
 - **Spell checking skips `skills/*/references/api/`,** written by `pnpm generate` from the service's own words, as it
   skips `docs/commands.md`. Linear's descriptions of its API stopped `pnpm docs:check` on twelve words.
