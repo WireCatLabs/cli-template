@@ -20,3 +20,5 @@
   untested: the session test covers `--credential-storage`, `session list` and `api list`; a tracker gets
   `src/tracker-options.test.ts`, which runs each tracker command and option over a synced copy; the GraphQL `api`
   test sends every variable, `--body` and `--body-file`, and `--all` on a paged list.
+- **`new --from-config` refuses a tracker over an OpenAPI description** with what is missing: cli-core's tracker
+  fake answers GraphQL only, so its contract test would fail every case.

@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { graphqlFake, type SchemaNode, sampleOf } from "@wirecat/cli-base/codegen"
 import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
@@ -110,18 +110,31 @@ it.each(API.manifest.operations.map((operation) => [operation.command, operation
     expect(service.refusals).toEqual([])
     expect(service.calls).toHaveLength(1)
     if (operation.request?.schema) {
-      const body = argsOf(operation)
-      body.splice(body.indexOf("--body"), 2, "--body-file", bodyFileOf(operation))
-      const fromFile = await runCli(["personal", "api", operation.command, ...body, "--json"], { service })
+      // The body file alone: with the variables also given as flags, an ignored file would still send them.
+      const bodyFile = bodyFileOf(operation)
+      const fromFile = await runCli(
+        [
+          "personal",
+          "api",
+          operation.command,
+          "--body-file",
+          bodyFile,
+          ...(operation.effect === "destructive" ? ["--yes"] : []),
+          "--json",
+        ],
+        { service },
+      )
       expect(fromFile.code, fromFile.err).toBe(0)
-      expect(service.calls[1]?.variables).toEqual(service.calls[0]?.variables)
+      expect(service.calls[1]?.variables).toEqual(JSON.parse(readFileSync(bodyFile, "utf8")))
     }
     if (!operation.pagination) return
     // The fake's sample of pageInfo says no next page, so --all sends one more call and ends.
+    const before = service.calls.length
     const all = await runCli(["personal", "api", operation.command, ...argsOf(operation), "--all", "--json"], {
       service,
     })
     expect(all.code, all.err).toBe(0)
+    expect(service.calls).toHaveLength(before + 1)
     expect(service.calls.at(-1)?.operation).toBe(operation.id)
     expect(service.refusals).toEqual([])
   },

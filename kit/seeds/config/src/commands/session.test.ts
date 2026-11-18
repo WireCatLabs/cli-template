@@ -50,7 +50,7 @@ it("a sign-in kept in a private file is listed among the sessions; api list name
   expect(started.code, started.err).toBe(0)
   const sessions = await runCli(["session", "list", "--json"], { keyring })
   expect(sessions.code, sessions.err).toBe(0)
-  expect(JSON.stringify(sessions.json())).toContain("files")
+  expect(sessions.json().items).toEqual(expect.arrayContaining([expect.objectContaining({ profile: "files" })]))
   const operations = await runCli(["api", "list", "--json"], { keyring })
   expect((operations.json().items as unknown[]).length).toBeGreaterThan(0)
   expect((await runCli(["files", "session", "end", "--json"], { keyring })).code).toBe(0)
