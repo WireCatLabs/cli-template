@@ -1,10 +1,13 @@
-import { hostFetch, retrying } from "@wirecat/cli-base/http"
-import { serviceApiCommand } from "@wirecat/cli-core/cli"
+import { retrying } from "@wirecat/cli-base/http"
+import { hostsFetch, serviceApiCommand } from "@wirecat/cli-core/cli"
 import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { API, configuration } from "../config.js"
-import { contextOf, PACE, tokenOf } from "../context.js"
+import { contextOf, PACE, type ServiceEnvironment, tokenOf } from "../context.js"
 import { DESKTOP, IDENTITY } from "../identity.js"
+
+/** The service's hosts and nothing else (WC-CMD-32), over the test's fake when it gives one. */
+export const serviceFetch = (environment: ServiceEnvironment) => hostsFetch(DESKTOP.hosts, environment.fetch)
 
 /**
  * The service's raw API from its spec, `api list`, `api show` and one command per operation, through cli-core's shared
@@ -19,8 +22,7 @@ export const apiCommand = (): Command =>
     configuration,
     fetch: (command) => {
       const { environment, env, profile } = contextOf(command)
-      const send = hostFetch({ hosts: DESKTOP.hosts ?? [], ...(environment.fetch ? { fetch: environment.fetch } : {}) })
-      return retrying(send, { pacer: new Pacer(pacePathFor(IDENTITY, profile, env), PACE) })
+      return retrying(serviceFetch(environment), { pacer: new Pacer(pacePathFor(IDENTITY, profile, env), PACE) })
     },
     token: tokenOf,
     schemas: () => import("../generated/schemas.js").then((module) => module.schemas),

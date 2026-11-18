@@ -1,0 +1,456 @@
+{
+  "data": {
+    "__schema": {
+      "queryType": { "name": "Query" },
+      "mutationType": null,
+      "types": [
+        {
+          "kind": "OBJECT",
+          "name": "Query",
+          "description": null,
+          "fields": [
+            {
+              "name": "teams",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "TeamConnection", "ofType": null }
+              },
+              "args": [
+                {
+                  "name": "first",
+                  "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                },
+                {
+                  "name": "after",
+                  "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                },
+                {
+                  "name": "includeArchived",
+                  "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                }
+              ],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "issues",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "IssueConnection", "ofType": null }
+              },
+              "args": [
+                {
+                  "name": "first",
+                  "type": { "kind": "SCALAR", "name": "Int", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                },
+                {
+                  "name": "after",
+                  "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                },
+                {
+                  "name": "includeArchived",
+                  "type": { "kind": "SCALAR", "name": "Boolean", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                },
+                {
+                  "name": "filter",
+                  "type": { "kind": "INPUT_OBJECT", "name": "IssueFilter", "ofType": null },
+                  "defaultValue": null,
+                  "description": null
+                }
+              ],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "viewer",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "User", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "Team",
+          "description": null,
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "key",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "createdAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "updatedAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "archivedAt",
+              "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "Issue",
+          "description": null,
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "identifier",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "title",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "team",
+              "type": { "kind": "OBJECT", "name": "Team", "ofType": null },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "createdAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "updatedAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "archivedAt",
+              "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "User",
+          "description": null,
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "name",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "TeamConnection",
+          "description": null,
+          "fields": [
+            {
+              "name": "nodes",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": { "kind": "OBJECT", "name": "Team", "ofType": null }
+                  }
+                }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "pageInfo",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "PageInfo", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "IssueConnection",
+          "description": null,
+          "fields": [
+            {
+              "name": "nodes",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": { "kind": "OBJECT", "name": "Issue", "ofType": null }
+                  }
+                }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "pageInfo",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "OBJECT", "name": "PageInfo", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "OBJECT",
+          "name": "PageInfo",
+          "description": null,
+          "fields": [
+            {
+              "name": "hasNextPage",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": { "kind": "SCALAR", "name": "Boolean", "ofType": null }
+              },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            },
+            {
+              "name": "endCursor",
+              "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+              "args": [],
+              "description": null,
+              "isDeprecated": false
+            }
+          ],
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "IssueFilter",
+          "description": null,
+          "fields": null,
+          "inputFields": [
+            {
+              "name": "updatedAt",
+              "type": { "kind": "INPUT_OBJECT", "name": "DateComparator", "ofType": null },
+              "defaultValue": null,
+              "description": null
+            }
+          ],
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "INPUT_OBJECT",
+          "name": "DateComparator",
+          "description": null,
+          "fields": null,
+          "inputFields": [
+            {
+              "name": "gte",
+              "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+              "defaultValue": null,
+              "description": null
+            }
+          ],
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "SCALAR",
+          "name": "Boolean",
+          "description": null,
+          "fields": null,
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "SCALAR",
+          "name": "ID",
+          "description": null,
+          "fields": null,
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "SCALAR",
+          "name": "Int",
+          "description": null,
+          "fields": null,
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        },
+        {
+          "kind": "SCALAR",
+          "name": "String",
+          "description": null,
+          "fields": null,
+          "inputFields": null,
+          "enumValues": null,
+          "possibleTypes": null
+        }
+      ]
+    }
+  }
+}

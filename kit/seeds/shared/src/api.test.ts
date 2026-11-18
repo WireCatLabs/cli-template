@@ -59,6 +59,15 @@ it("the spec offers operations", () => {
   expect(API.manifest.operations.length).toBeGreaterThan(0)
 })
 
+it("api show describes an operation from the generated files, without calling the service", async () => {
+  const [operation] = API.manifest.operations
+  const service = fake()
+  const shown = await runCli(["personal", "api", "show", String(operation?.command), "--json"], { service })
+  expect(shown.code, shown.err).toBe(0)
+  expect(shown.json().item).toMatchObject({ operation: { id: operation?.id } })
+  expect(service.calls).toEqual([])
+})
+
 // One test each, so a large API stays inside the per-test timeout and a failure names its operation.
 it.each(API.manifest.operations.map((operation) => [operation.command, operation] as const))(
   "sends %s as the spec describes it",

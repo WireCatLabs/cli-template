@@ -19,10 +19,10 @@ const graphqlAuth = (token: string) => {
 
 /** The answer of the call auth.verify names, with the token marked active where auth.verify.active says. */
 const verifyAnswer = (): Record<string, () => { body: unknown }> => {
-  const operation = API.manifest.operations.find((one) => one.id === VERIFY?.operation)
+  const operation = API.manifest.operations.find((one) => one.id === VERIFY.operation)
   const schema = operation?.response?.schema
-  const active = VERIFY?.active
-  if (!VERIFY || !active || !schema) return {}
+  const active = VERIFY.active
+  if (!active || !schema) return {}
   return {
     [VERIFY.operation]: () => {
       const body = sampleOf({ type: "ref", ref: schema }, definitions)

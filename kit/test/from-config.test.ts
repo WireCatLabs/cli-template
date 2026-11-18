@@ -120,7 +120,7 @@ describe("new --from-config", () => {
     ])
       expect(read(dir, path), path).not.toMatch(/sample\/|fake-comments|commentsCommand/)
     expect(read(dir, "src/identity.ts")).toContain('hosts: ["api.acme.example", "app.acme.example"],')
-    expect(read(dir, "src/commands/crm.ts")).toContain('live: ["user"]')
+    expect(read(dir, "src/commands/crm.ts")).toContain("live: LIVE")
     expect(runScope).toContain("sync: \"cli-core's addCrmCommands runs it in its run")
     expect(read(dir, "src/program.ts")).toMatch(/apiCommand\(\),\n +\.\.\.crmCommands\(\),/)
     expect(read(dir, "src/crm-contracts.test.ts")).toContain("crmSourceContract(")

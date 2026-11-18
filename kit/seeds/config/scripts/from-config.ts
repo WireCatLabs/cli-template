@@ -25,7 +25,11 @@ if (functions.length)
       "move it into the hooks module the config names in hooks (./src/hooks.ts)",
   )
 const verify = cli.auth.preset === "none" ? undefined : cli.auth.verify
-const literal = (value: unknown) => (value === undefined ? "undefined" : JSON.stringify(value, null, 2))
+// A value the config leaves out is a bare `undefined`, so a command that still reads it fails typecheck, not a run.
+const constant = (name: string, type: string, value: unknown) =>
+  value === undefined
+    ? `export const ${name} = undefined`
+    : `export const ${name}: ${type} = ${JSON.stringify(value, null, 2)}`
 // The hooks module is imported from src/generated/, inside the bundle: it must live under src/.
 const hooksImport = (() => {
   if (!cli.hooks) return undefined
@@ -49,24 +53,36 @@ const text = formatted(
   [
     "// Generated from wirecat.config.ts by scripts/from-config.ts; run pnpm generate",
     "",
-    `export const VERIFY: { operation: string; id: string; name?: string; active?: string } | undefined = ${literal(verify)}`,
+    constant("VERIFY", "{ operation: string; id: string; name?: string; active?: string }", verify),
     "",
-    `export const SOURCE: Readonly<Record<string, unknown>> | undefined = ${literal(cli.source)}`,
+    constant(
+      "SOURCE",
+      "Readonly<Record<string, unknown>> & { readonly provider: string; readonly kinds: readonly string[] }",
+      cli.source,
+    ),
     "",
+    // Spread into the source's options: `{}` without a hooks module.
     ...(hooksImport
-      ? [`export { hooks as HOOKS } from "${hooksImport}"`]
+      ? [`import { hooks } from "${hooksImport}"`, "", "export const HOOK_OPTIONS = { hooks }"]
       : cli.category === "tracker"
         ? [
             'import type { TrackerManifestHooks } from "@wirecat/cli-core/tracker"',
             "",
-            "export const HOOKS: TrackerManifestHooks | undefined = undefined",
+            "export const HOOK_OPTIONS: { hooks?: TrackerManifestHooks } = {}",
           ]
         : [
             'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
             "",
-            "export const HOOKS: CrmManifestHooks | undefined = undefined",
+            "export const HOOK_OPTIONS: { hooks?: CrmManifestHooks } = {}",
           ]),
     "",
+    // What a CRM reads live: its users, when the source names a call for them.
+    ...(cli.category === "crm"
+      ? [
+          `export const LIVE: readonly "user"[] = ${cli.source && "users" in cli.source && cli.source.users ? '["user"]' : "[]"}`,
+          "",
+        ]
+      : []),
   ].join("\n"),
 )
 

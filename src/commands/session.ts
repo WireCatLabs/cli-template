@@ -16,6 +16,7 @@ import {
   profilesHere,
   REMOTE_READ,
   refuseCommandName,
+  refuseOffline,
   refuseUnderReadOnly,
   rememberAccount,
   renderAnswer,
@@ -25,7 +26,7 @@ import {
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { configuration } from "../config.js"
-import { contextOf, refuseOffline, serviceFor, withService } from "../context.js"
+import { contextOf, serviceFor, withService } from "../context.js"
 import { IDENTITY, SERVICE } from "../identity.js"
 
 // `session start | status | end | list` is every provider CLI's sign-in (WC-ACCT-12). Keep it; replace the token
@@ -62,9 +63,9 @@ const startCommand = () =>
       "keyring" as TokenStorage,
     )
     .action(async function (this: Command, args: { credentialStorage: TokenStorage }) {
-      const { env, flags, profile, tokens, run } = contextOf(this)
+      const { env, profile, tokens, run } = contextOf(this)
       refuseCommandName(profile, commandWords(rootOf(this)), CLI)
-      refuseOffline(flags)
+      refuseOffline(this, SERVICE)
       // A secret is never an argument: it would land in shell history and in the run record (WC-SECR-5).
       const token = (await readSecret(`${SERVICE} API token: `, secretInputOf(this))).trim()
       if (!token) throw new CliError("validation_error", "no token was given")

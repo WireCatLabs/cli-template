@@ -16,8 +16,8 @@ importers:
         specifier: 0.117.0
         version: 0.117.0(@scalar/openapi-upgrader@0.4.6)(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
       '@wirecat/cli-core':
-        specifier: 0.698.0
-        version: 0.698.0(@wirecat/cli-base@0.117.0(@scalar/openapi-upgrader@0.4.6)(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
+        specifier: 0.699.0
+        version: 0.699.0(@wirecat/cli-base@0.117.0(@scalar/openapi-upgrader@0.4.6)(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -1201,8 +1201,8 @@ packages:
   '@wirecat/cli-core-sqlite@1.1.0':
     resolution: {integrity: sha512-GpGlh/dAIX/nblBYCdT6DfWSLFxav9mxxeELQAfEuw+QZdT9unKxbi5xa02s/s4JS1P7n0PQx2sCABj4FlMRNw==}
 
-  '@wirecat/cli-core@0.698.0':
-    resolution: {integrity: sha512-Vv67aCuMErhjWKhpZvNkfwHk5v423LpLxXtdwfMwAY5q2eejZPM4k0FCz16lm9O02mGkL1YMkz4JC0pUBNmDxw==}
+  '@wirecat/cli-core@0.699.0':
+    resolution: {integrity: sha512-HXcxnfcVr6mVHLKk3BG2mnJrbXFiSG6raWiG7RqGO+82OMLaP7gHpxWX5K/j2DbI8zp6k4+Tl9K/iGTyEYaMMg==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -3219,7 +3219,7 @@ snapshots:
 
   '@wirecat/cli-core-sqlite@1.1.0': {}
 
-  '@wirecat/cli-core@0.698.0(@wirecat/cli-base@0.117.0(@scalar/openapi-upgrader@0.4.6)(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
+  '@wirecat/cli-core@0.699.0(@wirecat/cli-base@0.117.0(@scalar/openapi-upgrader@0.4.6)(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
     dependencies:
       '@anthropic-ai/sdk': 1.3.0(zod@4.6.7)
       '@bomb.sh/tab': 0.0.22(commander@15.0.0)

@@ -88,11 +88,13 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
 `parseCliConfig`. In the CLI:
 
 - `pnpm generate` first writes `src/generated/wirecat-config.ts` from the config (`scripts/from-config.ts`): the
-  token check, the source and the hooks, which `src/` reads; the config stays the one file to edit.
+  token check, the source and the hooks, which `src/` reads; the config stays the one file to edit. Each value has its
+  exact type, and one the config leaves out is a bare `undefined`: a command that still reads it fails typecheck, not a
+  run.
 - A `source` (a `crm` or a `tracker` category) needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
   holds at `new`, and `pnpm generate` then reads their values again.
-- With `auth.verify`, `session start` is cli-core's `tokenSessionCommand`: it checks a token with that operation and
-  keeps the account's id from the answer. `verify.active` names a field that must be `true`, for a service that
+- With `auth.verify`, `session start` is cli-core's `tokenSessionCommand` over `manifestVerify`: it checks a token with
+  that operation and keeps the account's id from the answer; the CLI holds no check of its own. `verify.active` names a field that must be `true`, for a service that
   answers a revoked key with 200 and `active: false`, as Attio does; anything else is "sign in again".
 - With `auth.verify` and a spec, the CLI starts without the template's sample: its wiring and tests reach the API and
   its fake, so there is nothing for `remove-sample` to do. The hosts an OAuth sign-in in the description reaches join

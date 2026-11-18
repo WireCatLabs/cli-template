@@ -42,12 +42,13 @@ const mcpCommand = () =>
     untrusted: ["comment text", "author names"],
     permissionExample: "comments.create=deny",
     skill: SKILL,
-    signedIn: (profile, env, keyring) =>
-      new ProfileTokenStore({ app: IDENTITY, env, ...(keyring ? { keyring } : {}) }).signedIn(profile),
+    signedIn: (profile, env, keyring) => new ProfileTokenStore({ app: IDENTITY, env, keyring }).signedIn(profile),
   })
 
 export const definition = (): ProgramDefinition => ({
   app: IDENTITY,
+  // The daily "a newer version exists" line after a command that succeeded; <PREFIX>_NO_UPDATE_CHECK turns it off.
+  update,
   // The whole object: cli-core refuses a command by its key only when it gets the permission table too.
   configuration,
   commands: () => [
