@@ -7,7 +7,7 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
-import { OFF_SAMPLE, withoutSampleRunScope } from "./config-wiring.js"
+import { OFF_SAMPLE, withConfigRunScope } from "./config-wiring.js"
 import type { LoadedConfig } from "./from-config.js"
 import {
   ask,
@@ -765,41 +765,6 @@ export const withSourceCommands = (text: string, kind: "crm" | "tracker" = "crm"
     `$1apiCommand(),\n$1...${kind}Commands(),\n`,
   )
 
-const RUN_SCOPE = "src/run-scope.test.ts"
-
-/**
- * run-scope over a config's wiring: `session start` checks the token with the API, so the answering fake is the API's,
- * the sample gone; `sync` is cli-core's, run in its own run and tested by the source's contracts test.
- */
-export const withConfigRunScope = (
-  text: string,
-  { verifies, source, users = false }: { verifies: boolean; source?: "crm" | "tracker"; users?: boolean },
-): string => {
-  const answering = verifies ? withoutSampleRunScope(text) : text
-  const sync = {
-    crm: '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
-    tracker: '      sync: "cli-core\'s addTrackerCommands runs it in its run; src/tracker-contracts.test.ts syncs",',
-  }
-  return source
-    ? replaceOnce(
-        RUN_SCOPE,
-        answering,
-        '      "mcp serve": "listens until stopped",\n',
-        [
-          '      "mcp serve": "listens until stopped",',
-          sync[source],
-          ...(users
-            ? [
-                '      "users list": "cli-core\'s addCrmCommands runs it in its run, over source.users",',
-                '      "users show": "cli-core\'s addCrmCommands runs it in its run, over source.users",',
-              ]
-            : []),
-          "",
-        ].join("\n"),
-      )
-    : answering
-}
-
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
   const pkg = JSON.parse(text)
@@ -862,7 +827,7 @@ export const runNew = async (
               ? withConfigRunScope(withApiRunScope(text), {
                   verifies: loaded.verifies,
                   ...(loaded.config.source ? { source: sourceKind(loaded.config) } : {}),
-                  users: Boolean(loaded.config.source?.users),
+                  users: Boolean(loaded.config.source && "users" in loaded.config.source && loaded.config.source.users),
                 })
               : withApiRunScope(text),
         }

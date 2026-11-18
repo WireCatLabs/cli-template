@@ -13,10 +13,8 @@ const withoutSampleContext = (text: string): string => {
   const kept = each(CONTEXT, text, [
     ["  type EventSink,\n", ""],
     ['import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"\n', ""],
-    ['import { configuration } from "./config.js"\n', 'import { API, configuration } from "./config.js"\n'],
     [/^import \{ type CommentsService, commentsService \} from "\.\/sample\/comments\.js"\n/m, ""],
-    [/^import \{ SERVICE, transport \} from "\.\/sample\/transport\.js"\n/m, ""],
-    [/\{SERVICE\}; leave out --offline/, "{API.service}; leave out --offline"],
+    [/^import \{ transport \} from "\.\/sample\/transport\.js"\n/m, ""],
   ])
   // The sample's service and its run wrapper go: the api group and the CRM commands run their own calls.
   return each(CONTEXT, kept, [
@@ -28,9 +26,6 @@ const withoutSampleContext = (text: string): string => {
 const PROGRAM = "src/program.ts"
 const withoutSampleProgram = (text: string): string =>
   each(PROGRAM, withoutMount(text), [
-    [/^import \{ SERVICE \} from "\.\/sample\/transport\.js"\n/m, ""],
-    ['import { configuration } from "./config.js"\n', 'import { API, configuration } from "./config.js"\n'],
-    ["    name: SERVICE,\n", "    name: API.service,\n"],
     ['untrusted: ["comment text", "author names"],', 'untrusted: ["names and text the service\'s users wrote"],'],
     ['permissionExample: "comments.create=deny",', 'permissionExample: "api.list=deny",'],
   ])
@@ -71,6 +66,39 @@ export const withoutSampleRunScope = (text: string): string =>
     [/^ +"comments [a-z]+": \[.*\],\n/gm, ""],
     ["fetch: fakeComments().fetch", "fetch: fakeServiceApi().fetch"],
   ])
+
+/**
+ * run-scope over a config's wiring: `session start` checks the token with the API, so the answering fake is the API's,
+ * the sample gone; `sync` is cli-core's, run in its own run and tested by the source's contracts test.
+ */
+export const withConfigRunScope = (
+  text: string,
+  { verifies, source, users = false }: { verifies: boolean; source?: "crm" | "tracker"; users?: boolean },
+): string => {
+  const answering = verifies ? withoutSampleRunScope(text) : text
+  const sync = {
+    crm: '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
+    tracker: '      sync: "cli-core\'s addTrackerCommands runs it in its run; src/tracker-contracts.test.ts syncs",',
+  }
+  return source
+    ? replaceOnce(
+        RUN_SCOPE,
+        answering,
+        '      "mcp serve": "listens until stopped",\n',
+        [
+          '      "mcp serve": "listens until stopped",',
+          sync[source],
+          ...(users
+            ? [
+                '      "users list": "cli-core\'s addCrmCommands runs it in its run, over source.users",',
+                '      "users show": "cli-core\'s addCrmCommands runs it in its run, over source.users",',
+              ]
+            : []),
+          "",
+        ].join("\n"),
+      )
+    : answering
+}
 
 const API_TEST = "src/api.test.ts"
 const withoutSampleApiTest = (text: string): string =>

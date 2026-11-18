@@ -1,19 +1,12 @@
 import { CliError } from "@wirecat/cli-base"
 import { hostFetch } from "@wirecat/cli-base/http"
 import { serviceApiCall, tokenSessionCommand } from "@wirecat/cli-core/cli"
+import { valueAt } from "@wirecat/cli-core/manifest"
 import type { Command } from "commander"
 import { API, configuration } from "../config.js"
 import { contextOf } from "../context.js"
 import { VERIFY } from "../generated/wirecat-config.js"
 import { DESKTOP, IDENTITY } from "../identity.js"
-
-const valueAt = (answer: unknown, path: string): unknown =>
-  path
-    .split(".")
-    .reduce<unknown>(
-      (at, key) => (at !== null && typeof at === "object" ? (at as Record<string, unknown>)[key] : undefined),
-      answer,
-    )
 
 /**
  * `session start | status | end | list` (WC-ACCT-12): the token is checked by the call `auth.verify` names in
