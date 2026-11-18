@@ -1,0 +1,168 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Acme CRM", "version": "1" },
+  "servers": [{ "url": "https://api.acme.example/v1" }],
+  "security": [{ "bearer": [] }],
+  "components": {
+    "securitySchemes": { "bearer": { "type": "http", "scheme": "bearer" } },
+    "schemas": {
+      "Self": {
+        "type": "object",
+        "required": ["active", "workspace_id"],
+        "properties": {
+          "active": { "type": "boolean" },
+          "workspace_id": { "type": "string" },
+          "workspace_name": { "type": "string" }
+        }
+      },
+      "Person": {
+        "type": "object",
+        "required": ["id", "name", "created_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "company_id": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Company": {
+        "type": "object",
+        "required": ["id", "name", "created_at"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "domain": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "email": { "type": "string" } }
+      }
+    },
+    "parameters": {
+      "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 100 } },
+      "offset": { "name": "offset", "in": "query", "schema": { "type": "integer" } }
+    }
+  },
+  "paths": {
+    "/self": {
+      "get": {
+        "operationId": "getSelf",
+        "summary": "The workspace the token belongs to",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Self" } } }
+          }
+        }
+      }
+    },
+    "/people": {
+      "get": {
+        "operationId": "listPeople",
+        "summary": "List people",
+        "parameters": [{ "$ref": "#/components/parameters/limit" }, { "$ref": "#/components/parameters/offset" }],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Person" } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/people/{person_id}": {
+      "get": {
+        "operationId": "getPerson",
+        "summary": "Get a person",
+        "parameters": [{ "name": "person_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": { "data": { "$ref": "#/components/schemas/Person" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies": {
+      "get": {
+        "operationId": "listCompanies",
+        "summary": "List companies",
+        "parameters": [{ "$ref": "#/components/parameters/limit" }, { "$ref": "#/components/parameters/offset" }],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Company" } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/{company_id}": {
+      "get": {
+        "operationId": "getCompany",
+        "summary": "Get a company",
+        "parameters": [{ "name": "company_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": { "data": { "$ref": "#/components/schemas/Company" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/members": {
+      "get": {
+        "operationId": "listMembers",
+        "summary": "List workspace members",
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Member" } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -76,6 +76,13 @@ const text = formatted(
             "export const HOOK_OPTIONS: { hooks?: CrmManifestHooks } = {}",
           ]),
     "",
+    // What a CRM reads live: its users, when the source names a call for them.
+    ...(cli.category === "crm"
+      ? [
+          `export const LIVE: readonly "user"[] = ${cli.source && "users" in cli.source && cli.source.users ? '["user"]' : "[]"}`,
+          "",
+        ]
+      : []),
   ].join("\n"),
 )
 

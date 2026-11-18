@@ -1,46 +1,15 @@
 import { CliError } from "@wirecat/cli-base"
 import { retrying } from "@wirecat/cli-base/http"
-import { recalledAccount, serviceApiCall } from "@wirecat/cli-core/cli"
+import { openAppStore, recalledAccount, serviceApiCall } from "@wirecat/cli-core/cli"
 import { crmSourceFromManifest } from "@wirecat/cli-core/crm"
 import { addCrmCommands, type CrmRun, openCrmStore } from "@wirecat/cli-core/crm/cli"
 import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"
-import type { MessageStore } from "@wirecat/cli-core/store"
 import { Command } from "commander"
 import { API } from "../config.js"
 import { contextOf, PACE, tokenOf } from "../context.js"
-import { HOOK_OPTIONS, SOURCE } from "../generated/wirecat-config.js"
+import { HOOK_OPTIONS, LIVE, SOURCE } from "../generated/wirecat-config.js"
 import { IDENTITY } from "../identity.js"
 import { serviceFetch } from "./api.js"
-
-/**
- * The shared store, with this CLI's provider entry written, so every other CLI's search knows it (WC-ARCH-21). A
- * read-only open writes nothing, the entry included.
- */
-const openStore = async (env: NodeJS.ProcessEnv, { readOnly = false } = {}): Promise<MessageStore> => {
-  const { ensureSqlite } = await import("@wirecat/cli-core/sqlite-runtime")
-  await ensureSqlite()
-  const { openStore: open, storePath } = await import("@wirecat/cli-core/store")
-  const store = await open({
-    path: storePath(env),
-    env,
-    command: IDENTITY.command,
-    version: IDENTITY.version,
-    ...(readOnly ? { readOnly } : {}),
-  })
-  try {
-    if (!readOnly)
-      await store.accounts.registerProvider({
-        name: SOURCE.provider,
-        kind: "crm",
-        aliases: [],
-        command: IDENTITY.command,
-      })
-    return store
-  } catch (error) {
-    await store.close()
-    throw error
-  }
-}
 
 // The account is the one `session start` checked the token against; the store keeps each account's rows apart.
 const accountOf = (command: Command) => {
@@ -65,7 +34,13 @@ const open = async (command: Command, { readOnly }: { readOnly: boolean }): Prom
     profile,
     readOnly,
     provider: SOURCE.provider,
-    open: openStore,
+    // The shared store, with this CLI's provider entry written so every other CLI's search knows it (WC-ARCH-21).
+    open: (at, options) =>
+      openAppStore(at, {
+        app: IDENTITY,
+        provider: { name: SOURCE.provider, kind: "crm", aliases: [], command: IDENTITY.command },
+        ...options,
+      }),
     account: () => accountOf(command),
   })
   const fetch = retrying(serviceFetch(environment), { pacer: new Pacer(pacePathFor(IDENTITY, profile, env), PACE) })
@@ -92,7 +67,7 @@ export const crmCommands = (): Command[] => {
     open,
     leads: SOURCE.kinds.includes("lead"),
     // People and companies have no live list in a manifest source yet; its users do.
-    ...(SOURCE.users ? { live: ["user"] as const } : {}),
+    live: LIVE,
   })
   return [...holder.commands]
 }

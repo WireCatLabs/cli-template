@@ -87,7 +87,7 @@ export const failureOf = (status: number, writes: boolean, retryAfterMs?: number
  * first may have landed (WC-OUT-20).
  */
 export const transport = (options: TransportOptions) => {
-  const fetchOf = hostFetch({ hosts: DESKTOP.hosts ?? [], ...(options.fetch ? { fetch: options.fetch } : {}) })
+  const fetchOf = hostFetch({ hosts: DESKTOP.hosts, ...(options.fetch ? { fetch: options.fetch } : {}) })
   const sleep = options.sleep ?? realSleep
   const now = options.now ?? Date.now
 

@@ -28,3 +28,17 @@ it("sync through this CLI sends only calls the schema allows, under the account 
   expect(listed.code, listed.err).toBe(0)
   expect(fake.refusals).toEqual([])
 })
+
+// Its own profile: the account another test signed in to stays remembered for this file.
+it("sync before session start says to sign in, and after it --offline sends nothing", async () => {
+  const keyring = memoryKeyring()
+  const fake = fakeServiceApi()
+  const unsigned = await runCli(["work", "sync", "--json"], { keyring, service: fake })
+  expect(unsigned.json()).toMatchObject({ error: { code: "authentication_error" } })
+  expect(unsigned.err).toContain("session start")
+  await runCli(["work", "session", "start", "--json"], { keyring, service: fake, stdin: FAKE_API_TOKEN })
+  const sent = fake.calls.length
+  const offline = await runCli(["work", "sync", "--offline", "--json"], { keyring, service: fake })
+  expect(JSON.stringify(offline.json())).toContain("offline.refused")
+  expect(fake.calls.length).toBe(sent)
+})

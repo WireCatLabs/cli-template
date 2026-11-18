@@ -89,3 +89,18 @@ it("sync through this CLI keeps the rows under the account session start checked
       stored: crm.rows[kind]?.length,
     })
 })
+
+// Its own profile: the account another test signed in to stays remembered for this file.
+it("sync before session start says to sign in, and after it --offline sends nothing", async () => {
+  const keyring = memoryKeyring()
+  const crm = crmManifestFake(manifest, { api: API.manifest, definitions })
+  fakes.push(crm)
+  const service = signInAndCrm(crm)
+  const unsigned = await runCli(["work", "sync", "--json"], { keyring, service })
+  expect(unsigned.json()).toMatchObject({ error: { code: "authentication_error" } })
+  expect(unsigned.err).toContain("session start")
+  await runCli(["work", "session", "start", "--json"], { keyring, service, stdin: FAKE_MANIFEST_TOKEN })
+  const offline = await runCli(["work", "sync", "--offline", "--json"], { keyring, service })
+  expect(JSON.stringify(offline.json())).toContain("offline.refused")
+  expect(crm.calls).toEqual([])
+})

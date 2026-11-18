@@ -19,7 +19,7 @@ export const IDENTITY: AppIdentity = {
 
 // What `wcat` and WireCat Desktop show before the tool is installed: rewrite the tagline and the sign-in texts for
 // yours. The bin passes it to wcatStart before anything else loads; src/wcat.ts adds the permission keys.
-export const DESKTOP: ManifestIdentity = {
+export const DESKTOP = {
   ...IDENTITY,
   docs: "https://github.com/WireCatLabs/clidev-cli#readme",
   // SAMPLE: every host the CLI contacts (WC-CMD-32); src/sample/transport.ts reaches only these.
@@ -29,6 +29,6 @@ export const DESKTOP: ManifestIdentity = {
     gives: "Lets your agent read and change your account through clidev.",
     asks: "An API token or key from the service.",
   },
-}
+} satisfies ManifestIdentity
 
 export const SKILL = new URL("../skills/clidev-app/SKILL.md", import.meta.url)

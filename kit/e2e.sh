@@ -14,26 +14,19 @@ pnpm build >/dev/null
 tarball=$(npm pack --silent --ignore-scripts --pack-destination "$work" | tail -n 1)
 npm install --silent --no-save --prefix "$work/install" "$work/$tarball"
 
-# build <name> <command> <category> <spec>; outside @wirecat, as a third party makes one, and with every flag new takes.
-build() {
-  mkdir "$work/new-$2"
-  cd "$work/new-$2"
-  "$work/install/node_modules/.bin/cli-template" new "$1" --command "$2" --package "@example/$1" \
-    --owner example --tagline "Made by kit e2e" --category "$3" --content-lang en --sign-in none \
-    --api official-docs --spec "$4" --filters time --never-store tokens --untrusted none >/dev/null
-  cmp "$root/.gitignore" "$1/.gitignore"
-  cd "$1"
+# checks <command> <spec>: what a CLI made by new must pass, in its own folder.
+checks() {
   pnpm install
   # As new's next steps say: the rename changes line lengths, so Biome formats the renamed files once.
   pnpm lint:fix
-  if [ "$4" != none ]; then
+  if [ "$2" != none ]; then
     # A fresh CLI builds and runs before its first pnpm generate.
     pnpm build
     env -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_STATE_HOME -u XDG_CACHE_HOME HOME="$work/home" \
-      DBUS_SESSION_BUS_ADDRESS=disabled: node "dist/bin/$2.js" doctor >/dev/null
+      DBUS_SESSION_BUS_ADDRESS=disabled: node "dist/bin/$1.js" doctor >/dev/null
   fi
   pnpm generate
-  if [ "$4" != none ]; then
+  if [ "$2" != none ]; then
     pnpm exec cli-contract contracts/plan.json --update
     pnpm exec vitest run src/mcp.test.ts --update
     pnpm lint:fix
@@ -43,11 +36,43 @@ build() {
   pnpm contracts:check
   pnpm test:coverage
   pnpm docs:check
+}
+
+# build <name> <command> <category> <spec>; outside @wirecat, as a third party makes one, and with every flag new takes.
+build() {
+  mkdir "$work/new-$2"
+  cd "$work/new-$2"
+  "$work/install/node_modules/.bin/cli-template" new "$1" --command "$2" --package "@example/$1" \
+    --owner example --tagline "Made by kit e2e" --category "$3" --content-lang en --sign-in none \
+    --api official-docs --spec "$4" --filters time --never-store tokens --untrusted none >/dev/null
+  cmp "$root/.gitignore" "$1/.gitignore"
+  cd "$1"
+  checks "$2" "$4"
   echo "kit e2e: new $1 ($2, $3, --spec $4) passed lint, generate, ci:quick, contracts:check, test:coverage and docs:check"
+}
+
+# from_config <fixture> <command> <spec URL> <spec file>: new --from-config over kit/test/from-config/<fixture>, a config
+# with a token check (auth.verify) and a source, so the CLI starts without the sample. The preload answers the spec URL
+# from the file, for `new` only: install and generate run without it.
+from_config() {
+  mkdir "$work/config-$2"
+  cp "$root/kit/test/from-config/$1/wirecat.config.ts" "$work/config-$2/"
+  cd "$work/config-$2"
+  E2E_SPEC_URL="$3" E2E_SPEC_FILE="$root/kit/test/from-config/$1/$4" \
+    node --import "$root/kit/test/from-config/spec-fetch.mjs" \
+    "$work/install/node_modules/@wirecat/cli-template/kit/dist/main.js" \
+    new --from-config wirecat.config.ts --content-lang en --api official-docs --filters text --never-store tokens \
+    --untrusted records >/dev/null
+  [ ! -e "$2-cli/src/sample" ]
+  cd "$2-cli"
+  checks "$2" "$1"
+  echo "kit e2e: new --from-config ($1, $2) started without the sample and passed the same checks"
 }
 
 build demo-cli demo notes openapi
 build acme-workspace-cli acme-workspace crm none
+from_config crm acme https://docs.acme.example/openapi.json openapi.json
+from_config tracker acmet https://api.acme-tracker.example/graphql schema.json
 
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')

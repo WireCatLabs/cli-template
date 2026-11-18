@@ -1,4 +1,3 @@
-import { CliError } from "@wirecat/cli-base"
 import {
   type BaseEnvironment,
   baseContext,
@@ -6,6 +5,7 @@ import {
   environmentOf,
   type GlobalFlags,
   ProfileTokenStore,
+  refuseOffline,
 } from "@wirecat/cli-core/cli"
 import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
@@ -36,15 +36,10 @@ export const contextOf = (command: Command) => {
     tokens: new ProfileTokenStore({
       app: IDENTITY,
       env: base.env,
-      ...(base.keyring ? { keyring: base.keyring } : {}),
+      keyring: base.keyring,
       warn: base.renderer.warn,
     }),
   }
-}
-
-export const refuseOffline = (flags: GlobalFlags) => {
-  if (flags.offline)
-    throw new CliError("permission_error", `this needs ${SERVICE}; leave out --offline`, { reason: "offline.refused" })
 }
 
 /** The service for one run, with the token it was given; `events` comes from `run()`, so each request is recorded. */
@@ -63,8 +58,8 @@ export const serviceFor = (command: Command, token: string, events: EventSink) =
 
 /** The profile's saved token, or an authentication error that says how to sign in. Read before any request. */
 export const tokenOf = (command: Command): string => {
-  const { flags, profile, tokens } = contextOf(command)
-  refuseOffline(flags)
+  const { profile, tokens } = contextOf(command)
+  refuseOffline(command, SERVICE)
   return tokens.need(profile)
 }
 

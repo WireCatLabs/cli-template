@@ -506,7 +506,7 @@ export const withContentLanguages = (text: string, languages: readonly string[])
 
 // A CLI that never signs in has no account for `mcp check` to look for; with the check, it reports every profile unhealthy.
 export const withoutSignInCheck = (text: string): string => {
-  const check = /^ {4}signedIn: \(profile, env, keyring\) =>\n {6}new ProfileTokenStore\(.*\)\.signedIn\(profile\),\n/m
+  const check = /^ {4}signedIn: \(profile, env, keyring\) =>\s+new ProfileTokenStore\(.*\)\.signedIn\(profile\),\n/m
   const named = /^ {2}ProfileTokenStore,\n/m
   if (!check.test(text) || !named.test(text))
     throw new Error("src/program.ts: no signedIn check to take out of the MCP command")
