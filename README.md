@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/WireCatLabs/cli-template/main/kit/images/new.gif" alt="new --spec-url turns PokeAPI's description into 102 commands, answers a real call and starts an MCP server" width="700">
+  <img src="https://raw.githubusercontent.com/WireCatLabs/cli-template/main/kit/images/new.gif" alt="new --spec-url turns Notion's own OpenAPI description into a CLI: the files it writes, its commands and their help" width="800">
 </p>
 
 <p align="center">

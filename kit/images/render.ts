@@ -61,6 +61,6 @@ if (has("vhs") && has("ttyd")) {
     if (local) rmSync(local, { recursive: true, force: true })
   }
   if (has("gifsicle"))
-    execFileSync("gifsicle", ["-O3", "--lossy=80", "--colors", "64", "--resize-width", "700", "-b", GIF])
+    execFileSync("gifsicle", ["-O3", "--lossy=80", "--colors", "64", "--resize-width", "1000", "-b", GIF])
   console.error(`${GIF}: ${Math.round(statSync(GIF).size / 1024)} KB`)
 } else console.error(`skipped ${TAPE}: vhs needs ttyd (https://github.com/charmbracelet/vhs#installation)`)
