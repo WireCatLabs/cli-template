@@ -66,7 +66,7 @@ export const crmCommands = (): Command[] => {
     app: IDENTITY,
     open,
     leads: SOURCE.kinds.includes("lead"),
-    // People and companies have no live list in a manifest source yet; its users do.
+    // People and companies whose entity names a search, and the users when the source names a call for them.
     live: LIVE,
   })
   return [...holder.commands]

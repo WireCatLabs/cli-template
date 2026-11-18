@@ -26,6 +26,14 @@ if (functions.length)
   )
 const verify = cli.auth.preset === "none" ? undefined : cli.auth.verify
 // A value the config leaves out is a bare `undefined`, so a command that still reads it fails typecheck, not a run.
+const live = (): string[] => {
+  const source = cli.source as { entities?: Record<string, { search?: unknown }>; users?: unknown } | undefined
+  return [
+    ...(["person", "organization"] as const).filter((kind) => source?.entities?.[kind]?.search !== undefined),
+    ...(source?.users ? ["user"] : []),
+  ]
+}
+
 const constant = (name: string, type: string, value: unknown) =>
   value === undefined
     ? `export const ${name} = undefined`
@@ -76,12 +84,10 @@ const text = formatted(
             "export const HOOK_OPTIONS: { hooks?: CrmManifestHooks } = {}",
           ]),
     "",
-    // What a CRM reads live: its users, when the source names a call for them.
+    // What a CRM reads live: people and companies whose entity names a search, and its users when the source names a
+    // call for them.
     ...(cli.category === "crm"
-      ? [
-          `export const LIVE: readonly "user"[] = ${cli.source && "users" in cli.source && cli.source.users ? '["user"]' : "[]"}`,
-          "",
-        ]
+      ? [`export const LIVE: readonly ("person" | "organization" | "user")[] = ${JSON.stringify(live())}`, ""]
       : []),
   ].join("\n"),
 )
