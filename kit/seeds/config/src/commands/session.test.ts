@@ -16,7 +16,7 @@ it("session start checks the token with the call auth.verify names and remembers
     stdin: FAKE_API_TOKEN,
   })
   expect(started.code, started.err).toBe(0)
-  expect(fake.calls.map((call) => call.operation)).toEqual([VERIFY?.operation])
+  expect(fake.calls.map((call) => call.operation)).toEqual([VERIFY.operation])
   expect(fake.refusals).toEqual([])
   const { id } = started.json().item as { id: string }
   expect(id).toEqual(expect.any(String))

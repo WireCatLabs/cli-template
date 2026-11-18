@@ -1,12 +1,12 @@
 import { CliError } from "@wirecat/cli-base"
-import { hostFetch } from "@wirecat/cli-base/http"
 import { serviceApiCall, tokenSessionCommand } from "@wirecat/cli-core/cli"
 import { valueAt } from "@wirecat/cli-core/manifest"
 import type { Command } from "commander"
 import { API, configuration } from "../config.js"
 import { contextOf } from "../context.js"
 import { VERIFY } from "../generated/wirecat-config.js"
-import { DESKTOP, IDENTITY } from "../identity.js"
+import { IDENTITY } from "../identity.js"
+import { serviceFetch } from "./api.js"
 
 /**
  * `session start | status | end | list` (WC-ACCT-12): the token is checked by the call `auth.verify` names in
@@ -18,12 +18,11 @@ export const sessionCommand = (): Command =>
     service: API.service,
     resolveSettings: configuration.resolveSettings,
     verify: async (command, token) => {
-      if (!VERIFY) throw new CliError("configuration_error", "wirecat.config.ts names no auth.verify call")
       const { environment } = contextOf(command)
       const call = serviceApiCall({
         manifest: API.manifest,
         service: API.service,
-        fetch: hostFetch({ hosts: DESKTOP.hosts ?? [], ...(environment.fetch ? { fetch: environment.fetch } : {}) }),
+        fetch: serviceFetch(environment),
         token: () => token,
       })
       const answer = await call(VERIFY.operation, { path: {}, query: {}, headers: {}, fields: {} })

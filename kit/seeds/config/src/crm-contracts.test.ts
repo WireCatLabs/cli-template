@@ -15,7 +15,7 @@ import { type MessageStore, openStore } from "@wirecat/cli-core/store"
 import { afterEach, describe, expect, it } from "vitest"
 import { API } from "./config.js"
 import { definitions } from "./generated/definitions.js"
-import { HOOKS, SOURCE, VERIFY } from "./generated/wirecat-config.js"
+import { HOOK_OPTIONS, SOURCE, VERIFY } from "./generated/wirecat-config.js"
 import { fakeServiceApi } from "./testing/fake-api.js"
 import { runCli } from "./testing/harness.js"
 
@@ -31,7 +31,7 @@ afterEach(async () => {
 
 describe("crmSourceContract over a fake of the API, from wirecat.config.ts", () => {
   for (const { name, run } of crmSourceContract(() => {
-    const fixture = crmManifestFixture(manifest, { api: API.manifest, definitions, ...(HOOKS ? { hooks: HOOKS } : {}) })
+    const fixture = crmManifestFixture(manifest, { api: API.manifest, definitions, ...HOOK_OPTIONS })
     fakes.push(fixture.fake)
     return fixture
   }))
@@ -42,7 +42,7 @@ describe("crmSyncContract over a store", () => {
   for (const { name, run } of crmSyncContract(async () => {
     const store = await openStore({ path: join(mkdtempSync(join(tmpdir(), "crm-sync-")), "store.db") })
     stores.push(store)
-    return { store, account: { provider: String(SOURCE?.provider), account: "example.test" } }
+    return { store, account: { provider: SOURCE.provider, account: "example.test" } }
   }))
     it(name, run)
 })
@@ -51,7 +51,7 @@ describe("crmSyncContract over a store", () => {
 // over it reads until its budget runs out. The CRM's rows come from crmManifestFake, which pages them to their end; the
 // call auth.verify names stays with fakeServiceApi, which crmManifestFake does not answer.
 const signInAndCrm = (crm: CrmManifestFake) => {
-  const verify = API.manifest.operations.find((one) => one.id === VERIFY?.operation)
+  const verify = API.manifest.operations.find((one) => one.id === VERIFY.operation)
   const path = verify?.binding.kind === "http" ? verify.binding.path : undefined
   const pattern = path ? new RegExp(`${path.replace(/\{[^}]+\}/g, "[^/]+")}$`) : undefined
   const signIn = fakeServiceApi(FAKE_MANIFEST_TOKEN)
