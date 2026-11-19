@@ -139,3 +139,30 @@ it("sync before session start says to sign in, and sends nothing", async () => {
   expect(unsigned.json()).toMatchObject({ error: { code: "authentication_error" } })
   expect(sent).toEqual([])
 })
+
+// A call a role may not make names its right in `optional.needs`: a sign-in without it never sends the call (the fake
+// would list it in `refusals`), and the sync ends complete with that gap.
+type Needs = { check: string; message: string }
+const needs = Object.values(SOURCE.entities as Record<string, { optional?: { needs?: Needs } }[]>)
+  .flat()
+  .flatMap((entity) => (entity.optional?.needs ? [entity.optional.needs] : []))
+
+if (needs.length)
+  it("a sign-in without a call's right skips that call, says so, and the sync completes", async () => {
+    const keyring = memoryKeyring()
+    // A store of its own: the file's other tests sync every call's rows into the shared one.
+    const env = { MESSAGING_STORE: join(mkdtempSync(join(tmpdir(), "content-needs-")), "store.db") }
+    const started = await runCli(["personal", "session", "start", "--site", FAKE_SITE, "--login", login, "--json"], {
+      keyring,
+      service: fakeServiceApi(),
+      stdin: password,
+    })
+    expect(started.code, started.err).toBe(0)
+    const fake = contentManifestFake(SOURCE, { api: API.manifest, lacks: needs.map((one) => one.check) })
+    fakes.push(fake)
+    const synced = await runCli(["personal", "sync", "--json"], { keyring, service: fake, env })
+    expect(synced.code, synced.err).toBe(0)
+    const report = synced.json().item as { state: string; gaps: { message: string }[] }
+    expect(report.state).toBe("complete")
+    expect(report.gaps.map((one) => one.message)).toEqual(expect.arrayContaining(needs.map((one) => one.message)))
+  })

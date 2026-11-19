@@ -2,6 +2,7 @@ import { defineCli } from "@wirecat/cli-core/manifest"
 
 // WordPress's posts and pages: every status, sorted by id to list and by change time to sync.
 const STATUSES = "publish,future,draft,pending,private,trash"
+const ME = { operation: "getWpV2UsersMe", query: { context: "edit", _fields: "capabilities" } }
 const posts = (operation: string, type: "post" | "page") => {
   const list = { operation, query: { context: "edit", status: STATUSES, per_page: 100, orderby: "id", order: "asc" } }
   return {
@@ -44,15 +45,25 @@ const posts = (operation: string, type: "post" | "page") => {
       format: "wp-blocks" as const,
       fallback: { path: "content.rendered", format: "html" as const },
     },
-    optional: {
-      message: "the sign-in may not read every post: a contributor sees its own",
-      scope: "edit_others_posts",
-      requires: {
-        operation: "getWpV2UsersMe",
-        query: { context: "edit", _fields: "capabilities" },
-        check: "capabilities.edit_others_posts",
-      },
-    },
+    optional:
+      type === "post"
+        ? {
+            message: "the sign-in may not read every post: an author or a contributor reads only its own",
+            scope: "edit_others_posts",
+            requires: { ...ME, check: "capabilities.edit_others_posts" },
+          }
+        : {
+            message: "the sign-in may not read every page",
+            scope: "edit_others_pages",
+            requires: { ...ME, check: "capabilities.edit_others_pages" },
+            // WordPress refuses an author or a contributor pages with a private status (HTTP 400, 403 inside).
+            needs: {
+              ...ME,
+              check: "capabilities.edit_pages",
+              message: "only an editor or administrator reads the pages",
+              scope: "edit_pages",
+            },
+          },
   }
 }
 
