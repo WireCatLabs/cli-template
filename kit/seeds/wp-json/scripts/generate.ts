@@ -19,9 +19,10 @@ const root = resolve(import.meta.dirname, "..")
 // A fresh CLI has no src/generated/ yet and cannot build without it, so build runs this with --if-missing first.
 if (process.argv.includes("--if-missing") && existsSync(join(root, "src/generated/manifest.ts"))) process.exit(0)
 const { model, notes, overrides } = await specModel(root)
-// The route after /wp/v2/ names the keys: posts.publish, pages.delete.force.
+// The route after /wp/v2/ names the keys: posts.publish, pages.delete.force. A key's words take only letters and `-`,
+// so wp_pattern_category becomes wp-pattern-category.
 const group = (operation: ApiOperation) =>
-  operation.binding.kind === "http" ? (operation.binding.path.split("/")[3] ?? "wp") : "wp"
+  operation.binding.kind === "http" ? (operation.binding.path.split("/")[3] ?? "wp").replaceAll("_", "-") : "wp"
 const artifacts = generate(
   model,
   [
@@ -41,7 +42,18 @@ const artifacts = generate(
     // where WordPress's method misleads.
     overrides: { ...overrides },
     // Command names from the paths, without the /wp/v2 every route shares.
-    names: { fromPath: true, segments: { wp: "", v2: "" } },
+    names: {
+      fromPath: true,
+      segments: { wp: "", v2: "" },
+      // A route that ends in a namespace or a user id lists, yet its path reads as one item's. A site without the
+      // route (a plugin may hide the users routes) has nothing to rename.
+      commands: Object.fromEntries(
+        Object.entries({
+          getWpV2BlockTypesByNamespace: "block-types-list-namespace",
+          deleteWpV2UsersByUserIdApplicationPasswords: "users-application-passwords-delete-all",
+        }).filter(([id]) => model.operations.some((operation) => operation.id === id)),
+      ),
+    },
     permissions: {
       group,
       // WordPress publishes by status, by a scheduled post's date moved into the past (a null date is now), and by a

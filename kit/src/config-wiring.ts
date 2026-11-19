@@ -188,7 +188,7 @@ export const SITE_WIRING: Readonly<Record<string, (text: string) => string>> = {
 export const SOURCE_SEEDS = {
   crm: ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"],
   tracker: ["src/commands/tracker.ts", "src/tracker-contracts.test.ts", "src/tracker-options.test.ts"],
-  content: ["src/commands/content.ts", "src/content-contracts.test.ts"],
+  content: ["src/commands/content.ts", "src/content-contracts.test.ts", "src/content-options.test.ts"],
 }
 export type SourceKind = keyof typeof SOURCE_SEEDS
 

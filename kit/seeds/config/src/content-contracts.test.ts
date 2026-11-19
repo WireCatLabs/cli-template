@@ -1,11 +1,16 @@
+import { mkdtempSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
 import { contentSourceFromManifest, contentWriterFromManifest } from "@wirecat/cli-core/content"
 import {
   type ContentManifestFake,
   contentManifestFake,
   contentSourceContract,
+  contentSyncContract,
   contentWriteContract,
 } from "@wirecat/cli-core/content/testing"
+import { type MessageStore, openStore } from "@wirecat/cli-core/store"
 import { Command } from "commander"
 import { afterEach, describe, expect, it } from "vitest"
 import { API } from "./config.js"
@@ -14,8 +19,10 @@ import { FAKE_API_TOKEN, FAKE_SITE, fakeServiceApi } from "./testing/fake-api.js
 import { runCli } from "./testing/harness.js"
 
 const fakes: ContentManifestFake[] = []
+const stores: MessageStore[] = []
 
-afterEach(() => {
+afterEach(async () => {
+  await Promise.all(stores.splice(0).map((store) => store.close()))
   // A call the fake refused is one the API description does not allow: the source would fail on the real service.
   expect(fakes.splice(0).flatMap((fake) => fake.refusals)).toEqual([])
 })
@@ -58,6 +65,15 @@ describe("contentSourceContract over a fake of the API, from wirecat.config.ts",
         },
       },
     }
+  }))
+    it(name, run)
+})
+
+describe("contentSyncContract over a store", () => {
+  for (const { name, run } of contentSyncContract(async () => {
+    const store = await openStore({ path: join(mkdtempSync(join(tmpdir(), "content-sync-")), "store.db") })
+    stores.push(store)
+    return { store, account: { provider: String(SOURCE.provider), account: `${FAKE_SITE}:1` } }
   }))
     it(name, run)
 })

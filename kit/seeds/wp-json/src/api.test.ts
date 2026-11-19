@@ -133,3 +133,45 @@ it.runIf(writes.length > 0)("a date change needs the publish key unless the call
   })
   expect(kept.code, kept.err).toBe(0)
 })
+
+// Every option the spec offers, with a body from a file; the CLI's test matrix names each one.
+it.each(API.manifest.operations.map((operation) => [operation.command, operation] as const))(
+  "takes every option of %s, its body from a file",
+  async (_, operation) => {
+    writeFileSync(upload, new Uint8Array([0x89, 0x50, 0x4e, 0x47]))
+    withPermissions({ api: "allow", ...Object.fromEntries(keys.map((key) => [key, "allow"])) })
+    const service = fake()
+    const options = operation.parameters.flatMap((parameter) => [
+      `--${apiFlagOf(parameter.name)}`,
+      String(sampleOf(parameter.schema, definitions)),
+    ])
+    const body = operation.request?.schema
+      ? sampleOf({ type: "ref", ref: operation.request.schema }, definitions)
+      : undefined
+    const bodyFile = join(upload, "..", `${operation.command}.json`)
+    if (body !== undefined && !sendsBytes(operation)) writeFileSync(bodyFile, JSON.stringify(body))
+    const argv = [
+      ...options,
+      ...(sendsBytes(operation) ? ["--body-file", upload] : body === undefined ? [] : ["--body-file", bodyFile]),
+      ...(operation.effect === "destructive" ? ["--yes"] : []),
+    ]
+    const ran = await runCli(["personal", "api", operation.command, ...argv, "--json"], { service, env })
+    expect(ran.code, ran.err).toBe(0)
+    expect(service.refusals).toEqual([])
+    if (!operation.pagination) return
+    // WordPress names its page count in X-WP-TotalPages; with one page, --all stops after the first.
+    const onePage = {
+      fetch: async (input: string | URL | Request, init?: RequestInit) => {
+        const answer = await service.fetch(input, init)
+        const headers = new Headers(answer.headers)
+        headers.set("x-wp-totalpages", "1")
+        return new Response(answer.body, { status: answer.status, headers })
+      },
+    }
+    const all = await runCli(["personal", "api", operation.command, ...argv, "--all", "--json"], {
+      service: onePage,
+      env,
+    })
+    expect(all.code, all.err).toBe(0)
+  },
+)
