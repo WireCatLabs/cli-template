@@ -48,7 +48,7 @@ const posts = (operation: string, type: "post" | "page") => {
     optional:
       type === "post"
         ? {
-            message: "the sign-in may not read every post: an author or a contributor reads only its own",
+            message: "the sign-in may not read every post: an author or a contributor reads only their own",
             scope: "edit_others_posts",
             requires: { ...ME, check: "capabilities.edit_others_posts" },
           }
