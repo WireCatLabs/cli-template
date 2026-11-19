@@ -167,6 +167,7 @@ describe("new --from-config", () => {
     expect(read(dir, "scripts/sync-spec.ts")).toContain('version: "6.9.5"')
     expect(read(dir, "scripts/generate.ts")).toContain('also: ["date", "date_gmt", "password"]')
     expect(read(dir, "scripts/spec-model.ts")).toContain('const NAMESPACES = ["wp/v2"]')
+    expect(read(dir, "src/config.ts")).toContain("...api.defaults, ...SITE_WIDE_WRITES")
     expect(read(dir, "src/commands/session.ts")).toContain('site: { example: "blog.example.com" }')
     expect(read(dir, "src/commands/api.ts")).toContain("serverVariables: siteOf")
     // The site the CLI was made against is not one it serves: each profile's own is added at run time.

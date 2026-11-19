@@ -8,7 +8,7 @@ import { SOURCE } from "./generated/wirecat-config.js"
 import { FAKE_API_TOKEN, FAKE_SITE, fakeServiceApi } from "./testing/fake-api.js"
 import { runCli } from "./testing/harness.js"
 
-// The fake answers example rows, so this proves every content command and option runs, not what a real post holds.
+// Each write's answer is the post as the fake holds it after the write, read back through the source's map.
 it("every option of the content commands runs over a synced copy", async () => {
   const keyring = memoryKeyring()
   const [login, password] = FAKE_API_TOKEN.split(":") as [string, string]
@@ -46,34 +46,78 @@ it("every option of the content commands runs over a synced copy", async () => {
   expect(service.refusals).toEqual([])
   // A source without writes has no posts create, update, publish, unpublish or delete.
   if (!SOURCE.writes) return
-  for (const argv of [
-    [
+  type Answer = { item: { post?: Record<string, unknown> } }
+  const wrote = async (argv: string[]) => {
+    const answer = await ran([...argv, "--yes"])
+    expect(answer.code, `${argv.join(" ")}: ${answer.err}`).toBe(0)
+    return (answer.json() as Answer).item.post ?? {}
+  }
+  const created = await wrote([
+    "posts",
+    "create",
+    "--title",
+    "Notes",
+    "--text-file",
+    text,
+    "--description",
+    "Short",
+    "--slug",
+    "notes",
+    "--tags",
+    tag,
+    "--type",
+    "post",
+  ])
+  expect(created).toMatchObject({ status: "draft", title: "Notes", excerpt: "Short", slug: "notes", terms: [tag] })
+  expect(created.body).toContain("A short post.")
+  expect(
+    await wrote([
       "posts",
-      "create",
-      "--title",
-      "Notes",
+      "update",
+      first,
       "--text-file",
       text,
       "--description",
-      "Short",
+      "New",
       "--slug",
-      "notes",
+      "new",
       "--tags",
       tag,
-      "--type",
-      "post",
-      "--yes",
-    ],
-    ["posts", "update", first, "--text-file", text, "--description", "New", "--slug", "new", "--tags", tag, "--yes"],
-    ["posts", "update", first, "--text-file", text, "--replace-body", "--yes"],
-    ["posts", "publish", first, "--yes"],
-    ["posts", "unpublish", first, "--yes"],
-    ["posts", "publish", first, "--at-time", "2030-01-01T10:00:00Z", "--yes"],
-    ["posts", "delete", second, "--yes"],
-    ["posts", "delete", second, "--allow-delete", "--yes"],
-  ]) {
-    const answer = await ran(argv)
-    expect(answer.code, `${argv.join(" ")}: ${answer.err}`).toBe(0)
-  }
+    ]),
+  ).toMatchObject({ excerpt: "New", slug: "new", terms: [tag] })
+  expect(await wrote(["posts", "update", first, "--text-file", text, "--replace-body"])).toMatchObject({
+    body: expect.stringContaining("A short post."),
+  })
+  expect(await wrote(["posts", "publish", first])).toMatchObject({ status: "published" })
+  expect(await wrote(["posts", "unpublish", first])).toMatchObject({ status: "draft" })
+  expect(await wrote(["posts", "publish", first, "--at-time", "2030-01-01T10:00:00Z"])).toMatchObject({
+    status: "scheduled",
+    scheduled_for: "2030-01-01T10:00:00.000Z",
+  })
+  expect(await wrote(["posts", "delete", second])).toMatchObject({ status: "trashed" })
+  await wrote(["posts", "delete", second, "--allow-delete"])
+  expect(service.ids("post")).not.toContain(second)
   expect(service.refusals).toEqual([])
+
+  // The same write through the api group checks the content command's key (WC-PERM-22).
+  const create = API.manifest.operations.find(
+    (operation) => operation.id === (SOURCE.writes as { create?: { operation: string } }).create?.operation,
+  )
+  if (!create) return
+  // --dry-run names what the write checks: the content key at its built-in level, and the api key it sends through.
+  type Preview = { item: { permission: { key: string; level: string; also?: { key: string }[] } } }
+  const preview = async (argv: string[]) => ((await ran([...argv, "--dry-run"])).json() as Preview).item.permission
+  const drafted = await preview(["posts", "create", "--title", "Notes"])
+  expect(drafted).toMatchObject({ key: "posts.create", level: "ask" })
+  expect(drafted.also?.map(({ key }) => key)).toContain(`api.${create.command}`)
+  const erased = await preview(["posts", "delete", first, "--allow-delete"])
+  expect(erased).toMatchObject({ key: "posts.delete", level: "ask" })
+  expect(erased.also?.map(({ key }) => key)).toContain("posts.delete.force")
+  const trash = API.manifest.operations.find(
+    (operation) => operation.id === (SOURCE.writes as { trash?: { operation: string } }).trash?.operation,
+  )
+  if (trash) expect(erased.also?.map(({ key }) => key)).toContain(`api.${trash.command}`)
+  expect((await ran(["config", "set", "permissions.posts.create", "deny"])).code).toBe(0)
+  const refused = await ran(["api", create.command, "--body", "{}", "--dry-run"])
+  expect(refused.json()).toMatchObject({ error: { code: "permission_error", details: { permission: "posts.create" } } })
 })

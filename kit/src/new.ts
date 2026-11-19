@@ -13,7 +13,9 @@ import {
   SOURCE_SEEDS,
   type SourceKind,
   withConfigRunScope,
+  withContentPermissions,
   withSourceCommands,
+  withWordPressAsks,
 } from "./config-wiring.js"
 import type { LoadedConfig } from "./from-config.js"
 import {
@@ -832,7 +834,12 @@ export const runNew = async (
     },
     ...(spec
       ? {
-          "src/config.ts": (text: string) => withApiPermissions(text, service),
+          "src/config.ts": (text: string) => {
+            const api = withApiPermissions(text, service)
+            if (loaded?.config.source && sourceKind(loaded.config) === "content" && sourceFlags?.writes)
+              return withContentPermissions(api, service ?? "Example Comments", spec === "wp-json")
+            return spec === "wp-json" ? withWordPressAsks(api) : api
+          },
           "scripts/commands.ts": withApiSkill,
           "src/run-scope.test.ts": (text: string) =>
             loaded
