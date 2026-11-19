@@ -78,19 +78,19 @@ export default defineCli({
           // biome-ignore lint/security/noSecrets: an operation id, not a secret
           get: { operation: "getWpV2UsersById", path: { id: "{id}" }, query: { context: "edit" } },
           map: { externalId: "id", name: "name", email: "email", slug: "slug" },
-          optional: { message: "only an editor or administrator lists the users", scope: "list_users" },
+          optional: { message: "only an administrator lists the users", scope: "list_users" },
         },
       ],
+      // A tag's name and slug are public: editing terms is a right a contributor lacks, so no context=edit here.
       term: [
         {
-          list: { operation: "getWpV2Tags", query: { context: "edit", per_page: 100, orderby: "id" } },
-          // biome-ignore lint/security/noSecrets: an operation id, not a secret
-          get: { operation: "getWpV2TagsById", path: { id: "{id}" }, query: { context: "edit" } },
+          list: { operation: "getWpV2Tags", query: { per_page: 100, orderby: "id" } },
+          get: { operation: "getWpV2TagsById", path: { id: "{id}" } },
           map: { externalId: "id", kind: { value: "tag" }, name: "name", slug: "slug" },
         },
         {
-          list: { operation: "getWpV2Categories", query: { context: "edit", per_page: 100, orderby: "id" } },
-          get: { operation: "getWpV2CategoriesById", path: { id: "{id}" }, query: { context: "edit" } },
+          list: { operation: "getWpV2Categories", query: { per_page: 100, orderby: "id" } },
+          get: { operation: "getWpV2CategoriesById", path: { id: "{id}" } },
           map: { externalId: "id", kind: { value: "category" }, name: "name", slug: "slug" },
         },
       ],

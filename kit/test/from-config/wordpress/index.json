@@ -6144,6 +6144,1612 @@
         "title": "user",
         "type": "object"
       }
+    },
+    "/wp/v2/block-types": {
+      "endpoints": [
+        {
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Block namespace.",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["GET"]
+        }
+      ],
+      "methods": ["GET"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "allowed_blocks": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Allowed child block types.",
+            "items": {
+              "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array", "null"]
+          },
+          "ancestor": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Ancestor blocks.",
+            "items": {
+              "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array", "null"]
+          },
+          "api_version": {
+            "context": ["embed", "view", "edit"],
+            "default": 1,
+            "description": "Version of block API.",
+            "readonly": true,
+            "type": "integer"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block attributes.",
+            "properties": [],
+            "readonly": true,
+            "type": ["object", "null"]
+          },
+          "block_hooks": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "This block is automatically inserted near any occurrence of the block types used as keys of this map, into a relative position given by the corresponding value.",
+            "patternProperties": {
+              "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$": {
+                "enum": ["before", "after", "first_child", "last_child"],
+                "type": "string"
+              }
+            },
+            "readonly": true,
+            "type": "object"
+          },
+          "category": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block category.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "description": {
+            "context": ["embed", "view", "edit"],
+            "default": "",
+            "description": "Description of block type.",
+            "readonly": true,
+            "type": "string"
+          },
+          "editor_script": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Editor script handle. DEPRECATED: Use `editor_script_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "editor_script_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Editor script handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "editor_style": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Editor style handle. DEPRECATED: Use `editor_style_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "editor_style_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Editor style handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "example": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block example.",
+            "properties": {
+              "attributes": {
+                "description": "The attributes used in the example.",
+                "type": "object"
+              },
+              "innerBlocks": {
+                "description": "The list of inner blocks used in the example.",
+                "items": {
+                  "properties": {
+                    "attributes": {
+                      "description": "The attributes of the inner block.",
+                      "type": "object"
+                    },
+                    "innerBlocks": {
+                      "description": "A list of the inner block's own inner blocks. This is a recursive definition following the parent innerBlocks schema.",
+                      "type": "array"
+                    },
+                    "name": {
+                      "description": "The name of the inner block.",
+                      "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "readonly": true,
+            "type": ["object", "null"]
+          },
+          "icon": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Icon of block type.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "is_dynamic": {
+            "context": ["embed", "view", "edit"],
+            "default": false,
+            "description": "Is the block dynamically rendered.",
+            "readonly": true,
+            "type": "boolean"
+          },
+          "keywords": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Block keywords.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "name": {
+            "context": ["embed", "view", "edit"],
+            "description": "Unique name identifying the block type.",
+            "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+            "readonly": true,
+            "required": true,
+            "type": "string"
+          },
+          "parent": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Parent blocks.",
+            "items": {
+              "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array", "null"]
+          },
+          "provides_context": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Context provided by blocks of this type.",
+            "properties": [],
+            "readonly": true,
+            "type": "object"
+          },
+          "script": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public facing and editor script handle. DEPRECATED: Use `script_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "script_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing and editor script handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "selectors": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Custom CSS selectors.",
+            "properties": [],
+            "readonly": true,
+            "type": "object"
+          },
+          "style": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public facing and editor style handle. DEPRECATED: Use `style_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "style_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing and editor style handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "styles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Block style variations.",
+            "items": {
+              "properties": {
+                "inline_style": {
+                  "description": "Inline CSS code that registers the CSS class required for the style.",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "The human-readable label for the style.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Unique name identifying the style.",
+                  "required": true,
+                  "type": "string"
+                },
+                "style_handle": {
+                  "description": "Contains the handle that defines the block style.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "supports": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Block supports.",
+            "properties": [],
+            "readonly": true,
+            "type": "object"
+          },
+          "textdomain": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public text domain.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "title": {
+            "context": ["embed", "view", "edit"],
+            "default": "",
+            "description": "Title of block type.",
+            "readonly": true,
+            "type": "string"
+          },
+          "uses_context": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Context values inherited by blocks of this type.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "variations": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block variations.",
+            "items": {
+              "properties": {
+                "attributes": {
+                  "description": "The initial values for attributes.",
+                  "type": "object"
+                },
+                "category": {
+                  "context": ["embed", "view", "edit"],
+                  "default": null,
+                  "description": "Block category.",
+                  "readonly": true,
+                  "type": ["string", "null"]
+                },
+                "description": {
+                  "description": "A detailed variation description.",
+                  "required": false,
+                  "type": "string"
+                },
+                "example": {
+                  "context": ["embed", "view", "edit"],
+                  "default": null,
+                  "description": "Block example.",
+                  "properties": {
+                    "attributes": {
+                      "description": "The attributes used in the example.",
+                      "type": "object"
+                    },
+                    "innerBlocks": {
+                      "description": "The list of inner blocks used in the example.",
+                      "items": {
+                        "properties": {
+                          "attributes": {
+                            "description": "The attributes of the inner block.",
+                            "type": "object"
+                          },
+                          "innerBlocks": {
+                            "description": "A list of the inner block's own inner blocks. This is a recursive definition following the parent innerBlocks schema.",
+                            "type": "array"
+                          },
+                          "name": {
+                            "description": "The name of the inner block.",
+                            "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+                            "required": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "readonly": true,
+                  "type": ["object", "null"]
+                },
+                "icon": {
+                  "context": ["embed", "view", "edit"],
+                  "default": null,
+                  "description": "Icon of block type.",
+                  "readonly": true,
+                  "type": ["string", "null"]
+                },
+                "innerBlocks": {
+                  "description": "The list of inner blocks used in the example.",
+                  "items": {
+                    "properties": {
+                      "attributes": {
+                        "description": "The attributes of the inner block.",
+                        "type": "object"
+                      },
+                      "innerBlocks": {
+                        "description": "A list of the inner block's own inner blocks. This is a recursive definition following the parent innerBlocks schema.",
+                        "type": "array"
+                      },
+                      "name": {
+                        "description": "The name of the inner block.",
+                        "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "isDefault": {
+                  "default": false,
+                  "description": "Indicates whether the current variation is the default one.",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "keywords": {
+                  "context": ["embed", "view", "edit"],
+                  "default": [],
+                  "description": "Block keywords.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "readonly": true,
+                  "type": "array"
+                },
+                "name": {
+                  "description": "The unique and machine-readable name.",
+                  "required": true,
+                  "type": "string"
+                },
+                "scope": {
+                  "default": null,
+                  "description": "The list of scopes where the variation is applicable. When not provided, it assumes all available scopes.",
+                  "items": {
+                    "enum": ["block", "inserter", "transform"],
+                    "type": "string"
+                  },
+                  "readonly": true,
+                  "type": ["array", "null"]
+                },
+                "title": {
+                  "description": "A human-readable variation title.",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "view_script": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public facing script handle. DEPRECATED: Use `view_script_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "view_script_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing script handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "view_script_module_ids": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing script module IDs.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "view_style_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing style handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          }
+        },
+        "title": "block-type",
+        "type": "object"
+      }
+    },
+    "/wp/v2/block-types/(?P<namespace>[a-zA-Z0-9_-]+)": {
+      "endpoints": [
+        {
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Block namespace.",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["GET"]
+        }
+      ],
+      "methods": ["GET"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "allowed_blocks": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Allowed child block types.",
+            "items": {
+              "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array", "null"]
+          },
+          "ancestor": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Ancestor blocks.",
+            "items": {
+              "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array", "null"]
+          },
+          "api_version": {
+            "context": ["embed", "view", "edit"],
+            "default": 1,
+            "description": "Version of block API.",
+            "readonly": true,
+            "type": "integer"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block attributes.",
+            "properties": [],
+            "readonly": true,
+            "type": ["object", "null"]
+          },
+          "block_hooks": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "This block is automatically inserted near any occurrence of the block types used as keys of this map, into a relative position given by the corresponding value.",
+            "patternProperties": {
+              "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$": {
+                "enum": ["before", "after", "first_child", "last_child"],
+                "type": "string"
+              }
+            },
+            "readonly": true,
+            "type": "object"
+          },
+          "category": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block category.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "description": {
+            "context": ["embed", "view", "edit"],
+            "default": "",
+            "description": "Description of block type.",
+            "readonly": true,
+            "type": "string"
+          },
+          "editor_script": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Editor script handle. DEPRECATED: Use `editor_script_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "editor_script_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Editor script handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "editor_style": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Editor style handle. DEPRECATED: Use `editor_style_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "editor_style_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Editor style handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "example": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block example.",
+            "properties": {
+              "attributes": {
+                "description": "The attributes used in the example.",
+                "type": "object"
+              },
+              "innerBlocks": {
+                "description": "The list of inner blocks used in the example.",
+                "items": {
+                  "properties": {
+                    "attributes": {
+                      "description": "The attributes of the inner block.",
+                      "type": "object"
+                    },
+                    "innerBlocks": {
+                      "description": "A list of the inner block's own inner blocks. This is a recursive definition following the parent innerBlocks schema.",
+                      "type": "array"
+                    },
+                    "name": {
+                      "description": "The name of the inner block.",
+                      "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "readonly": true,
+            "type": ["object", "null"]
+          },
+          "icon": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Icon of block type.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "is_dynamic": {
+            "context": ["embed", "view", "edit"],
+            "default": false,
+            "description": "Is the block dynamically rendered.",
+            "readonly": true,
+            "type": "boolean"
+          },
+          "keywords": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Block keywords.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "name": {
+            "context": ["embed", "view", "edit"],
+            "description": "Unique name identifying the block type.",
+            "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+            "readonly": true,
+            "required": true,
+            "type": "string"
+          },
+          "parent": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Parent blocks.",
+            "items": {
+              "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array", "null"]
+          },
+          "provides_context": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Context provided by blocks of this type.",
+            "properties": [],
+            "readonly": true,
+            "type": "object"
+          },
+          "script": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public facing and editor script handle. DEPRECATED: Use `script_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "script_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing and editor script handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "selectors": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Custom CSS selectors.",
+            "properties": [],
+            "readonly": true,
+            "type": "object"
+          },
+          "style": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public facing and editor style handle. DEPRECATED: Use `style_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "style_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing and editor style handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "styles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Block style variations.",
+            "items": {
+              "properties": {
+                "inline_style": {
+                  "description": "Inline CSS code that registers the CSS class required for the style.",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "The human-readable label for the style.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Unique name identifying the style.",
+                  "required": true,
+                  "type": "string"
+                },
+                "style_handle": {
+                  "description": "Contains the handle that defines the block style.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "supports": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Block supports.",
+            "properties": [],
+            "readonly": true,
+            "type": "object"
+          },
+          "textdomain": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public text domain.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "title": {
+            "context": ["embed", "view", "edit"],
+            "default": "",
+            "description": "Title of block type.",
+            "readonly": true,
+            "type": "string"
+          },
+          "uses_context": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Context values inherited by blocks of this type.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "variations": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Block variations.",
+            "items": {
+              "properties": {
+                "attributes": {
+                  "description": "The initial values for attributes.",
+                  "type": "object"
+                },
+                "category": {
+                  "context": ["embed", "view", "edit"],
+                  "default": null,
+                  "description": "Block category.",
+                  "readonly": true,
+                  "type": ["string", "null"]
+                },
+                "description": {
+                  "description": "A detailed variation description.",
+                  "required": false,
+                  "type": "string"
+                },
+                "example": {
+                  "context": ["embed", "view", "edit"],
+                  "default": null,
+                  "description": "Block example.",
+                  "properties": {
+                    "attributes": {
+                      "description": "The attributes used in the example.",
+                      "type": "object"
+                    },
+                    "innerBlocks": {
+                      "description": "The list of inner blocks used in the example.",
+                      "items": {
+                        "properties": {
+                          "attributes": {
+                            "description": "The attributes of the inner block.",
+                            "type": "object"
+                          },
+                          "innerBlocks": {
+                            "description": "A list of the inner block's own inner blocks. This is a recursive definition following the parent innerBlocks schema.",
+                            "type": "array"
+                          },
+                          "name": {
+                            "description": "The name of the inner block.",
+                            "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+                            "required": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "readonly": true,
+                  "type": ["object", "null"]
+                },
+                "icon": {
+                  "context": ["embed", "view", "edit"],
+                  "default": null,
+                  "description": "Icon of block type.",
+                  "readonly": true,
+                  "type": ["string", "null"]
+                },
+                "innerBlocks": {
+                  "description": "The list of inner blocks used in the example.",
+                  "items": {
+                    "properties": {
+                      "attributes": {
+                        "description": "The attributes of the inner block.",
+                        "type": "object"
+                      },
+                      "innerBlocks": {
+                        "description": "A list of the inner block's own inner blocks. This is a recursive definition following the parent innerBlocks schema.",
+                        "type": "array"
+                      },
+                      "name": {
+                        "description": "The name of the inner block.",
+                        "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "isDefault": {
+                  "default": false,
+                  "description": "Indicates whether the current variation is the default one.",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "keywords": {
+                  "context": ["embed", "view", "edit"],
+                  "default": [],
+                  "description": "Block keywords.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "readonly": true,
+                  "type": "array"
+                },
+                "name": {
+                  "description": "The unique and machine-readable name.",
+                  "required": true,
+                  "type": "string"
+                },
+                "scope": {
+                  "default": null,
+                  "description": "The list of scopes where the variation is applicable. When not provided, it assumes all available scopes.",
+                  "items": {
+                    "enum": ["block", "inserter", "transform"],
+                    "type": "string"
+                  },
+                  "readonly": true,
+                  "type": ["array", "null"]
+                },
+                "title": {
+                  "description": "A human-readable variation title.",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "readonly": true,
+            "type": "array"
+          },
+          "view_script": {
+            "context": ["embed", "view", "edit"],
+            "default": null,
+            "description": "Public facing script handle. DEPRECATED: Use `view_script_handles` instead.",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "view_script_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing script handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "view_script_module_ids": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing script module IDs.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          },
+          "view_style_handles": {
+            "context": ["embed", "view", "edit"],
+            "default": [],
+            "description": "Public facing style handles.",
+            "items": {
+              "type": "string"
+            },
+            "readonly": true,
+            "type": ["array"]
+          }
+        },
+        "title": "block-type",
+        "type": "object"
+      }
+    },
+    "/wp/v2/users/(?P<user_id>(?:[\\d]+|me))/application-passwords": {
+      "endpoints": [
+        {
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["GET"]
+        },
+        {
+          "args": {
+            "app_id": {
+              "description": "A UUID provided by the application to uniquely identify it. It is recommended to use an UUID v5 with the URL or DNS namespace.",
+              "oneOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "enum": [""],
+                  "type": "string"
+                }
+              ],
+              "required": false,
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of the application password.",
+              "minLength": 1,
+              "pattern": ".*\\S.*",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "methods": ["POST"]
+        },
+        {
+          "args": [],
+          "methods": ["DELETE"]
+        }
+      ],
+      "methods": ["GET", "POST", "DELETE"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "app_id": {
+            "context": ["view", "edit", "embed"],
+            "description": "A UUID provided by the application to uniquely identify it. It is recommended to use an UUID v5 with the URL or DNS namespace.",
+            "oneOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "enum": [""],
+                "type": "string"
+              }
+            ],
+            "type": "string"
+          },
+          "created": {
+            "context": ["view", "edit"],
+            "description": "The GMT date the application password was created.",
+            "format": "date-time",
+            "readonly": true,
+            "type": "string"
+          },
+          "last_ip": {
+            "context": ["view", "edit"],
+            "description": "The IP address the application password was last used by.",
+            "format": "ip",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "last_used": {
+            "context": ["view", "edit"],
+            "description": "The GMT date the application password was last used.",
+            "format": "date-time",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "name": {
+            "context": ["view", "edit", "embed"],
+            "description": "The name of the application password.",
+            "minLength": 1,
+            "pattern": ".*\\S.*",
+            "required": true,
+            "type": "string"
+          },
+          "password": {
+            "context": ["edit"],
+            "description": "The generated password. Only available after adding an application.",
+            "readonly": true,
+            "type": "string"
+          },
+          "uuid": {
+            "context": ["view", "edit", "embed"],
+            "description": "The unique identifier for the application password.",
+            "format": "uuid",
+            "readonly": true,
+            "type": "string"
+          }
+        },
+        "title": "application-password",
+        "type": "object"
+      }
+    },
+    "/wp/v2/users/(?P<user_id>(?:[\\d]+|me))/application-passwords/(?P<uuid>[\\w\\-]+)": {
+      "endpoints": [
+        {
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["GET"]
+        },
+        {
+          "args": {
+            "app_id": {
+              "description": "A UUID provided by the application to uniquely identify it. It is recommended to use an UUID v5 with the URL or DNS namespace.",
+              "oneOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "enum": [""],
+                  "type": "string"
+                }
+              ],
+              "required": false,
+              "type": "string"
+            },
+            "name": {
+              "description": "The name of the application password.",
+              "minLength": 1,
+              "pattern": ".*\\S.*",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["POST", "PUT", "PATCH"]
+        },
+        {
+          "args": [],
+          "methods": ["DELETE"]
+        }
+      ],
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "app_id": {
+            "context": ["view", "edit", "embed"],
+            "description": "A UUID provided by the application to uniquely identify it. It is recommended to use an UUID v5 with the URL or DNS namespace.",
+            "oneOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "enum": [""],
+                "type": "string"
+              }
+            ],
+            "type": "string"
+          },
+          "created": {
+            "context": ["view", "edit"],
+            "description": "The GMT date the application password was created.",
+            "format": "date-time",
+            "readonly": true,
+            "type": "string"
+          },
+          "last_ip": {
+            "context": ["view", "edit"],
+            "description": "The IP address the application password was last used by.",
+            "format": "ip",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "last_used": {
+            "context": ["view", "edit"],
+            "description": "The GMT date the application password was last used.",
+            "format": "date-time",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "name": {
+            "context": ["view", "edit", "embed"],
+            "description": "The name of the application password.",
+            "minLength": 1,
+            "pattern": ".*\\S.*",
+            "required": true,
+            "type": "string"
+          },
+          "password": {
+            "context": ["edit"],
+            "description": "The generated password. Only available after adding an application.",
+            "readonly": true,
+            "type": "string"
+          },
+          "uuid": {
+            "context": ["view", "edit", "embed"],
+            "description": "The unique identifier for the application password.",
+            "format": "uuid",
+            "readonly": true,
+            "type": "string"
+          }
+        },
+        "title": "application-password",
+        "type": "object"
+      }
+    },
+    "/wp/v2/users/(?P<user_id>(?:[\\d]+|me))/application-passwords/introspect": {
+      "endpoints": [
+        {
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["GET"]
+        }
+      ],
+      "methods": ["GET"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "app_id": {
+            "context": ["view", "edit", "embed"],
+            "description": "A UUID provided by the application to uniquely identify it. It is recommended to use an UUID v5 with the URL or DNS namespace.",
+            "oneOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "enum": [""],
+                "type": "string"
+              }
+            ],
+            "type": "string"
+          },
+          "created": {
+            "context": ["view", "edit"],
+            "description": "The GMT date the application password was created.",
+            "format": "date-time",
+            "readonly": true,
+            "type": "string"
+          },
+          "last_ip": {
+            "context": ["view", "edit"],
+            "description": "The IP address the application password was last used by.",
+            "format": "ip",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "last_used": {
+            "context": ["view", "edit"],
+            "description": "The GMT date the application password was last used.",
+            "format": "date-time",
+            "readonly": true,
+            "type": ["string", "null"]
+          },
+          "name": {
+            "context": ["view", "edit", "embed"],
+            "description": "The name of the application password.",
+            "minLength": 1,
+            "pattern": ".*\\S.*",
+            "required": true,
+            "type": "string"
+          },
+          "password": {
+            "context": ["edit"],
+            "description": "The generated password. Only available after adding an application.",
+            "readonly": true,
+            "type": "string"
+          },
+          "uuid": {
+            "context": ["view", "edit", "embed"],
+            "description": "The unique identifier for the application password.",
+            "format": "uuid",
+            "readonly": true,
+            "type": "string"
+          }
+        },
+        "title": "application-password",
+        "type": "object"
+      }
+    },
+    "/wp/v2/wp_pattern_category": {
+      "endpoints": [
+        {
+          "allow_batch": {
+            "v1": true
+          },
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            },
+            "exclude": {
+              "default": [],
+              "description": "Ensure result set excludes specific IDs.",
+              "items": {
+                "type": "integer"
+              },
+              "required": false,
+              "type": "array"
+            },
+            "hide_empty": {
+              "default": false,
+              "description": "Whether to hide terms not assigned to any posts.",
+              "required": false,
+              "type": "boolean"
+            },
+            "include": {
+              "default": [],
+              "description": "Limit result set to specific IDs.",
+              "items": {
+                "type": "integer"
+              },
+              "required": false,
+              "type": "array"
+            },
+            "offset": {
+              "description": "Offset the result set by a specific number of items.",
+              "required": false,
+              "type": "integer"
+            },
+            "order": {
+              "default": "asc",
+              "description": "Order sort attribute ascending or descending.",
+              "enum": ["asc", "desc"],
+              "required": false,
+              "type": "string"
+            },
+            "orderby": {
+              "default": "name",
+              "description": "Sort collection by term attribute.",
+              "enum": ["id", "include", "name", "slug", "include_slugs", "term_group", "description", "count"],
+              "required": false,
+              "type": "string"
+            },
+            "page": {
+              "default": 1,
+              "description": "Current page of the collection.",
+              "minimum": 1,
+              "required": false,
+              "type": "integer"
+            },
+            "per_page": {
+              "default": 10,
+              "description": "Maximum number of items to be returned in result set.",
+              "maximum": 100,
+              "minimum": 1,
+              "required": false,
+              "type": "integer"
+            },
+            "post": {
+              "default": null,
+              "description": "Limit result set to terms assigned to a specific post.",
+              "required": false,
+              "type": "integer"
+            },
+            "search": {
+              "description": "Limit results to those matching a string.",
+              "required": false,
+              "type": "string"
+            },
+            "slug": {
+              "description": "Limit result set to terms with one or more specific slugs.",
+              "items": {
+                "type": "string"
+              },
+              "required": false,
+              "type": "array"
+            }
+          },
+          "methods": ["GET"]
+        },
+        {
+          "allow_batch": {
+            "v1": true
+          },
+          "args": {
+            "description": {
+              "description": "HTML description of the term.",
+              "required": false,
+              "type": "string"
+            },
+            "meta": {
+              "description": "Meta fields.",
+              "properties": [],
+              "required": false,
+              "type": "object"
+            },
+            "name": {
+              "description": "HTML title for the term.",
+              "required": true,
+              "type": "string"
+            },
+            "slug": {
+              "description": "An alphanumeric identifier for the term unique to its type.",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["POST"]
+        }
+      ],
+      "methods": ["GET", "POST"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "count": {
+            "context": ["view", "edit"],
+            "description": "Number of published posts for the term.",
+            "readonly": true,
+            "type": "integer"
+          },
+          "description": {
+            "context": ["view", "edit"],
+            "description": "HTML description of the term.",
+            "type": "string"
+          },
+          "id": {
+            "context": ["view", "embed", "edit"],
+            "description": "Unique identifier for the term.",
+            "readonly": true,
+            "type": "integer"
+          },
+          "link": {
+            "context": ["view", "embed", "edit"],
+            "description": "URL of the term.",
+            "format": "uri",
+            "readonly": true,
+            "type": "string"
+          },
+          "meta": {
+            "context": ["view", "edit"],
+            "description": "Meta fields.",
+            "properties": [],
+            "type": "object"
+          },
+          "name": {
+            "context": ["view", "embed", "edit"],
+            "description": "HTML title for the term.",
+            "required": true,
+            "type": "string"
+          },
+          "slug": {
+            "context": ["view", "embed", "edit"],
+            "description": "An alphanumeric identifier for the term unique to its type.",
+            "type": "string"
+          },
+          "taxonomy": {
+            "context": ["view", "embed", "edit"],
+            "description": "Type attribution for the term.",
+            "enum": ["wp_pattern_category"],
+            "readonly": true,
+            "type": "string"
+          }
+        },
+        "title": "wp_pattern_category",
+        "type": "object"
+      }
+    },
+    "/wp/v2/wp_pattern_category/(?P<id>[\\d]+)": {
+      "endpoints": [
+        {
+          "allow_batch": {
+            "v1": true
+          },
+          "args": {
+            "context": {
+              "default": "view",
+              "description": "Scope under which the request is made; determines fields present in response.",
+              "enum": ["view", "embed", "edit"],
+              "required": false,
+              "type": "string"
+            },
+            "id": {
+              "description": "Unique identifier for the term.",
+              "required": false,
+              "type": "integer"
+            }
+          },
+          "methods": ["GET"]
+        },
+        {
+          "allow_batch": {
+            "v1": true
+          },
+          "args": {
+            "description": {
+              "description": "HTML description of the term.",
+              "required": false,
+              "type": "string"
+            },
+            "id": {
+              "description": "Unique identifier for the term.",
+              "required": false,
+              "type": "integer"
+            },
+            "meta": {
+              "description": "Meta fields.",
+              "properties": [],
+              "required": false,
+              "type": "object"
+            },
+            "name": {
+              "description": "HTML title for the term.",
+              "required": false,
+              "type": "string"
+            },
+            "slug": {
+              "description": "An alphanumeric identifier for the term unique to its type.",
+              "required": false,
+              "type": "string"
+            }
+          },
+          "methods": ["POST", "PUT", "PATCH"]
+        },
+        {
+          "allow_batch": {
+            "v1": true
+          },
+          "args": {
+            "force": {
+              "default": false,
+              "description": "Required to be true, as terms do not support trashing.",
+              "required": false,
+              "type": "boolean"
+            },
+            "id": {
+              "description": "Unique identifier for the term.",
+              "required": false,
+              "type": "integer"
+            }
+          },
+          "methods": ["DELETE"]
+        }
+      ],
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      "namespace": "wp/v2",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+          "count": {
+            "context": ["view", "edit"],
+            "description": "Number of published posts for the term.",
+            "readonly": true,
+            "type": "integer"
+          },
+          "description": {
+            "context": ["view", "edit"],
+            "description": "HTML description of the term.",
+            "type": "string"
+          },
+          "id": {
+            "context": ["view", "embed", "edit"],
+            "description": "Unique identifier for the term.",
+            "readonly": true,
+            "type": "integer"
+          },
+          "link": {
+            "context": ["view", "embed", "edit"],
+            "description": "URL of the term.",
+            "format": "uri",
+            "readonly": true,
+            "type": "string"
+          },
+          "meta": {
+            "context": ["view", "edit"],
+            "description": "Meta fields.",
+            "properties": [],
+            "type": "object"
+          },
+          "name": {
+            "context": ["view", "embed", "edit"],
+            "description": "HTML title for the term.",
+            "required": true,
+            "type": "string"
+          },
+          "slug": {
+            "context": ["view", "embed", "edit"],
+            "description": "An alphanumeric identifier for the term unique to its type.",
+            "type": "string"
+          },
+          "taxonomy": {
+            "context": ["view", "embed", "edit"],
+            "description": "Type attribution for the term.",
+            "enum": ["wp_pattern_category"],
+            "readonly": true,
+            "type": "string"
+          }
+        },
+        "title": "wp_pattern_category",
+        "type": "object"
+      }
     }
   }
 }
