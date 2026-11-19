@@ -62,7 +62,14 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
   return { config, text: await readFile(full, "utf8"), pending: notWiredYet(config), verifies }
 }
 
-const SIGN_IN: Record<CliConfig["auth"]["preset"], string> = { none: "none", token: "token", "oauth2-pkce": "oauth" }
+// Keyed by name, not by cli-core's preset type: a preset cli-core adds must not stop this file compiling.
+const SIGN_IN: Readonly<Record<string, string>> = { none: "none", token: "token", "oauth2-pkce": "oauth" }
+
+const signInOf = (preset: string): string => {
+  const sign = SIGN_IN[preset]
+  if (sign === undefined) throw new Error(`wirecat.config: auth.preset ${preset} is not one this template makes yet`)
+  return sign
+}
 
 const notWiredYet = (config: CliConfig): string[] => [
   ...(config.auth.preset === "oauth2-pkce"
@@ -89,7 +96,7 @@ export const configArgs = (config: CliConfig, args: NewArgs): NewArgs => {
     package: config.identity.package,
     owner: config.identity.owner,
     category: config.category === "other" ? "other:api" : config.category,
-    "sign-in": SIGN_IN[config.auth.preset],
+    "sign-in": signInOf(config.auth.preset),
     spec: config.spec.kind,
     "spec-url": config.spec.from,
   }
