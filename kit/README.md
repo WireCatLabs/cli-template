@@ -130,7 +130,13 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   `source.writes` `posts create|update|publish|unpublish|delete`) over `contentSourceFromManifest`. A write goes
   through the `api` group's own write path with its keys, and a key the `posts` command already asked is not asked
   again. `src/content-contracts.test.ts` runs the source, sync and write contracts and a sync through the CLI over
-  `contentManifestFake`, a fake built from the config and the generated API.
+  `contentManifestFake`, a fake built from the config and the generated API. With `source.writes`, `src/config.ts`
+  passes the content keys and their `ask` levels to `--dry-run`, and the `api` group's create and update of the
+  written route check `posts.create` and `posts.update` too, so a deny on a `posts` command covers the raw write.
+  `src/content-options.test.ts` checks what each write changed.
+- A WordPress CLI (`wp-json`) leaves out the route that makes an application password, whose answer holds the new
+  password in clear, and its `api` writes that install a plugin, change settings, users, comments, templates,
+  widgets, menus or navigation ask by default.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
 

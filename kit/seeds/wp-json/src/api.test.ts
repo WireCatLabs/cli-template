@@ -55,7 +55,7 @@ const argsOf = (operation: Operation) => [
   ...(operation.request?.schema
     ? ["--body", JSON.stringify(sampleOf({ type: "ref", ref: operation.request.schema }, definitions))]
     : []),
-  ...(operation.effect === "destructive" ? ["--yes"] : []),
+  ...(operation.effect === "read" ? [] : ["--yes"]),
 ]
 
 it("the spec offers operations", () => {
@@ -153,25 +153,56 @@ it.each(API.manifest.operations.map((operation) => [operation.command, operation
     const argv = [
       ...options,
       ...(sendsBytes(operation) ? ["--body-file", upload] : body === undefined ? [] : ["--body-file", bodyFile]),
-      ...(operation.effect === "destructive" ? ["--yes"] : []),
+      ...(operation.effect === "read" ? [] : ["--yes"]),
     ]
     const ran = await runCli(["personal", "api", operation.command, ...argv, "--json"], { service, env })
     expect(ran.code, ran.err).toBe(0)
     expect(service.refusals).toEqual([])
+    const [call] = service.calls
+    for (const parameter of operation.parameters) {
+      const sent = parameter.in === "path" ? call?.path : parameter.in === "query" ? call?.query : undefined
+      if (sent)
+        expect([sent[parameter.name]].flat().join(","), `--${apiFlagOf(parameter.name)}`).toBe(
+          String(sampleOf(parameter.schema, definitions)),
+        )
+    }
+    if (body !== undefined && !sendsBytes(operation)) expect(call?.body).toEqual(body)
     if (!operation.pagination) return
-    // WordPress names its page count in X-WP-TotalPages; with one page, --all stops after the first.
-    const onePage = {
+    // WordPress names its page count in X-WP-TotalPages: --all reads each page up to it.
+    const twoPages = fake()
+    const counted = {
       fetch: async (input: string | URL | Request, init?: RequestInit) => {
-        const answer = await service.fetch(input, init)
+        const answer = await twoPages.fetch(input, init)
         const headers = new Headers(answer.headers)
-        headers.set("x-wp-totalpages", "1")
+        headers.set("x-wp-totalpages", "2")
         return new Response(answer.body, { status: answer.status, headers })
       },
     }
     const all = await runCli(["personal", "api", operation.command, ...argv, "--all", "--json"], {
-      service: onePage,
+      service: counted,
       env,
     })
     expect(all.code, all.err).toBe(0)
+    expect(twoPages.calls).toHaveLength(2)
+  },
+)
+
+// Installing a plugin runs code on the site; a new user, a role or a site setting reaches every visitor. An index
+// without one of these routes has nothing to ask.
+const ASKS = ["plugins-create", "settings-create", "users-create", "users-update", "comments-create", "menus-update"]
+it.each(ASKS.filter((command) => API.manifest.operations.some((operation) => operation.command === command)))(
+  "%s asks before it writes",
+  async (command) => {
+    const service = fake()
+    const operation = API.manifest.operations.find((one) => one.command === command) as Operation
+    const path = operation.parameters
+      .filter((parameter) => parameter.in === "path")
+      .flatMap((parameter) => [`--${apiFlagOf(parameter.name)}`, String(sampleOf(parameter.schema, definitions))])
+    const body = JSON.stringify(sampleOf({ type: "ref", ref: operation.request?.schema ?? "" }, definitions))
+    const ran = await runCli(["personal", "api", command, ...path, "--body", body, "--json"], { service, env })
+    expect(ran.json()).toMatchObject({
+      error: { reason: "confirmation.required", details: { permission: `api.${command}` } },
+    })
+    expect(service.calls).toEqual([])
   },
 )

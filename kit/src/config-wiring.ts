@@ -205,3 +205,121 @@ export const withSourceCommands = (text: string, kind: SourceKind = "crm"): stri
     /^( +)apiCommand\(\),\n/m,
     `$1apiCommand(),\n$1...${kind}Commands(),\n`,
   )
+
+// WordPress writes that install code, change a role or change what every visitor sees: cli-core lets any api write
+// but a delete run unasked, so these ask (WC-PERM-7: a CLI only tightens). Only the ones the index has are kept.
+const WORDPRESS_ASKS = [
+  "plugins-create",
+  "settings-create",
+  "users-create",
+  "users-update",
+  "users-me-create",
+  "comments-create",
+  "comments-update",
+  "templates-create",
+  "template-parts-create",
+  "sidebars-update",
+  "widgets-create",
+  "widgets-update",
+  "menus-create",
+  "menus-update",
+  "menu-items-create",
+  "menu-items-update",
+  "navigation-create",
+  "navigation-update",
+]
+
+const SITE_WIDE_WRITES = [
+  "// cli-core lets every api write but a delete run unasked. These install code, give a user a role, or change",
+  "// what every visitor sees, so they ask (WC-PERM-7: a CLI only tightens). A new comment is public at once.",
+  "const SITE_WIDE_WRITES = Object.fromEntries(",
+  `  ${JSON.stringify(WORDPRESS_ASKS)}`,
+  "    .filter((command) => API.manifest.operations.some((operation) => operation.command === command))",
+  '    .map((command) => [`api.${command}`, "ask" as const]),',
+  ")",
+  "",
+]
+
+/** A WordPress CLI that does not write content: the api group's site-wide writes ask. */
+export const withWordPressAsks = (text: string): string =>
+  replaceOnce(
+    "src/config.ts",
+    text,
+    "export const permissions = commandPermissions(serviceApiPermissions(API))\n",
+    [
+      "const api = serviceApiPermissions(API)",
+      "",
+      ...SITE_WIDE_WRITES,
+      "export const permissions = commandPermissions({ ...api, defaults: { ...api.defaults, ...SITE_WIDE_WRITES } })",
+      "",
+    ].join("\n"),
+  )
+
+const CONTENT_PERMISSIONS = (wordpress: boolean) =>
+  [
+    "/**",
+    " * The content command each raw write does the same as, from the source's writes: `posts.create: deny` also stops",
+    " * `api <its create command>` (WC-PERM-22). Deletes need no entry: the generator gave them `posts.delete` already.",
+    " */",
+    'const writes = (SOURCE.writes ?? {}) as Partial<Record<"create" | "update", { operation: string }>>',
+    'const commandOf = (verb: "create" | "update") =>',
+    "  manifest.operations.find((operation) => operation.id === writes[verb]?.operation)?.command",
+    "const COMMAND_KEYS: Readonly<Record<string, string>> = Object.fromEntries(",
+    '  (["create", "update"] as const).flatMap((verb) => {',
+    "    const command = commandOf(verb)",
+    "    return command ? [[command, `posts.${verb}`]] : []",
+    "  }),",
+    ")",
+    "",
+    "export const API = {",
+    "  manifest: {",
+    "    ...manifest,",
+    "    operations: serviceApiOperations(manifest).offered.map((operation) => {",
+    "      const key = COMMAND_KEYS[operation.command]",
+    "      return key ? { ...operation, permissions: [...(operation.permissions ?? []), { key }] } : operation",
+    "    }),",
+    "  },",
+    "  service: SERVICE,",
+    "}",
+    "",
+    "const api = serviceApiPermissions(API)",
+    "",
+    "/** The content commands write through the api group's operations, whose own keys the run checks too. */",
+    "const API_KEYS: Readonly<Record<string, string>> = Object.fromEntries(",
+    "  Object.entries(COMMAND_KEYS).flatMap(([command, key]) =>",
+    '    key === "posts.create"',
+    "      ? [[key, `api.${command}`]]",
+    '      : ["posts.update", "posts.publish", "posts.unpublish"].map((own) => [own, `api.${command}`]),',
+    "  ),",
+    ")",
+    "",
+    ...(wordpress ? SITE_WIDE_WRITES : []),
+    "export const permissions = commandPermissions({",
+    "  extra: [...new Set([...api.extra, ...CONTENT_WRITE_KEYS])],",
+    "  alsoChecks: (path) => {",
+    '    const own = API_KEYS[path.join(".")]',
+    "    return [...api.alsoChecks(path), ...contentAlsoChecks(path), ...(own ? [own] : [])]",
+    "  },",
+    `  defaults: { ...api.defaults, ${wordpress ? "...SITE_WIDE_WRITES, " : ""}...CONTENT_WRITE_DEFAULTS },`,
+    "})",
+    "",
+  ].join("\n")
+
+/**
+ * A content CLI that writes: the content commands' keys and levels reach `--dry-run`, and the api group's raw writes
+ * check them too. Before, `posts create --dry-run` said `allow` for a write that asks (FIND-2820).
+ */
+export const withContentPermissions = (text: string, wordpress: boolean): string => {
+  const service = /^ {2}service: (.*),$/m.exec(text)?.[1] ?? '""'
+  return each("src/config.ts", text, [
+    [
+      'import * as manifest from "./generated/manifest.js"\n',
+      'import { CONTENT_WRITE_DEFAULTS, CONTENT_WRITE_KEYS, contentAlsoChecks } from "@wirecat/cli-core/content"\n' +
+        'import * as manifest from "./generated/manifest.js"\nimport { SOURCE } from "./generated/wirecat-config.js"\n',
+    ],
+    [
+      /export const API = \{[\s\S]*?export const permissions = commandPermissions\(serviceApiPermissions\(API\)\)\n/,
+      `const SERVICE = ${service}\n\n${CONTENT_PERMISSIONS(wordpress)}`,
+    ],
+  ])
+}
