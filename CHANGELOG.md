@@ -5,6 +5,61 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.32.0 — 19.11.2026
+
+### Added
+
+- **A WordPress CLI from a site's REST index: `spec.kind: "wp-json"` in `wirecat.config.ts`.** With
+  `auth.preset: "app-password"` and the WordPress `spec.version`, `new --from-config` saves the index of a plain
+  install as `pnpm spec:sync` does, and the CLI's `api` group offers every `wp/v2` route. `session start --site
+  <address> --login <user>` keeps an application password with its site; every call goes to that site alone, never to
+  another site on the same host, and `--all` pages by `X-WP-TotalPages`. Publishing needs `<route>.publish`, by
+  status, by a date or a password, unless the call keeps a draft, pending or private; a delete with `force=true` also
+  needs `<route>.delete.force`. `batch/v1` is never offered. The README says which key guards what, and the one limit
+  of the raw `api` group: a missed schedule publishes on any edit. See [the kit's README](kit/README.md).
+- **A content CLI from a config: `category: "content"`.** A config whose `source` maps a site's posts, tags and users
+  (a WordPress site today) gets cli-core's content commands: `sync` into a local copy, `posts list|show|search|stats`,
+  `tags list`, `users list`, `channels list`, and with `source.writes` `posts create|update|publish|unpublish|delete`.
+  A write goes through the `api` group's own write path and keys, and asks the owner once. Two profiles on two
+  sites keep two copies, even when both sign in as user 1. The CLI comes with the
+  content contract tests over a fake of its own API. See [the kit's README](kit/README.md).
+
+### Fixed
+
+- `bin/live` says when it does not run the check because the version's shipped code already passed, and `--again`
+  runs it anyway. A change to `scripts/live.sh` alone is not part of the record, so before this the new steps were
+  silently skipped and the old record was reported as a pass.
+- **A tracker CLI made from a config builds.** Its line in WireCat Desktop's manifest listed all seven kinds (64
+  characters), and `pnpm generate` stopped on `desktop.sync.what`, which takes 40. The line now keeps the kinds a sync
+  reads last: "your projects, issues and comments".
+- **A tracker's sync test fails when a kind fails.** A typo in a variable of the source failed every kind before a
+  request was sent, and the test passed: it read `issues` where the answer has none (they are under `meta`), and not each kind's `error`.
+- **The `api` test of a GraphQL CLI fits a large schema.** It sends what an operation requires plus its optional plain
+  fields, and an object flag as JSON. A sample of every optional field nests filter in filter (Linear's
+  `IssueFilter` reaches `TeamFilter` and back), and the worker ran out of memory; an object flag went as
+  `[object Object]`. Linear's 493 operations now pass in about 20 seconds.
+- **No `api` test waits for the pace.** Every case shared the profile's pace file, so past the burst each case
+  waited for real; the file is cleared after each case.
+- **Spell checking skips `skills/*/references/api/`,** written by `pnpm generate` from the service's own words, as it
+  skips `docs/commands.md`. Linear's descriptions of its API stopped `pnpm docs:check` on twelve words.
+- **A tracker CLI from a config runs `trackerSourceContract`** over cli-core's `trackerManifestFixture`, a fake of
+  its API built from the source, so `cli-dev ready` verifies its category (cli-base 0.119.0 asks a tracker for that
+  contract). cli-core 0.701.0 and cli-base 0.119.0.
+- **A CLI from a config drives every command and option in its tests**, so its test matrix starts with nothing
+  untested: the session test covers `--credential-storage`, `session list` and `api list`; a tracker gets
+  `src/tracker-options.test.ts`, which runs each tracker command and option over a synced copy; the GraphQL `api`
+  test sends every variable, `--body` and `--body-file`, and `--all` on a paged list.
+- **`new --from-config` refuses a tracker over an OpenAPI description** with what is missing: cli-core's tracker
+  fake answers GraphQL only, so its contract test would fail every case.
+- **`bin/setup-github` pushes `main`, whatever branch is checked out.** It created the repository with
+  `gh repo create --push`, which sends the current branch: run from a feature branch, that branch became the default
+  and took main's ruleset, and `main` was not on GitHub.
+- **A CRM CLI made from a config lists people and companies live when their entity names a `search`.**
+  `scripts/from-config.ts` wrote `LIVE` with users only, so a CLI with a people search had to mount `people list` and
+  `organizations list` by hand.
+- **`new --from-config` compiles with a cli-core that knows more sign-in presets.** A preset the kit does not make
+  yet is refused by name at `new`, instead of failing the kit's build.
+
 ## 0.31.0 — 18.11.2026
 
 ### Added
