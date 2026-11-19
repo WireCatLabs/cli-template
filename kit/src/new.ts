@@ -820,6 +820,8 @@ export const runNew = async (
   const category = answers.category?.[0] ?? ""
   const time = isWireCat(names) ? wirecatMonthlyTime(names.name, takenMinutes(ciPage())) : monthlyTime(names.package)
   const spec = specKindOf(answers.spec?.[0])
+  // The sample stays only where nothing replaces it: a config's token check brings a fake of the API itself.
+  const offSample = Boolean(spec && loaded?.verifies)
   const rewrites: Record<string, (text: string) => string> = {
     "package.json": (text) => {
       const pkg = spec
@@ -868,9 +870,11 @@ export const runNew = async (
     "SECURITY.md": ownRepository(names),
     "docs/security.md": (text: string) => {
       const own = ownRepository(names)(text)
-      return spec && service ? withServicePage("docs/security.md", own, service) : own
+      return spec && service ? withServicePage("docs/security.md", own, service, offSample) : own
     },
-    ...(spec && service ? { "docs/index.md": (text: string) => withServicePage("docs/index.md", text, service) } : {}),
+    ...(spec && service
+      ? { "docs/index.md": (text: string) => withServicePage("docs/index.md", text, service, offSample) }
+      : {}),
     "CHANGELOG.md": () => cliChangelog(names, source),
     [VERSION_FILE]: (text) => text.replace(/VERSION = "[^"]*"/, 'VERSION = "0.0.0"'),
     [IDENTITY_FILE]: (text) => {
@@ -898,8 +902,6 @@ export const runNew = async (
   const hashes: Record<string, string> = {}
   const prefixed: string[] = []
   const agentSkill = `skills/${appNameOf(names)}/SKILL.md`
-  // The sample stays only where nothing replaces it: a config's token check brings a fake of the API itself.
-  const offSample = Boolean(spec && loaded?.verifies)
   const sited = loaded?.config.auth.preset === "app-password"
   const own = (path: string, text: string) => {
     const off = offSample && OFF_SAMPLE[path] ? OFF_SAMPLE[path](text) : text
@@ -913,7 +915,7 @@ export const runNew = async (
       (spec && path === agentSkill
         ? (text: string) => {
             const linked = withApiSkillLink(text)
-            return service ? withServicePage(agentSkill, linked, service) : linked
+            return service ? withServicePage(agentSkill, linked, service, offSample) : linked
           }
         : undefined)
     const rewritten = rewrite ? rewrite(file.content.toString("utf8")) : file.content

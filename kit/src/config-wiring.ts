@@ -132,7 +132,16 @@ const withoutSampleHost = (text: string): string =>
   ])
 
 /** The rewrites of the files that used the sample, by path. */
+const withoutSampleRuns = (text: string): string =>
+  replaceOnce(
+    "docs/configuration.md",
+    text,
+    "`comments` and `session status --check` do their work in a run, so `--record` keeps them.",
+    "`session status --check` does its work in a run, so `--record` keeps it.",
+  )
+
 export const OFF_SAMPLE: Readonly<Record<string, (text: string) => string>> = {
+  "docs/configuration.md": withoutSampleRuns,
   [CONTEXT]: withoutSampleContext,
   [PROGRAM]: withoutSampleProgram,
   [HARNESS]: withoutSampleHarness,

@@ -119,6 +119,12 @@ describe("new --from-config", () => {
       "src/api.test.ts",
     ])
       expect(read(dir, path), path).not.toMatch(/sample\/|fake-comments|commentsCommand/)
+    for (const page of ["docs/index.md", "docs/security.md", "docs/configuration.md"])
+      expect(read(dir, page), page).not.toMatch(/sample|`comments`/)
+    expect(read(dir, "docs/index.md")).toMatch(
+      /Its `api` group reaches .+, one command per operation[\s\S]*\nand `session`\./,
+    )
+    expect(read(dir, "docs/configuration.md")).toContain("`session status --check` does its work in a run")
     expect(read(dir, "src/identity.ts")).toContain('hosts: ["api.acme.example", "app.acme.example"],')
     expect(read(dir, "src/commands/crm.ts")).toContain("live: LIVE")
     expect(runScope).toContain("sync: \"cli-core's addCrmCommands runs it in its run")
