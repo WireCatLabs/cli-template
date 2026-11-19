@@ -837,7 +837,7 @@ export const runNew = async (
           "src/config.ts": (text: string) => {
             const api = withApiPermissions(text, service)
             if (loaded?.config.source && sourceKind(loaded.config) === "content" && sourceFlags?.writes)
-              return withContentPermissions(api, spec === "wp-json")
+              return withContentPermissions(api, service ?? "Example Comments", spec === "wp-json")
             return spec === "wp-json" ? withWordPressAsks(api) : api
           },
           "scripts/commands.ts": withApiSkill,

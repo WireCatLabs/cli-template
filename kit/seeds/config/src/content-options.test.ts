@@ -104,6 +104,19 @@ it("every option of the content commands runs over a synced copy", async () => {
     (operation) => operation.id === (SOURCE.writes as { create?: { operation: string } }).create?.operation,
   )
   if (!create) return
+  // --dry-run names what the write checks: the content key at its built-in level, and the api key it sends through.
+  type Preview = { item: { permission: { key: string; level: string; also?: { key: string }[] } } }
+  const preview = async (argv: string[]) => ((await ran([...argv, "--dry-run"])).json() as Preview).item.permission
+  const drafted = await preview(["posts", "create", "--title", "Notes"])
+  expect(drafted).toMatchObject({ key: "posts.create", level: "ask" })
+  expect(drafted.also?.map(({ key }) => key)).toContain(`api.${create.command}`)
+  const erased = await preview(["posts", "delete", first, "--allow-delete"])
+  expect(erased).toMatchObject({ key: "posts.delete", level: "ask" })
+  expect(erased.also?.map(({ key }) => key)).toContain("posts.delete.force")
+  const trash = API.manifest.operations.find(
+    (operation) => operation.id === (SOURCE.writes as { trash?: { operation: string } }).trash?.operation,
+  )
+  if (trash) expect(erased.also?.map(({ key }) => key)).toContain(`api.${trash.command}`)
   expect((await ran(["config", "set", "permissions.posts.create", "deny"])).code).toBe(0)
   const refused = await ran(["api", create.command, "--body", "{}", "--dry-run"])
   expect(refused.json()).toMatchObject({ error: { code: "permission_error", details: { permission: "posts.create" } } })

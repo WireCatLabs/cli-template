@@ -208,7 +208,7 @@ export const withSourceCommands = (text: string, kind: SourceKind = "crm"): stri
 
 // WordPress writes that install code, change a role or change what every visitor sees: cli-core lets any api write
 // but a delete run unasked, so these ask (WC-PERM-7: a CLI only tightens). Only the ones the index has are kept.
-const WORDPRESS_ASKS = [
+export const WORDPRESS_ASKS = [
   "plugins-create",
   "settings-create",
   "users-create",
@@ -255,15 +255,17 @@ export const withWordPressAsks = (text: string): string =>
     ].join("\n"),
   )
 
-const CONTENT_PERMISSIONS = (wordpress: boolean) =>
+const CONTENT_PERMISSIONS = (service: string, wordpress: boolean) =>
   [
+    'type Verb = "create" | "update" | "trash" | "delete"',
+    "const writes = (SOURCE.writes ?? {}) as Partial<Record<Verb, { operation: string }>>",
+    "const commandOf = (verb: Verb) =>",
+    "  manifest.operations.find((operation) => operation.id === writes[verb]?.operation)?.command",
+    "",
     "/**",
     " * The content command each raw write does the same as, from the source's writes: `posts.create: deny` also stops",
     " * `api <its create command>` (WC-PERM-22). Deletes need no entry: the generator gave them `posts.delete` already.",
     " */",
-    'const writes = (SOURCE.writes ?? {}) as Partial<Record<"create" | "update", { operation: string }>>',
-    'const commandOf = (verb: "create" | "update") =>',
-    "  manifest.operations.find((operation) => operation.id === writes[verb]?.operation)?.command",
     "const COMMAND_KEYS: Readonly<Record<string, string>> = Object.fromEntries(",
     '  (["create", "update"] as const).flatMap((verb) => {',
     "    const command = commandOf(verb)",
@@ -271,6 +273,9 @@ const CONTENT_PERMISSIONS = (wordpress: boolean) =>
     "  }),",
     ")",
     "",
+    "// SAMPLE: your service's name. The keys a delete or a share checks come from `permissions` in",
+    "// scripts/generate.ts. The operations the api group cannot offer are left out: one that answers with a",
+    "// credential (the CLI signs in through `session`) and a body it cannot send, such as a multipart form.",
     "export const API = {",
     "  manifest: {",
     "    ...manifest,",
@@ -279,18 +284,22 @@ const CONTENT_PERMISSIONS = (wordpress: boolean) =>
     "      return key ? { ...operation, permissions: [...(operation.permissions ?? []), { key }] } : operation",
     "    }),",
     "  },",
-    "  service: SERVICE,",
+    `  service: ${JSON.stringify(service)},`,
     "}",
     "",
     "const api = serviceApiPermissions(API)",
     "",
     "/** The content commands write through the api group's operations, whose own keys the run checks too. */",
     "const API_KEYS: Readonly<Record<string, string>> = Object.fromEntries(",
-    "  Object.entries(COMMAND_KEYS).flatMap(([command, key]) =>",
-    '    key === "posts.create"',
-    "      ? [[key, `api.${command}`]]",
-    '      : ["posts.update", "posts.publish", "posts.unpublish"].map((own) => [own, `api.${command}`]),',
-    "  ),",
+    "  (",
+    "    [",
+    '      ["posts.create", commandOf("create")],',
+    '      ["posts.update", commandOf("update")],',
+    '      ["posts.publish", commandOf("update")],',
+    '      ["posts.unpublish", commandOf("update")],',
+    '      ["posts.delete", commandOf("trash") ?? commandOf("delete")],',
+    "    ] as const",
+    "  ).flatMap(([key, command]) => (command ? [[key, `api.${command}`]] : [])),",
     ")",
     "",
     ...(wordpress ? SITE_WIDE_WRITES : []),
@@ -309,17 +318,15 @@ const CONTENT_PERMISSIONS = (wordpress: boolean) =>
  * A content CLI that writes: the content commands' keys and levels reach `--dry-run`, and the api group's raw writes
  * check them too. Before, `posts create --dry-run` said `allow` for a write that asks (FIND-2820).
  */
-export const withContentPermissions = (text: string, wordpress: boolean): string => {
-  const service = /^ {2}service: (.*),$/m.exec(text)?.[1] ?? '""'
-  return each("src/config.ts", text, [
+export const withContentPermissions = (text: string, service: string, wordpress: boolean): string =>
+  each("src/config.ts", text, [
     [
       'import * as manifest from "./generated/manifest.js"\n',
       'import { CONTENT_WRITE_DEFAULTS, CONTENT_WRITE_KEYS, contentAlsoChecks } from "@wirecat/cli-core/content"\n' +
         'import * as manifest from "./generated/manifest.js"\nimport { SOURCE } from "./generated/wirecat-config.js"\n',
     ],
     [
-      /export const API = \{[\s\S]*?export const permissions = commandPermissions\(serviceApiPermissions\(API\)\)\n/,
-      `const SERVICE = ${service}\n\n${CONTENT_PERMISSIONS(wordpress)}`,
+      /\/\/ SAMPLE: your service's name\.[\s\S]*?export const permissions = commandPermissions\(serviceApiPermissions\(API\)\)\n/,
+      CONTENT_PERMISSIONS(service, wordpress),
     ],
   ])
-}

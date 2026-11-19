@@ -189,7 +189,26 @@ it.each(API.manifest.operations.map((operation) => [operation.command, operation
 
 // Installing a plugin runs code on the site; a new user, a role or a site setting reaches every visitor. An index
 // without one of these routes has nothing to ask.
-const ASKS = ["plugins-create", "settings-create", "users-create", "users-update", "comments-create", "menus-update"]
+const ASKS = [
+  "plugins-create",
+  "settings-create",
+  "users-create",
+  "users-update",
+  "users-me-create",
+  "comments-create",
+  "comments-update",
+  "templates-create",
+  "template-parts-create",
+  "sidebars-update",
+  "widgets-create",
+  "widgets-update",
+  "menus-create",
+  "menus-update",
+  "menu-items-create",
+  "menu-items-update",
+  "navigation-create",
+  "navigation-update",
+]
 it.each(ASKS.filter((command) => API.manifest.operations.some((operation) => operation.command === command)))(
   "%s asks before it writes",
   async (command) => {
@@ -201,7 +220,7 @@ it.each(ASKS.filter((command) => API.manifest.operations.some((operation) => ope
     const body = JSON.stringify(sampleOf({ type: "ref", ref: operation.request?.schema ?? "" }, definitions))
     const ran = await runCli(["personal", "api", command, ...path, "--body", body, "--json"], { service, env })
     expect(ran.json()).toMatchObject({
-      error: { reason: "confirmation.required", details: { permission: `api.${command}` } },
+      error: { reason: "confirmation.required", details: { permission: expect.stringContaining(`api.${command}`) } },
     })
     expect(service.calls).toEqual([])
   },
