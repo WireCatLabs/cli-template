@@ -7,7 +7,14 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
-import { OFF_SAMPLE, withConfigRunScope } from "./config-wiring.js"
+import {
+  OFF_SAMPLE,
+  SITE_WIRING,
+  SOURCE_SEEDS,
+  type SourceKind,
+  withConfigRunScope,
+  withSourceCommands,
+} from "./config-wiring.js"
 import type { LoadedConfig } from "./from-config.js"
 import {
   ask,
@@ -40,6 +47,7 @@ import {
   withSpecPackage,
 } from "./spec.js"
 import { type DownloadedSpec, downloadSpec, introspectSpec, type SpecFetch } from "./spec-url.js"
+import { configSeedOf, WORDPRESS_KEYS, wordpressSignIn, wordpressSpec } from "./wordpress.js"
 
 const run = promisify(execFile)
 
@@ -540,7 +548,7 @@ export const withoutApiSignIn = (path: string, text: string): string => {
 export const withMessenger = (text: string, category: string): string =>
   category === "messenger" ? text.replace(/^ {2}messenger: false,$/m, "  messenger: true,") : text
 
-export type ReadmeFacts = { tagline: string; service?: string; signIn: string; api: boolean }
+export type ReadmeFacts = { tagline: string; service?: string; signIn: string; api: boolean; wordpress?: boolean }
 
 // WC-DOC-7's order, tg-cli's: the gain first, then why, then the steps. Every command in it runs as written.
 // The links row is WC-DOC-24's, with full GitHub links because npm ships the README without docs/. No community
@@ -595,9 +603,14 @@ export const cliReadme = (names: Names, facts: ReadmeFacts): string => {
     "",
     `Once it is on npm: \`npm install -g ${names.package}\`, then \`${cli} doctor\`. Every command that uses an account`,
     `starts with a profile, a name you choose: \`${cli} personal config show\`.`,
-    ...(signsIn
-      ? ["", `Sign in once with \`${cli} personal session start\`. It asks for the token and keeps it in the keyring.`]
-      : []),
+    ...(facts.wordpress
+      ? wordpressSignIn(cli)
+      : signsIn
+        ? [
+            "",
+            `Sign in once with \`${cli} personal session start\`. It asks for the token and keeps it in the keyring.`,
+          ]
+        : []),
     "",
     "## Use it with your agent",
     "",
@@ -620,6 +633,7 @@ export const cliReadme = (names: Names, facts: ReadmeFacts): string => {
           "",
         ]
       : []),
+    ...(facts.wordpress ? WORDPRESS_KEYS : []),
     "## What it can do",
     "",
     "[docs/commands.md](docs/commands.md) lists every command, and `--help` after any of them shows its flags.",
@@ -735,10 +749,15 @@ export const sharedListEntries = (names: Names, tagline: string, time: MonthlyTi
   ]
 }
 
-const specFromUrl = async (args: NewArgs, fetch: SpecFetch | undefined): Promise<DownloadedSpec | undefined> => {
+const specFromUrl = async (
+  args: NewArgs,
+  fetch: SpecFetch | undefined,
+  loaded: LoadedConfig | undefined,
+): Promise<DownloadedSpec | undefined> => {
   const url = args.flags["spec-url"]
-  if (url === undefined) return undefined
   const given = args.flags.spec
+  if (given === "wp-json") return wordpressSpec(url, loaded?.config.spec.version, fetch)
+  if (url === undefined) return undefined
   if (given === "graphql") return introspectSpec(url, fetch)
   const downloaded = await downloadSpec(url, fetch)
   if (given !== undefined && given !== downloaded.kind)
@@ -752,28 +771,10 @@ const CONFIG_FILE = "wirecat.config.ts"
 const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
 const SESSION = ["src/commands/session.ts", "src/commands/session.test.ts", "src/testing/fake-api.ts"]
-const CRM = ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"]
-const TRACKER = ["src/commands/tracker.ts", "src/tracker-contracts.test.ts", "src/tracker-options.test.ts"]
-
-const sourceKind = (config: LoadedConfig["config"]): "crm" | "tracker" =>
-  config.category === "tracker" ? "tracker" : "crm"
-
+const sourceKind = (config: LoadedConfig["config"]): SourceKind =>
+  config.category === "tracker" || config.category === "content" ? config.category : "crm"
 const sourceSeeds = (config: LoadedConfig["config"]): string[] =>
-  !config.source ? [] : sourceKind(config) === "tracker" ? TRACKER : CRM
-
-/** cli-core's commands for the config's source (`crm` or `tracker`), beside the api group. */
-export const withSourceCommands = (text: string, kind: "crm" | "tracker" = "crm"): string =>
-  replaceOnce(
-    "src/program.ts",
-    replaceOnce(
-      "src/program.ts",
-      text,
-      'import { apiCommand } from "./commands/api.js"\n',
-      `import { apiCommand } from "./commands/api.js"\nimport { ${kind}Commands } from "./commands/${kind}.js"\n`,
-    ),
-    /^( +)apiCommand\(\),\n/m,
-    `$1apiCommand(),\n$1...${kind}Commands(),\n`,
-  )
+  !config.source ? [] : SOURCE_SEEDS[sourceKind(config)]
 
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
@@ -799,7 +800,7 @@ export const runNew = async (
   loaded?: LoadedConfig,
 ): Promise<string> => {
   const preset = presetOf(args.flags)
-  const downloaded = await specFromUrl(args, fetch)
+  const downloaded = await specFromUrl(args, fetch, loaded)
   const collected = await collect(
     withPreset(downloaded ? { ...args, flags: { ...args.flags, spec: downloaded.kind } } : args),
     io,
@@ -807,6 +808,7 @@ export const runNew = async (
   const answers = collected.answers
   const names = withFreePrefix(loaded ? { ...collected.names, prefix: loaded.config.identity.prefix } : collected.names)
   const service = loaded?.config.identity.service ?? (downloaded && serviceOf(downloaded.title))
+  const sourceFlags = loaded?.config.source as { users?: boolean; writes?: boolean } | undefined
   if (preset && isWireCat(names))
     throw new Error(`--preset ${preset} is for a CLI outside WireCat; ${names.package} is a WireCat package`)
   const description = preset ? GENERIC_DESCRIPTION : DESCRIPTION
@@ -837,7 +839,8 @@ export const runNew = async (
               ? withConfigRunScope(withApiRunScope(text), {
                   verifies: loaded.verifies,
                   ...(loaded.config.source ? { source: sourceKind(loaded.config) } : {}),
-                  users: Boolean(loaded.config.source && "users" in loaded.config.source && loaded.config.source.users),
+                  users: Boolean(sourceFlags?.users),
+                  writes: Boolean(sourceFlags?.writes),
                 })
               : withApiRunScope(text),
         }
@@ -853,6 +856,7 @@ export const runNew = async (
         ...(service ? { service } : {}),
         signIn: answers.signIn?.[0] ?? "none",
         api: Boolean(spec),
+        wordpress: spec === "wp-json",
       }),
     "SECURITY.md": ownRepository(names),
     "docs/security.md": (text: string) => {
@@ -889,7 +893,11 @@ export const runNew = async (
   const agentSkill = `skills/${appNameOf(names)}/SKILL.md`
   // The sample stays only where nothing replaces it: a config's token check brings a fake of the API itself.
   const offSample = Boolean(spec && loaded?.verifies)
-  const own = (path: string, text: string) => (offSample && OFF_SAMPLE[path] ? OFF_SAMPLE[path](text) : text)
+  const sited = loaded?.config.auth.preset === "app-password"
+  const own = (path: string, text: string) => {
+    const off = offSample && OFF_SAMPLE[path] ? OFF_SAMPLE[path](text) : text
+    return sited && SITE_WIRING[path] ? SITE_WIRING[path](off) : off
+  }
   for (const [path, file] of rendered) {
     if (offSample && inSample(path)) continue
     if (file.kind === "file") hashes[path] = sha256(file.content)
@@ -902,7 +910,7 @@ export const runNew = async (
           }
         : undefined)
     const rewritten = rewrite ? rewrite(file.content.toString("utf8")) : file.content
-    const content = OFF_SAMPLE[path] ? own(path, rewritten.toString()) : rewritten
+    const content = OFF_SAMPLE[path] || SITE_WIRING[path] ? own(path, rewritten.toString()) : rewritten
     if (content.includes(`${prefixOf(names)}_`)) prefixed.push(path)
     await writeOut(target, path, content, file.mode)
   }
@@ -921,7 +929,8 @@ export const runNew = async (
   if (loaded) {
     await writeOut(target, CONFIG_FILE, loaded.text)
     const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? SESSION : []), ...sourceSeeds(loaded.config)]
-    for (const path of seeds) await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", path)))
+    for (const path of seeds)
+      await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", configSeedOf(loaded, path))))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))

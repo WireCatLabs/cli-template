@@ -6,7 +6,7 @@ import { renameContent, renamer } from "./rename.js"
 import type { TemplateSource } from "./source.js"
 import type { DownloadedSpec } from "./spec-url.js"
 
-export const SPEC_KINDS = ["openapi", "swagger", "discovery", "graphql"] as const
+export const SPEC_KINDS = ["openapi", "swagger", "discovery", "graphql", "wp-json"] as const
 export type SpecKind = (typeof SPEC_KINDS)[number]
 
 export const specKindOf = (answer: string | undefined): SpecKind | undefined =>
@@ -191,7 +191,7 @@ export const withApiSkill = (text: string): string =>
     ],
   ].reduce((rest, [from = "", to = ""]) => replaceOnce("scripts/commands.ts", rest, from, to), text)
 
-const SAMPLE_DOCUMENTS = ["openapi.json", "swagger.json", "schema.json", "provenance.json"]
+const SAMPLE_DOCUMENTS = ["openapi.json", "swagger.json", "schema.json", "wp-json.json", "provenance.json"]
 
 /** The seeds with the downloaded description in place of the sample's, its corrections, and its own permission group. */
 export const withDownloadedSpec = (
@@ -212,11 +212,18 @@ export const withDownloadedSpec = (
     const text = files.get(path)?.toString("utf8") ?? ""
     files.set(path, Buffer.from(replaceOnce(path, text, from, to)))
   }
-  edit("scripts/generate.ts", 'group: "comments"', `group: ${JSON.stringify(names.command)}`)
+  // A WordPress CLI groups its keys by route, as posts.publish and pages.publish.
+  if (spec.kind !== "wp-json")
+    edit("scripts/generate.ts", 'group: "comments"', `group: ${JSON.stringify(names.command)}`)
   if (spec.kind === "graphql") {
     const sample = '"https://comments.example.invalid/graphql"'
     edit("scripts/spec-model.ts", sample, JSON.stringify(spec.url))
     edit("scripts/sync-spec.ts", sample, JSON.stringify(spec.url))
+  }
+  if (spec.kind === "wp-json") {
+    edit("scripts/sync-spec.ts", '"https://comments.example.invalid/wp-json/"', JSON.stringify(spec.url))
+    const { version } = JSON.parse(spec.provenance ?? "{}") as { version?: string }
+    if (version && version !== "6.9.4") edit("scripts/sync-spec.ts", '"6.9.4"', JSON.stringify(version))
   }
   if (spec.prefix.length)
     edit(

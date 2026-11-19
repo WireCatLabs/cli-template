@@ -133,6 +133,68 @@ describe("new --from-config", () => {
     expect(out).not.toContain("auth.verify:")
   })
 
+  it("makes a WordPress CLI from a site's index: its own site's sign-in, the publish rules and no batch route", async () => {
+    const cwd = tempDir("from-config-wordpress")
+    const wordpress = CONFIG.replace(
+      'spec: { kind: "openapi", from: "https://docs.acme.example/openapi.json" },',
+      'spec: { kind: "wp-json", from: "https://wp.acme.example/wp-json/", version: "6.9.5" },',
+    ).replace(
+      "auth: { preset },",
+      'auth: { preset: "app-password", verify: { operation: "getWpV2UsersMe", id: "id", name: "name" } },',
+    )
+    writeFileSync(join(cwd, "wirecat.config.ts"), wordpress)
+    const loaded = await loadCliConfig(join(cwd, "wirecat.config.ts"))
+    const index = read(join(import.meta.dirname, "from-config/wordpress"), "index.json")
+    const asked: string[] = []
+    const answering: SpecFetch = async (url) => {
+      asked.push(String(url))
+      return new Response(index)
+    }
+
+    await runNew(
+      cwd,
+      await loadSource(join(import.meta.dirname, "../..")),
+      configArgs(loaded.config, { flags: ANSWERS }),
+      io(),
+      answering,
+      loaded,
+    )
+
+    const dir = join(cwd, "acme-cli")
+    expect(asked).toEqual(["https://wp.acme.example/wp-json/?context=help"])
+    expect(JSON.parse(read(dir, "spec/acme/provenance.json"))).toMatchObject({ version: "6.9.5" })
+    expect(read(dir, "scripts/sync-spec.ts")).toContain('root: "https://wp.acme.example/wp-json/"')
+    expect(read(dir, "scripts/sync-spec.ts")).toContain('version: "6.9.5"')
+    expect(read(dir, "scripts/generate.ts")).toContain('also: ["date", "date_gmt", "password"]')
+    expect(read(dir, "scripts/spec-model.ts")).toContain('const NAMESPACES = ["wp/v2"]')
+    expect(read(dir, "src/commands/session.ts")).toContain('site: { example: "blog.example.com" }')
+    expect(read(dir, "src/commands/api.ts")).toContain("serverVariables: siteOf")
+    // The site the CLI was made against is not one it serves: each profile's own is added at run time.
+    expect(read(dir, "src/identity.ts")).not.toContain("wp.acme.example")
+    expect(read(dir, "README.md")).toContain("`<route>.delete.force`")
+  })
+
+  it("keeps wp-json and an application password together, with the WordPress version", async () => {
+    // A config is a module, loaded once per path.
+    const write = (text: string) => {
+      const file = join(tempDir("from-config-wordpress-bad"), "wirecat.config.ts")
+      writeFileSync(file, text)
+      return file
+    }
+    const wpJson = 'spec: { kind: "wp-json", from: "https://wp.acme.example/wp-json/" },'
+    const unpaired = write(
+      CONFIG.replace('spec: { kind: "openapi", from: "https://docs.acme.example/openapi.json" },', wpJson),
+    )
+    await expect(loadCliConfig(unpaired)).rejects.toThrow("go together")
+    const unversioned = write(
+      CONFIG.replace('spec: { kind: "openapi", from: "https://docs.acme.example/openapi.json" },', wpJson).replace(
+        "auth: { preset },",
+        'auth: { preset: "app-password", verify: { operation: "getWpV2UsersMe", id: "id" } },',
+      ),
+    )
+    await expect(loadCliConfig(unversioned)).rejects.toThrow("spec.version")
+  })
+
   it("names the field a config gets wrong", async () => {
     const cwd = tempDir("from-config-bad")
     writeFileSync(join(cwd, "wirecat.config.ts"), CONFIG.replace('"WCACME"', '"wc-acme"'))

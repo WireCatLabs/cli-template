@@ -63,8 +63,12 @@ export const INTERVIEW: Question[] = [
     title: "Category",
     flag: "category",
     text: "What kind of tool is it?",
-    // A tracker's items are not a kind a search reads yet, so it has no key in CATEGORIES.
-    choices: [...Object.values(CATEGORIES), { value: "tracker", label: "issue tracker (issues, projects, teams)" }],
+    // A tracker's issues and a blog's posts are not kinds a search reads yet, so they have no key in CATEGORIES.
+    choices: [
+      ...Object.values(CATEGORIES),
+      { value: "tracker", label: "issue tracker (issues, projects, teams)" },
+      { value: "content", label: "blog or site content (posts, pages, tags)" },
+    ],
   },
   {
     key: "contentLang",
@@ -107,6 +111,7 @@ export const INTERVIEW: Question[] = [
       { value: "swagger", label: "Swagger 2.0" },
       { value: "discovery", label: "Google Discovery" },
       { value: "graphql", label: "a GraphQL schema (introspection)" },
+      { value: "wp-json", label: "a WordPress site's REST index (wp-json), from wirecat.config.ts only" },
       { value: "none", label: "none" },
     ],
   },
@@ -148,6 +153,7 @@ export const INTERVIEW: Question[] = [
       { value: "messages", label: "messages from other people", categories: ["messenger", "mail"] },
       { value: "records", label: "deals, contacts and comments others entered", categories: ["crm"] },
       { value: "issues", label: "issues and comments others wrote", categories: ["tracker"] },
+      { value: "posts", label: "posts and pages others wrote", categories: ["content"] },
       { value: "invitations", label: "invitations and event descriptions from others", categories: ["calendar"] },
       { value: "transcripts", label: "what other attendees said or wrote", categories: ["meetings"] },
       { value: "files", label: "files and attachments" },

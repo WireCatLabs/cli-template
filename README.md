@@ -46,7 +46,7 @@ There are two ways in. Pick the one that fits what you have.
 | You have | Start with | You get |
 | --- | --- | --- |
 | The address of the service's API description | `new --spec-url <url>` | A CLI with one command per operation, the MCP server and the skill |
-| An API description and a few lines saying how its records map to people and companies | `new --from-config wirecat.config.ts` | The same, plus sign-in, `sync` into a local copy and the category's contract tests (CRM today) |
+| An API description and a few lines saying how its records map to people and companies | `new --from-config wirecat.config.ts` | The same, plus sign-in, `sync` into a local copy and the category's contract tests (CRM, tracker, content) |
 | An agent and no time | `npx skills add WireCatLabs/cli-template` | Your agent finds the description and runs `new --spec-url` for you |
 
 ### From an API description
@@ -132,7 +132,7 @@ poke-cli/
 ├── src/commands/                the api group, the sign-in and your own commands
 ├── src/hooks.ts                 yours to add, named by `hooks` in the config: what the config cannot say
 ├── src/api.test.ts              every operation sent to a strict fake of the API
-├── src/crm-contracts.test.ts    with a CRM config: cli-core's contracts for the category
+├── src/crm-contracts.test.ts    with a CRM config: cli-core's contracts for the category (tracker, content alike)
 ├── contracts/wirecat.json       what WireCat Desktop reads to show and run the tool
 ├── skills/                      the agent skill, with pages for the API
 ├── .github/workflows/           CI, the release and a monthly check

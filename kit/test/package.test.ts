@@ -110,7 +110,7 @@ describe("the packed bin", () => {
 
     expect(result.status).toBe(1)
     expect(result.stderr).toContain(
-      "--category: messenger, mail, notes, files, meetings, calendar, crm, tracker, or other:<your answer>",
+      "--category: messenger, mail, notes, files, meetings, calendar, crm, tracker, content, or other:<your answer>",
     )
   })
 

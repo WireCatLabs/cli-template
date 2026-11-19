@@ -199,12 +199,12 @@ describe("new", () => {
     const cwd = tempDir("ask")
     const source = await loadSource(fixture("0.1.0", V1))
     const { category: _, filters: __, owner: ___, ...flags } = NOTES_FLAGS
-    const terminal = io(["Example-Org", "", "10", "1", "2,6", "by location"], true)
+    const terminal = io(["Example-Org", "", "11", "1", "2,6", "by location"], true)
 
     await runNew(cwd, source, { name: "cal-cli", flags }, terminal)
 
     const design = read(join(cwd, "cal-cli"), "docs/dev/DESIGN.md")
-    expect(terminal.text()).toContain('"10" is not one of the choices')
+    expect(terminal.text()).toContain('"11" is not one of the choices')
     expect(design).toContain("**Category:** messenger")
     expect(design).toContain("**How people filter:** by person, other: by location")
     expect(JSON.parse(read(join(cwd, "cal-cli"), "template.json")).names.owner).toBe("Example-Org")
@@ -220,8 +220,8 @@ describe("new", () => {
     }
   })
 
-  it("offers one category for each of cli-core's kinds, and the tracker", () => {
-    expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(KINDS.length + 1)
+  it("offers one category for each of cli-core's kinds, the tracker and content", () => {
+    expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(KINDS.length + 2)
   })
 
   it("offers the untrusted input of the category in the menu, and takes any choice as a flag", async () => {

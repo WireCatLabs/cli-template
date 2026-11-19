@@ -73,6 +73,12 @@ build demo-cli demo notes openapi
 build acme-workspace-cli acme-workspace crm none
 from_config crm acme https://docs.acme.example/openapi.json openapi.json
 from_config tracker acmet https://api.acme-tracker.example/graphql schema.json
+# A WordPress CLI: the index from a site, an application password kept with its site, the publish and delete keys.
+from_config wordpress acmewp https://wp.acme.example/wp-json/ index.json
+# Its sync reads posts by the site's page count, from the generated description, with no paging set by hand.
+posts=$(grep -A30 'id: "getWpV2Posts"' "$work/config-acmewp/acmewp-cli/src/generated/manifest.ts" || true)
+grep -q 'pagesHeader: "x-wp-totalpages"' <<<"$posts" && grep -q 'start: 1,' <<<"$posts" ||
+  { echo "kit e2e: getWpV2Posts does not page from 1 by X-WP-TotalPages"; exit 1; }
 
 cd "$work/new-demo/demo-cli"
 bin=$(node -p 'require("./package.json").bin.demo')

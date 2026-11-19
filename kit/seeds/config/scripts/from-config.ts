@@ -70,19 +70,22 @@ const text = formatted(
     ),
     "",
     // Spread into the source's options: `{}` without a hooks module.
-    ...(hooksImport
-      ? [`import { hooks } from "${hooksImport}"`, "", "export const HOOK_OPTIONS = { hooks }"]
-      : cli.category === "tracker"
-        ? [
-            'import type { TrackerManifestHooks } from "@wirecat/cli-core/tracker"',
-            "",
-            "export const HOOK_OPTIONS: { hooks?: TrackerManifestHooks } = {}",
-          ]
-        : [
-            'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
-            "",
-            "export const HOOK_OPTIONS: { hooks?: CrmManifestHooks } = {}",
-          ]),
+    // A content source takes no hooks: its manifest is data only.
+    ...(cli.category === "content"
+      ? []
+      : hooksImport
+        ? [`import { hooks } from "${hooksImport}"`, "", "export const HOOK_OPTIONS = { hooks }"]
+        : cli.category === "tracker"
+          ? [
+              'import type { TrackerManifestHooks } from "@wirecat/cli-core/tracker"',
+              "",
+              "export const HOOK_OPTIONS: { hooks?: TrackerManifestHooks } = {}",
+            ]
+          : [
+              'import type { CrmManifestHooks } from "@wirecat/cli-core/crm"',
+              "",
+              "export const HOOK_OPTIONS: { hooks?: CrmManifestHooks } = {}",
+            ]),
     "",
     // What a CRM reads live: people and companies whose entity names a search, and its users when the source names a
     // call for them.

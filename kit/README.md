@@ -92,7 +92,8 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   token check, the source and the hooks, which `src/` reads; the config stays the one file to edit. Each value has its
   exact type, and one the config leaves out is a bare `undefined`: a command that still reads it fails typecheck, not a
   run.
-- A `source` (a `crm` or a `tracker` category) needs `auth: { preset: "token", verify }`; `new` writes the files below only for what the config
+- A `source` (a `crm`, `tracker` or `content` category) needs `auth: { preset: "token", verify }` (`app-password` for
+  `content`); `new` writes the files below only for what the config
   holds at `new`, and `pnpm generate` then reads their values again.
 - With `auth.verify`, `session start` is cli-core's `tokenSessionCommand` over `manifestVerify`: it checks a token with
   that operation and keeps the account's id from the answer; the CLI holds no check of its own. `verify.active` names a field that must be `true`, for a service that
@@ -115,6 +116,20 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   cut-list case on purpose: describe the paging in the API description or an override. A tracker's
   `src/tracker-contracts.test.ts` checks the source against the generated API and syncs through the CLI over a fake
   of the schema.
+- WordPress: `spec: { kind: "wp-json", from: "https://<plain install>/wp-json/", version: "6.9.4" }` with
+  `auth: { preset: "app-password", verify: { operation: "getWpV2UsersMe", id: "id", name: "name" } }`, the two only
+  together. `new` saves the index the way `pnpm spec:sync` does (cli-base `syncWpJson`), from a plain install, as the
+  CLI serves every site; its host is not the CLI's. `session start --site <address> --login <user>` keeps an
+  application password with its site, the `api` group sends every call there and nowhere else on that host, and
+  `--all` pages by `X-WP-TotalPages`. The keys: `<route>.publish` for a status of publish or future, a `date`,
+  `date_gmt` or `password` (unless the call keeps a draft, pending or private), and `<route>.delete.force` for
+  `force=true`. Only `wp/v2` is offered; `batch/v1` never is.
+- A `content` source (posts on a site, today a WordPress site) gets `src/commands/content.ts`: cli-core's content
+  commands (`sync`, `posts list|show|search|stats`, `tags list`, `users list`, `channels list`, and with
+  `source.writes` `posts create|update|publish|unpublish|delete`) over `contentSourceFromManifest`. A write goes
+  through the `api` group's own write path with its keys, and a key the `posts` command already asked is not asked
+  again. `src/content-contracts.test.ts` runs the source and write contracts and a sync through the CLI over
+  `contentManifestFake`, a fake built from the config and the generated API.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
 
@@ -132,7 +147,7 @@ choices. Nothing is guessed.
 | `--content-lang` | language codes, several: `en,ru` |
 | `--sign-in` | `oauth`, `token`, `session`, `none` |
 | `--api` | `official-client`, `official-docs`, `unofficial` |
-| `--spec` | `openapi`, `swagger`, `discovery`, `graphql`, `none`; left out with `--spec-url`, it is the downloaded description's |
+| `--spec` | `openapi`, `swagger`, `discovery`, `graphql`, `wp-json` (from `--from-config` only), `none`; left out with `--spec-url`, it is the downloaded description's |
 | `--spec-url` | the URL of the service's OpenAPI 3 or Swagger 2.0 description, JSON or YAML; with `--spec graphql`, the endpoint |
 | `--filters` | several of `time`, `person`, `container`, `text`, `status` |
 | `--never-store` | several of `tokens`, `codes`, `secret-links`, `content` |

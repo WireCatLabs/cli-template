@@ -45,7 +45,24 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
   if (module.default === undefined)
     throw new Error(`${path}: export the config as default: export default defineCli({…})`)
   const config = parseCliConfig(module.default)
-  const verifies = config.auth.preset === "token" && config.auth.verify !== undefined
+  const verifies =
+    (config.auth.preset === "token" || config.auth.preset === "app-password") && config.auth.verify !== undefined
+  // WordPress signs in with an application password on the owner's own site, and that sign-in reaches nothing else.
+  const wordpress = config.spec.kind === "wp-json"
+  if (wordpress !== (config.auth.preset === "app-password"))
+    throw new Error('wirecat.config: spec.kind "wp-json" and auth.preset "app-password" go together, one for the other')
+  if (wordpress && (!verifies || config.spec.version === undefined))
+    throw new Error(
+      "wirecat.config: a WordPress CLI needs spec.version, the WordPress version spec.from runs, and auth.verify, " +
+        'as { operation: "getWpV2UsersMe", id: "id", name: "name" }',
+    )
+  // The content commands sign in to the profile's own site, as an application password does.
+  if (config.category === "content" && config.source && !wordpress)
+    throw new Error(
+      'wirecat.config: a content source reads a site\'s REST index yet: spec.kind "wp-json" with auth.preset "app-password"',
+    )
+  if (wordpress && config.source && config.category !== "content")
+    throw new Error('wirecat.config: a WordPress source is the content category: category: "content"')
   // cli-core's trackerManifestFake, which the tracker's contract test runs over, answers GraphQL only.
   if (config.category === "tracker" && config.spec.kind !== "graphql")
     throw new Error(
@@ -63,7 +80,12 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
 }
 
 // Keyed by name, not by cli-core's preset type: a preset cli-core adds must not stop this file compiling.
-const SIGN_IN: Readonly<Record<string, string>> = { none: "none", token: "token", "oauth2-pkce": "oauth" }
+const SIGN_IN: Readonly<Record<string, string>> = {
+  none: "none",
+  token: "token",
+  "app-password": "token",
+  "oauth2-pkce": "oauth",
+}
 
 const signInOf = (preset: string): string => {
   const sign = SIGN_IN[preset]
