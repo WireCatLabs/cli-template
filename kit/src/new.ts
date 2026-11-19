@@ -7,7 +7,14 @@ import { dirname, join } from "node:path"
 import { createInterface } from "node:readline/promises"
 import type { Readable, Writable } from "node:stream"
 import { promisify } from "node:util"
-import { OFF_SAMPLE, SITE_WIRING, withConfigRunScope } from "./config-wiring.js"
+import {
+  OFF_SAMPLE,
+  SITE_WIRING,
+  SOURCE_SEEDS,
+  type SourceKind,
+  withConfigRunScope,
+  withSourceCommands,
+} from "./config-wiring.js"
 import type { LoadedConfig } from "./from-config.js"
 import {
   ask,
@@ -764,28 +771,10 @@ const CONFIG_FILE = "wirecat.config.ts"
 const SOURCE_CHECK = "scripts/source-check.ts"
 const FROM_CONFIG = "scripts/from-config.ts"
 const SESSION = ["src/commands/session.ts", "src/commands/session.test.ts", "src/testing/fake-api.ts"]
-const CRM = ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"]
-const TRACKER = ["src/commands/tracker.ts", "src/tracker-contracts.test.ts", "src/tracker-options.test.ts"]
-
-const sourceKind = (config: LoadedConfig["config"]): "crm" | "tracker" =>
-  config.category === "tracker" ? "tracker" : "crm"
-
+const sourceKind = (config: LoadedConfig["config"]): SourceKind =>
+  config.category === "tracker" || config.category === "content" ? config.category : "crm"
 const sourceSeeds = (config: LoadedConfig["config"]): string[] =>
-  !config.source ? [] : sourceKind(config) === "tracker" ? TRACKER : CRM
-
-/** cli-core's commands for the config's source (`crm` or `tracker`), beside the api group. */
-export const withSourceCommands = (text: string, kind: "crm" | "tracker" = "crm"): string =>
-  replaceOnce(
-    "src/program.ts",
-    replaceOnce(
-      "src/program.ts",
-      text,
-      'import { apiCommand } from "./commands/api.js"\n',
-      `import { apiCommand } from "./commands/api.js"\nimport { ${kind}Commands } from "./commands/${kind}.js"\n`,
-    ),
-    /^( +)apiCommand\(\),\n/m,
-    `$1apiCommand(),\n$1...${kind}Commands(),\n`,
-  )
+  !config.source ? [] : SOURCE_SEEDS[sourceKind(config)]
 
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
@@ -819,6 +808,7 @@ export const runNew = async (
   const answers = collected.answers
   const names = withFreePrefix(loaded ? { ...collected.names, prefix: loaded.config.identity.prefix } : collected.names)
   const service = loaded?.config.identity.service ?? (downloaded && serviceOf(downloaded.title))
+  const sourceFlags = loaded?.config.source as { users?: boolean; writes?: boolean } | undefined
   if (preset && isWireCat(names))
     throw new Error(`--preset ${preset} is for a CLI outside WireCat; ${names.package} is a WireCat package`)
   const description = preset ? GENERIC_DESCRIPTION : DESCRIPTION
@@ -849,7 +839,8 @@ export const runNew = async (
               ? withConfigRunScope(withApiRunScope(text), {
                   verifies: loaded.verifies,
                   ...(loaded.config.source ? { source: sourceKind(loaded.config) } : {}),
-                  users: Boolean(loaded.config.source && "users" in loaded.config.source && loaded.config.source.users),
+                  users: Boolean(sourceFlags?.users),
+                  writes: Boolean(sourceFlags?.writes),
                 })
               : withApiRunScope(text),
         }

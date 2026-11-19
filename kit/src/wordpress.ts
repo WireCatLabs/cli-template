@@ -12,10 +12,10 @@ export const wordpressSpec = async (
   return url === undefined ? undefined : wpJsonSpec(url, version, fetch)
 }
 
-/** An application password is the owner's site's own: its session takes --site and --login. */
+/** An application password is WordPress's (from-config ties it to wp-json): its session takes --site and --login. */
 export const configSeedOf = (loaded: LoadedConfig, path: string): string =>
   loaded.config.auth.preset === "app-password" && path.startsWith("src/commands/session")
-    ? path.replace("session", "session-site")
+    ? path.replace("session", "session-wordpress")
     : path
 
 // The README's WordPress parts: the sign-in on the owner's own site, and which key guards what.

@@ -73,12 +73,18 @@ export const withoutSampleRunScope = (text: string): string =>
  */
 export const withConfigRunScope = (
   text: string,
-  { verifies, source, users = false }: { verifies: boolean; source?: "crm" | "tracker"; users?: boolean },
+  {
+    verifies,
+    source,
+    users = false,
+    writes = false,
+  }: { verifies: boolean; source?: SourceKind; users?: boolean; writes?: boolean },
 ): string => {
   const answering = verifies ? withoutSampleRunScope(text) : text
   const sync = {
     crm: '      sync: "cli-core\'s addCrmCommands runs it in its run; src/crm-contracts.test.ts runs crmSyncContract",',
     tracker: '      sync: "cli-core\'s addTrackerCommands runs it in its run; src/tracker-contracts.test.ts syncs",',
+    content: '      sync: "cli-core\'s addContentCommands runs it in its run; src/content-contracts.test.ts syncs",',
   }
   return source
     ? replaceOnce(
@@ -93,6 +99,12 @@ export const withConfigRunScope = (
                 '      "users list": "cli-core\'s addCrmCommands runs it in its run, over source.users",',
                 '      "users show": "cli-core\'s addCrmCommands runs it in its run, over source.users",',
               ]
+            : []),
+          ...(source === "content" && writes
+            ? ["create", "update", "publish", "unpublish", "delete"].map(
+                (verb) =>
+                  `      "posts ${verb}": "cli-core's addContentCommands runs it in its run; src/content-contracts.test.ts writes",`,
+              )
             : []),
           "",
         ].join("\n"),
@@ -171,3 +183,25 @@ export const SITE_WIRING: Readonly<Record<string, (text: string) => string>> = {
   [HARNESS]: withSiteHarness,
   [RUN_SCOPE]: withSiteRunScope,
 }
+
+/** The files each source kind's commands bring, from kit/seeds/config. */
+export const SOURCE_SEEDS = {
+  crm: ["src/commands/crm.ts", "src/crm-contracts.test.ts", "lint/contract-exceptions.json"],
+  tracker: ["src/commands/tracker.ts", "src/tracker-contracts.test.ts", "src/tracker-options.test.ts"],
+  content: ["src/commands/content.ts", "src/content-contracts.test.ts"],
+}
+export type SourceKind = keyof typeof SOURCE_SEEDS
+
+/** cli-core's commands for the config's source (`crm`, `tracker` or `content`), beside the api group. */
+export const withSourceCommands = (text: string, kind: SourceKind = "crm"): string =>
+  replaceOnce(
+    "src/program.ts",
+    replaceOnce(
+      "src/program.ts",
+      text,
+      'import { apiCommand } from "./commands/api.js"\n',
+      `import { apiCommand } from "./commands/api.js"\nimport { ${kind}Commands } from "./commands/${kind}.js"\n`,
+    ),
+    /^( +)apiCommand\(\),\n/m,
+    `$1apiCommand(),\n$1...${kind}Commands(),\n`,
+  )

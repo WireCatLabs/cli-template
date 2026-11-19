@@ -4,7 +4,7 @@ import { API } from "../config.js"
 import { definitions } from "../generated/definitions.js"
 import { VERIFY } from "../generated/wirecat-config.js"
 
-// A service on the owner's own site (WordPress) is answered at this one; its server names `{site}`.
+// A service on the owner's own site, whose server names `{site}`, is answered at this one.
 const sited = API.manifest.servers?.[0]?.url.includes("{site}") === true
 
 /** The site session start --site names in a test; a made-up address that never resolves. */

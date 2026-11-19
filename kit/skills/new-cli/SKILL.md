@@ -108,14 +108,14 @@ without one:
 
 ```sh
 npx @wirecat/cli-template new <name>-cli --command <word> --package @wirecat/<name>-cli --owner WireCatLabs \
-  --category messenger|mail|notes|files|meetings|calendar|crm|tracker|other:<what> \
+  --category messenger|mail|notes|files|meetings|calendar|crm|tracker|content|other:<what> \
   --content-lang <ISO 639-1 codes, comma-separated> \
   --sign-in oauth|token|session|none \
   --api official-client|official-docs|unofficial \
   --spec openapi|swagger|discovery|graphql|wp-json|none \
   --filters time,person,container,text,status \
   --never-store tokens,codes,secret-links,content \
-  --untrusted messages,records,issues,invitations,transcripts,files,links,names|none
+  --untrusted messages,records,issues,posts,invitations,transcripts,files,links,names|none
 ```
 
 `--api` is what the service offers; `--spec` is the API description `new` builds the `api` group from. With a spec,

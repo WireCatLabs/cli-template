@@ -23,7 +23,8 @@ it("session start checks the token with the call auth.verify names and remembers
   expect(fake.refusals).toEqual([])
   const { id } = started.json().item as { id: string }
   expect(id).toEqual(expect.any(String))
-  expect(recalledAccount(IDENTITY, "any", "personal", process.env)?.account).toBe(id)
+  // Each site numbers its users from 1: the account names the site too.
+  expect(recalledAccount(IDENTITY, "any", "personal", process.env)?.account).toBe(`${FAKE_SITE}:${id}`)
   const status = await runCli(["personal", "session", "status", "--check", "--json"], { keyring, service: fake })
   expect(status.json().item).toMatchObject({ state: "saved", token_from: "keyring", verified: true, site: FAKE_SITE })
   expect((await runCli(["personal", "session", "end", "--json"], { keyring })).code).toBe(0)

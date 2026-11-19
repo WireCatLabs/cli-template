@@ -56,8 +56,13 @@ export const loadCliConfig = async (path: string): Promise<LoadedConfig> => {
       "wirecat.config: a WordPress CLI needs spec.version, the WordPress version spec.from runs, and auth.verify, " +
         'as { operation: "getWpV2UsersMe", id: "id", name: "name" }',
     )
-  if (wordpress && config.source)
-    throw new Error("wirecat.config: a WordPress source comes with the content category; leave out source yet")
+  // The content commands sign in to the profile's own site, as an application password does.
+  if (config.category === "content" && config.source && !wordpress)
+    throw new Error(
+      'wirecat.config: a content source reads a site\'s REST index yet: spec.kind "wp-json" with auth.preset "app-password"',
+    )
+  if (wordpress && config.source && config.category !== "content")
+    throw new Error('wirecat.config: a WordPress source is the content category: category: "content"')
   // cli-core's trackerManifestFake, which the tracker's contract test runs over, answers GraphQL only.
   if (config.category === "tracker" && config.spec.kind !== "graphql")
     throw new Error(
