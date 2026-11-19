@@ -10,3 +10,6 @@
   `cli-dev ready` could not verify its contracts row.
 - **The WordPress example reads tags and categories without `context=edit`.** An Author or a Contributor may not
   edit terms and was refused the read. A term's name and slug are public.
+- **A WordPress CLI made from a config passes its test matrix.** The wp-json `api` test passes every option of each
+  operation, with `--all` over one page, and `src/content-options.test.ts` runs every content command and option.
+  Before, 501 options had no test and `release:check` failed.

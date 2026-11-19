@@ -123,12 +123,13 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   application password with its site, the `api` group sends every call there and nowhere else on that host, and
   `--all` pages by `X-WP-TotalPages`. The keys: `<route>.publish` for a status of publish or future, a `date`,
   `date_gmt` or `password` (unless the call keeps a draft, pending or private), and `<route>.delete.force` for
-  `force=true`. Only `wp/v2` is offered; `batch/v1` never is.
+  `force=true`, with `_` in a route written as `-` (`wp-pattern-category.delete`). Only `wp/v2` is offered; `batch/v1`
+  never is.
 - A `content` source (posts on a site, today a WordPress site) gets `src/commands/content.ts`: cli-core's content
   commands (`sync`, `posts list|show|search|stats`, `tags list`, `users list`, `channels list`, and with
   `source.writes` `posts create|update|publish|unpublish|delete`) over `contentSourceFromManifest`. A write goes
   through the `api` group's own write path with its keys, and a key the `posts` command already asked is not asked
-  again. `src/content-contracts.test.ts` runs the source and write contracts and a sync through the CLI over
+  again. `src/content-contracts.test.ts` runs the source, sync and write contracts and a sync through the CLI over
   `contentManifestFake`, a fake built from the config and the generated API.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
