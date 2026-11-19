@@ -243,17 +243,23 @@ export const withDownloadedSpec = (
 // "Notion API" names the API; the commands already add "API" after the service's name.
 export const serviceOf = (title: string): string => title.replace(/\s+API$/i, "") || title
 
-// The pages say the sample is the CLI's one service, which stops being true once the api group reaches a real one.
-const SAMPLE_ONLY: Readonly<Record<string, [RegExp, (service: string) => string]>> = {
+// The pages say the sample is the CLI's one service, which stops being true once the api group reaches a real one, and
+// a CLI from a config with a token check has no sample left to name.
+const SAMPLE_ONLY: Readonly<Record<string, [RegExp, (service: string, offSample: boolean) => string]>> = {
   "docs/index.md": [
-    / Its one service is a sample,\nExample Comments, made up to show how a command reaches a service; its address never resolves\./,
-    (service) =>
-      `\nIts \`api\` group reaches ${service}, one command per operation of its API description. The sample's \`comments\`` +
-      "\ngroup shows how a command reaches a service; its made-up address never resolves.",
+    / Its one service is a sample,\nExample Comments, made up to show how a command reaches a service; its address never resolves\.([\s\S]*?)\nand the sample's `session` and `comments`\./,
+    (service, offSample) =>
+      offSample
+        ? `\nIts \`api\` group reaches ${service}, one command per operation of its API description.$1\nand \`session\`.`
+        : `\nIts \`api\` group reaches ${service}, one command per operation of its API description. The sample's \`comments\`` +
+          "\ngroup shows how a command reaches a service; its made-up address never resolves.$1\nand the sample's `session` and `comments`.",
   ],
   "docs/security.md": [
     / Its one service is\nthe sample, Example Comments, whose address never resolves\. /,
-    (service) => `\nIts \`api\` group reaches ${service}; the sample's made-up address never resolves.\n`,
+    (service, offSample) =>
+      offSample
+        ? `\nIts \`api\` group reaches ${service}.\n`
+        : `\nIts \`api\` group reaches ${service}; the sample's made-up address never resolves.\n`,
   ],
   SKILL: [
     / Its one service is a made-up sample, Example Comments\./,
@@ -261,10 +267,10 @@ const SAMPLE_ONLY: Readonly<Record<string, [RegExp, (service: string) => string]
   ],
 }
 
-export const withServicePage = (path: string, text: string, service: string): string => {
+export const withServicePage = (path: string, text: string, service: string, offSample = false): string => {
   const [from, to] = SAMPLE_ONLY[path.endsWith("SKILL.md") ? "SKILL" : path] ?? []
   if (!from || !to) throw new Error(`${path}: no sample sentence known to rewrite`)
-  return replaceOnce(path, text, from, to(service))
+  return replaceOnce(path, text, from, to(service, offSample))
 }
 
 export const withService = (text: string, service: string): string =>
