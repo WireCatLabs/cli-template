@@ -20,7 +20,7 @@ const stub = (dir: string, name: string, body: string) => {
 
 // npm has 0.1.2, so bin/release raises the version through a pull request. gh refuses to open it, which stops the run
 // right after the release branch is pushed, before anything could publish.
-const raised = (fragment: string) => {
+const raised = (fragment: string, dated = "") => {
   const work = mkdtempSync(join(tmpdir(), "release-level-"))
   dirs.push(work)
   const origin = join(work, "origin.git")
@@ -40,10 +40,13 @@ const raised = (fragment: string) => {
   mkdirSync(join(repo, "changes"))
   writeFileSync(
     join(repo, "package.json"),
-    `${JSON.stringify({ name: "@example/acme-cli", version: "0.1.2" }, null, 2)}\n`,
+    `${JSON.stringify({ name: "@example/acme-cli", version: dated ? "0.1.3" : "0.1.2" }, null, 2)}\n`,
   )
-  writeFileSync(join(repo, "src/version.ts"), 'export const VERSION = "0.1.2"\n')
-  writeFileSync(join(repo, "CHANGELOG.md"), "# Changelog\n\n## 0.1.2 — 19.11.2026\n\n### Fixed\n\n- **One.** A fix.\n")
+  writeFileSync(join(repo, "src/version.ts"), `export const VERSION = "${dated ? "0.1.3" : "0.1.2"}"\n`)
+  writeFileSync(
+    join(repo, "CHANGELOG.md"),
+    `# Changelog\n\n${dated}## 0.1.2 — 19.11.2026\n\n### Fixed\n\n- **One.** A fix.\n`,
+  )
   writeFileSync(join(repo, "changes/feat-pages.md"), fragment)
   git(repo, "add", "-A")
   git(repo, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "init")
@@ -91,4 +94,15 @@ it("keeps a patch for fragments that only fix", () => {
   const { run, branches } = raised("### Fixed\n\n- **Two.** Another fix.\n")
   expect(run.stdout).toContain("publishing 0.1.3 instead")
   expect(branches).toContain("release/0.1.3")
+})
+
+it("raises a version dated by hand when the fragments merged since need more", () => {
+  const { run, branches, show } = raised(
+    "### Added\n\n- **Pages.** Pages are written.\n",
+    "## 0.1.3 — 20.11.2026\n\n### Fixed\n\n- **Two.** Another fix.\n\n",
+  )
+  expect(run.stdout).toContain("the changes/ fragments need 0.2.0 — publishing it instead of 0.1.3")
+  expect(branches).toContain("release/0.2.0")
+  expect(JSON.parse(show("release/0.2.0", "package.json")).version).toBe("0.2.0")
+  expect(show("release/0.2.0", "CHANGELOG.md")).toMatch(/## 0\.2\.0 — 20\.11\.2026\n\n### Added[\s\S]*### Fixed/)
 })
