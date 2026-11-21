@@ -6,3 +6,6 @@
   are now collected first, and an `Added` raises the release to a minor. A version dated by hand is raised the same
   way when the fragments merged since need more. `scripts/release.test.ts` checks both and is kept up to date by
   `upgrade`, as `bin/release` is. A CLI gets this with its next `upgrade`.
+- **The template builds on cli-core 0.718.0 and cli-base 0.126.1**, so `pnpm audit:commands` passes the family audit
+  again: the published CLIs still name an unknown profile twice, and cli-base 0.126.1 lists that as a shared
+  difference.
