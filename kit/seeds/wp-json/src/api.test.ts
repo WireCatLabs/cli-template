@@ -78,9 +78,15 @@ it("offers no command that makes an application password, whose answer holds it 
   )
   if (!create) return
   expect(left).toContainEqual({ id: create.id, reason: expect.stringContaining("credential") })
-  const ran = await runCli(["personal", "api", create.command, "--user-id", "1", "--json"], { service: fake(), env })
+  const service = fake()
+  const ran = await runCli(["personal", "api", create.command, "--user-id", "1", "--json"], { service, env })
   expect(ran.code).not.toBe(0)
-  expect(ran.out).not.toContain("password")
+  expect(service.calls).toEqual([])
+})
+
+// The tests below run the offered calls only: a call left out for another reason would drop out unseen.
+it("leaves out only the calls whose answer holds a credential", () => {
+  expect(left.filter(({ reason }) => !reason.includes("credential"))).toEqual([])
 })
 
 it("api show describes an operation from the generated files, without calling the service", async () => {

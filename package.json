@@ -90,7 +90,7 @@
     "kit:docs": "cspell lint --config cspell.json --no-progress --no-summary kit/*.md SKILL.md && rumdl check --config config/wirecat/rumdl.toml kit/*.md SKILL.md"
   },
   "dependencies": {
-    "@wirecat/cli-base": "0.123.0",
+    "@wirecat/cli-base": "0.125.2",
     "@wirecat/cli-core": "0.710.0",
     "commander": "15.0.0",
     "valibot": "1.5.0",
