@@ -245,12 +245,15 @@ export const serviceOf = (title: string): string => title.replace(/\s+API$/i, ""
 
 // The pages say the sample is the CLI's one service, which stops being true once the api group reaches a real one, and
 // a CLI from a config with a token check has no sample left to name.
-const SAMPLE_ONLY: Readonly<Record<string, [RegExp, (service: string, offSample: boolean) => string]>> = {
+const SAMPLE_ONLY: Readonly<
+  Record<string, [RegExp, (service: string, offSample: boolean, copy: string | undefined) => string]>
+> = {
   "docs/index.md": [
     / Its one service is a sample,\nExample Comments, made up to show how a command reaches a service; its address never resolves\.([\s\S]*?)\nand the sample's `session` and `comments`\./,
-    (service, offSample) =>
+    (service, offSample, copy) =>
       offSample
-        ? `\nIts \`api\` group reaches ${service}, one command per operation of its API description.$1\nand \`session\`.`
+        ? `\nIts \`api\` group reaches ${service}, one command per operation of its API description.$1\nand \`session\`.` +
+          (copy ? `\n\`sync\` keeps ${copy} on this computer, and its own commands read that copy.` : "")
         : `\nIts \`api\` group reaches ${service}, one command per operation of its API description. The sample's \`comments\`` +
           "\ngroup shows how a command reaches a service; its made-up address never resolves.$1\nand the sample's `session` and `comments`.",
   ],
@@ -263,14 +266,21 @@ const SAMPLE_ONLY: Readonly<Record<string, [RegExp, (service: string, offSample:
   ],
   SKILL: [
     / Its one service is a made-up sample, Example Comments\./,
-    (service) => ` Its api group reaches ${service}.`,
+    (service, _, copy) =>
+      ` Its api group reaches ${service}.${copy ? ` Its sync keeps ${copy} in a local copy its commands read.` : ""}`,
   ],
 }
 
-export const withServicePage = (path: string, text: string, service: string, offSample = false): string => {
+export const withServicePage = (
+  path: string,
+  text: string,
+  service: string,
+  offSample = false,
+  copy?: string,
+): string => {
   const [from, to] = SAMPLE_ONLY[path.endsWith("SKILL.md") ? "SKILL" : path] ?? []
   if (!from || !to) throw new Error(`${path}: no sample sentence known to rewrite`)
-  return replaceOnce(path, text, from, to(service, offSample))
+  return replaceOnce(path, text, from, to(service, offSample, copy))
 }
 
 export const withService = (text: string, service: string): string =>

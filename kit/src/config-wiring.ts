@@ -201,6 +201,18 @@ export const SOURCE_SEEDS = {
 }
 export type SourceKind = keyof typeof SOURCE_SEEDS
 
+/** What a source's `sync` keeps, so the pages name the commands a config's category adds, not only `api`. */
+export const SOURCE_COPY: Readonly<Record<SourceKind, string>> = {
+  crm: "the people, organizations and deals",
+  tracker: "the issues and their lists",
+  content: "the posts, pages, their terms and authors",
+}
+
+export const sourceBullet = (cli: string, kind: SourceKind): string[] => [
+  `- **A local copy to work from.** \`${cli} personal sync\` keeps ${SOURCE_COPY[kind]} on this computer,`,
+  `  and the ${kind} commands read it: \`${cli} commands\` lists them.`,
+]
+
 /** cli-core's commands for the config's source (`crm`, `tracker` or `content`), beside the api group. */
 export const withSourceCommands = (text: string, kind: SourceKind = "crm"): string =>
   replaceOnce(

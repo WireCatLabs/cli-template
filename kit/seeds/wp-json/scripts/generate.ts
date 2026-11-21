@@ -42,18 +42,7 @@ const artifacts = generate(
     // where WordPress's method misleads.
     overrides: { ...overrides },
     // Command names from the paths, without the /wp/v2 every route shares.
-    names: {
-      fromPath: true,
-      segments: { wp: "", v2: "" },
-      // A route that ends in a namespace or a user id lists, yet its path reads as one item's. A site without the
-      // route (a plugin may hide the users routes) has nothing to rename.
-      commands: Object.fromEntries(
-        Object.entries({
-          getWpV2BlockTypesByNamespace: "block-types-list-namespace",
-          deleteWpV2UsersByUserIdApplicationPasswords: "users-application-passwords-delete-all",
-        }).filter(([id]) => model.operations.some((operation) => operation.id === id)),
-      ),
-    },
+    names: { fromPath: true, segments: { wp: "", v2: "" } },
     permissions: {
       group,
       // WordPress publishes by status, by a scheduled post's date moved into the past (a null date is now), and by a

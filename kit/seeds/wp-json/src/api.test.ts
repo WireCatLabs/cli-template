@@ -1,7 +1,13 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { fakeApi, sampleOf } from "@wirecat/cli-base/codegen"
-import { apiFlagOf, manifestBaseUrl, type ServiceApiManifest, sendsBytes } from "@wirecat/cli-core/cli"
+import {
+  apiFlagOf,
+  manifestBaseUrl,
+  type ServiceApiManifest,
+  sendsBytes,
+  serviceApiOperations,
+} from "@wirecat/cli-core/cli"
 import { pacePathFor } from "@wirecat/cli-core/sends"
 import { afterEach, expect, it } from "vitest"
 import { API } from "./config.js"
@@ -41,6 +47,9 @@ const fake = () =>
 // Signed in to the fake's site, as session start --site keeps it.
 const env = { CLIDEV_TOKEN: FAKE_API_TOKEN, CLIDEV_TOKEN_SITE: FAKE_SITE }
 
+// The api group's commands: cli-core leaves out a call whose answer holds a credential, as a new application password.
+const { offered, left } = serviceApiOperations(API.manifest)
+
 const keys = [
   ...new Set(API.manifest.operations.flatMap((operation) => (operation.permissions ?? []).map(({ key }) => key))),
 ]
@@ -62,8 +71,20 @@ it("the spec offers operations", () => {
   expect(API.manifest.operations.length).toBeGreaterThan(0)
 })
 
+// A site without the route (a plugin may hide the users routes) has nothing to leave out.
+it("offers no command that makes an application password, whose answer holds it in clear", async () => {
+  const create = API.manifest.operations.find(
+    (operation) => operation.id === "postWpV2UsersByUserIdApplicationPasswords",
+  )
+  if (!create) return
+  expect(left).toContainEqual({ id: create.id, reason: expect.stringContaining("credential") })
+  const ran = await runCli(["personal", "api", create.command, "--user-id", "1", "--json"], { service: fake(), env })
+  expect(ran.code).not.toBe(0)
+  expect(ran.out).not.toContain("password")
+})
+
 it("api show describes an operation from the generated files, without calling the service", async () => {
-  const [operation] = API.manifest.operations
+  const [operation] = offered
   const service = fake()
   const shown = await runCli(["personal", "api", "show", String(operation?.command), "--json"], { service, env })
   expect(shown.code, shown.err).toBe(0)
@@ -72,7 +93,7 @@ it("api show describes an operation from the generated files, without calling th
 })
 
 // One test each, so a large API stays inside the per-test timeout and a failure names its operation.
-it.each(API.manifest.operations.map((operation) => [operation.command, operation] as const))(
+it.each(offered.map((operation) => [operation.command, operation] as const))(
   "sends %s as the spec describes it",
   async (_, operation) => {
     writeFileSync(upload, new Uint8Array([0x89, 0x50, 0x4e, 0x47]))
@@ -85,7 +106,7 @@ it.each(API.manifest.operations.map((operation) => [operation.command, operation
   },
 )
 
-const destructive = API.manifest.operations.filter((operation) => operation.effect === "destructive")
+const destructive = offered.filter((operation) => operation.effect === "destructive")
 
 // A service whose API only reads has no delete to check.
 it.runIf(destructive.length > 0)(
@@ -106,7 +127,7 @@ it.runIf(destructive.length > 0)(
   },
 )
 
-const writes = API.manifest.operations.filter((operation) =>
+const writes = offered.filter((operation) =>
   (operation.permissions ?? []).some(({ key, body }) => key.endsWith(".publish") && body?.includes("date")),
 )
 
@@ -135,7 +156,7 @@ it.runIf(writes.length > 0)("a date change needs the publish key unless the call
 })
 
 // Every option the spec offers, with a body from a file; the CLI's test matrix names each one.
-it.each(API.manifest.operations.map((operation) => [operation.command, operation] as const))(
+it.each(offered.map((operation) => [operation.command, operation] as const))(
   "takes every option of %s, its body from a file",
   async (_, operation) => {
     writeFileSync(upload, new Uint8Array([0x89, 0x50, 0x4e, 0x47]))

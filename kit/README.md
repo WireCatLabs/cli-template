@@ -134,8 +134,8 @@ read before the CLI has `node_modules`: its import resolves to the kit's own cli
   passes the content keys and their `ask` levels to `--dry-run`, and the `api` group's create and update of the
   written route check `posts.create` and `posts.update` too, so a deny on a `posts` command covers the raw write.
   `src/content-options.test.ts` checks what each write changed.
-- A WordPress CLI (`wp-json`) leaves out the route that makes an application password, whose answer holds the new
-  password in clear, and its `api` writes that install a plugin, change settings, users, comments, templates,
+- A WordPress CLI (`wp-json`) offers no `api` command whose answer may hold an application password: cli-base marks
+  the field secret and cli-core leaves those calls out (`api show` names why). Both deletes stay. Its `api` writes that install a plugin, change settings, users, comments, templates,
   widgets, menus or navigation ask by default.
 - `pnpm source:check` checks the source's operations and every path its map reads against the generated API, after
   `pnpm generate`.
