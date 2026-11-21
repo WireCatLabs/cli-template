@@ -125,6 +125,10 @@ describe("new --from-config", () => {
       /Its `api` group reaches .+, one command per operation[\s\S]*\nand `session`\./,
     )
     expect(read(dir, "docs/configuration.md")).toContain("`session status --check` does its work in a run")
+    // The pages name what the source adds, not only the api group.
+    expect(read(dir, "README.md")).toContain("`acme personal sync` keeps the people, organizations and deals")
+    expect(read(dir, "docs/index.md")).toContain("`sync` keeps the people, organizations and deals on this computer")
+    expect(read(dir, "skills/acme-cli/SKILL.md")).toContain("Its sync keeps the people, organizations and deals")
     expect(read(dir, "src/identity.ts")).toContain('hosts: ["api.acme.example", "app.acme.example"],')
     expect(read(dir, "src/commands/crm.ts")).toContain("live: LIVE")
     expect(runScope).toContain("sync: \"cli-core's addCrmCommands runs it in its run")

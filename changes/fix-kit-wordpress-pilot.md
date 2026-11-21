@@ -1,8 +1,8 @@
 ### Fixed
 
 - **A WordPress CLI generates from a plain site's whole index.** Two routes of WordPress 6.9.4 read as one item's
-  and took the same command name (`block-types-get`, `users-application-passwords-delete`). The wp-json seed now
-  names them `block-types-list-namespace` and `users-application-passwords-delete-all`.
+  and took the same command name (`block-types-get`, `users-application-passwords-delete`). They are now
+  `block-types-list-namespace` and `users-application-passwords-delete-all`.
 - **A route with `_` in its name no longer breaks the settings check.** The wp-json seed wrote the key of
   `wp_pattern_category` as written in the path, which `config` does not know. Keys are now written as their
   commands are (`wp-pattern-category.delete`), so every `api` test passes.

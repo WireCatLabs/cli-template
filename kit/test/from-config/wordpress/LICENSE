@@ -1,5 +1,5 @@
-The routes in index.json are cut from the REST index of WordPress 6.9.4 (GET /wp-json/?context=help on a plain
-install, no plugins), taken on 2026-11-18.
+index.json is the whole REST index of WordPress 6.9.4 (GET /wp-json/?context=help on a plain install, no plugins),
+as cli-base's syncWpJson wrote it on 2026-11-19 (wordpress-cli's spec/wordpress), formatted by Biome.
 
 WordPress - Web publishing software
 Copyright 2011-2026 by the contributors
