@@ -5,6 +5,50 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.33.0 — 21.11.2026
+
+### Fixed
+
+- **A content CLI from a config shows and checks its write keys.** `src/config.ts` passes cli-core's content write
+  keys and their `ask` levels, so `posts create --dry-run` no longer says `allow` for a write that asks, and
+  `--allow-delete` names `posts.delete.force`. The `api` group's create and update of the written route check
+  `posts.create` and `posts.update` too, so a deny on a `posts` command covers the raw write (WC-PERM-22).
+- **A WordPress CLI's risky `api` writes ask.** Writes that install a plugin or change settings, users, comments,
+  templates, widgets, menus or navigation ask by default.
+- **The content and `api` tests check what they send.** `src/content-options.test.ts` checks each write's result,
+  and that `posts.create: deny` stops the `api` write. `src/api.test.ts` checks every option's value, reads a second
+  page with `--all`, and checks the WordPress writes that ask.
+- **A CLI from a config no longer names the sample it left out.** `docs/index.md`, `docs/security.md` and
+  `docs/configuration.md` of a CLI made by `new --from-config` with a token check said the sample's made-up address
+  never resolves and that `comments` runs in a run; that CLI has no sample and no `comments`. Found on linear-cli.
+- **A WordPress CLI generates from a plain site's whole index.** Two routes of WordPress 6.9.4 read as one item's
+  and took the same command name (`block-types-get`, `users-application-passwords-delete`). They are now
+  `block-types-list-namespace` and `users-application-passwords-delete-all`.
+- **A route with `_` in its name no longer breaks the settings check.** The wp-json seed wrote the key of
+  `wp_pattern_category` as written in the path, which `config` does not know. Keys are now written as their
+  commands are (`wp-pattern-category.delete`), so every `api` test passes.
+- **A content CLI runs cli-core's `contentSyncContract`.** The seed ran only the source and write contracts, so
+  `cli-dev ready` could not verify its contracts row.
+- **The WordPress example reads tags and categories without `context=edit`.** An Author or a Contributor may not
+  edit terms and was refused the read. A term's name and slug are public.
+- **A WordPress CLI made from a config passes its test matrix.** The wp-json `api` test passes every option of each
+  operation, with `--all` over one page, and `src/content-options.test.ts` runs every content command and option.
+  Before, 501 options had no test and `release:check` failed.
+- **A WordPress CLI never offers making an application password.** WordPress answers the new password in clear and
+  its index marks no field secret. cli-base 0.125.2 marks it, and cli-core then leaves the create, list, get, update
+  and introspect of application passwords out of the `api` group; `api show` says why. Both deletes are commands.
+  `src/api.test.ts` checks that the create is not offered and that no other call is left out.
+- **kit e2e builds a WordPress CLI from the whole 6.9.4 index,** not a cut of 26 routes, so a clash of command names
+  or a secret field anywhere in WordPress stops the template's own check.
+- **A CLI from a config with a source says what its sync keeps.** The README, `docs/index.md` and the agent skill
+  said only that the `api` group reaches the service. They now say that `sync` keeps the people, organizations and
+  deals (CRM), the issues with their projects, labels and comments (tracker), or the posts, pages, their terms and
+  authors (content), and which commands work from that copy.
+- **A content CLI made from a config syncs an Author's or Contributor's posts.** The WordPress case gives the pages
+  call `optional.needs` on `capabilities.edit_pages` (cli-core 0.710.0): WordPress refuses both roles the pages list,
+  and that refusal failed the whole post sync. Pages now check `edit_others_pages`, not `edit_others_posts`. A
+  content CLI's seed tests that a sign-in without a call's right never sends it and still completes its sync.
+
 ## 0.32.0 — 19.11.2026
 
 ### Added
