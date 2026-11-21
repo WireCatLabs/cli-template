@@ -15,6 +15,7 @@
     "docs/dev/TESTING.md",
     "lefthook.yml",
     "scripts/one-cli-base.ts",
+    "scripts/release.test.ts",
     "scripts/sandboxed.ts",
     "src/test-timeouts.test.ts",
     "tsconfig.json",

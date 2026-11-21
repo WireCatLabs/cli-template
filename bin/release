@@ -122,17 +122,9 @@ published || folded=$(pnpm exec cli-dev changelog fold --land --version "$versio
 [ -z "$folded" ] || echo "$folded"
 rerun_if_changed "$@"
 
-# Two sessions preparing the same number is normal; the second takes the next free one.
-latest=$(npm view "$package" version --prefer-online 2>/dev/null || true)
-versions=$(npm view "$package" versions --json --prefer-online 2>/dev/null || true)
-next=$(pnpm exec cli-dev next-version "$version" "$latest" "$versions")
-fragments=$(find changes -maxdepth 1 -type f -name '*.md' ! -name README.md 2>/dev/null | wc -l)
-if [ "$next" != "$version" ]; then
-  taken=""
-  if published; then taken=1; why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
-  next=$(pnpm exec cli-dev changelog level --next "$next")
-  echo "$why — publishing $next instead"
-  # A version npm already has keeps its changelog section; the unreleased one becomes the new version.
+# Raises the version from $1 to $2 in package.json, src/version.ts and the CHANGELOG heading. With $3 set, npm has
+# $1, so its section stays and the unreleased one becomes $2.
+renumber() {
   node -e 'const fs = require("fs"); const [o, n, taken] = process.argv.slice(1)
     const swap = (file, from, to) => {
       const text = fs.readFileSync(file, "utf8")
@@ -146,10 +138,30 @@ if [ "$next" != "$version" ]; then
     const log = fs.readFileSync("CHANGELOG.md", "utf8")
     if (taken && log.includes("\n## Unreleased\n")) swap("CHANGELOG.md", "\n## Unreleased\n", `\n## ${n} — ${today}\n`)
     else if (taken) swap("CHANGELOG.md", "\n## ", `\n## ${n} — ${today}\n\n## `)
-    else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
+    else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$1" "$2" "$3"
+}
+
+# Two sessions preparing the same number is normal; the second takes the next free one.
+latest=$(npm view "$package" version --prefer-online 2>/dev/null || true)
+versions=$(npm view "$package" versions --json --prefer-online 2>/dev/null || true)
+next=$(pnpm exec cli-dev next-version "$version" "$latest" "$versions")
+fragments=$(find changes -maxdepth 1 -type f -name '*.md' ! -name README.md 2>/dev/null | wc -l)
+if [ "$next" != "$version" ]; then
+  taken=""
+  if published; then taken=1; why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
+  renumber "$version" "$next" "$taken"
   pnpm exec cli-dev changelog fragments --collect "$next"
-  body="bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading, and the
-changes/ fragments collected under it.
+  # next-version keeps the level of the version it raises; the section, with the fragments now in it, may need more:
+  # an Added is a minor.
+  levelled=$(pnpm exec cli-dev changelog level --next "$next")
+  if [ "$levelled" != "$next" ]; then
+    levelled=$(pnpm exec cli-dev next-version "$levelled" "$latest" "$versions")
+    renumber "$next" "$levelled" ""
+    next=$levelled
+  fi
+  echo "$why — publishing $next instead"
+  body="bin/release: $why. Only the number changes, to the level the changelog needs: package.json, src/version.ts,
+the CHANGELOG heading, and the changes/ fragments collected under it.
 
 ## Conformance
 
@@ -158,10 +170,20 @@ The release pull request of $version recorded the checks; this one changes only 
   rerun_if_changed "$@"
   version=$next
 elif [ "$fragments" -gt 0 ]; then
-  # The version was dated by hand; fragments merged since then still belong to it.
+  # The version was dated by hand; fragments merged since then still belong to it, and may need a higher level.
   pnpm exec cli-dev changelog fragments --collect "$version"
-  land "release/$version-changes" "chore(changelog): collect changes/ into $version" \
-    "bin/release: the changes/ fragments merged since $version was dated, collected into its section."
+  levelled=$(pnpm exec cli-dev changelog level --next "$version")
+  if [ "$levelled" != "$version" ]; then
+    levelled=$(pnpm exec cli-dev next-version "$levelled" "$latest" "$versions")
+    renumber "$version" "$levelled" ""
+    echo "the changes/ fragments need $levelled — publishing it instead of $version"
+    land "release/$levelled" "chore(release): $levelled" \
+      "bin/release: the changes/ fragments merged since $version was dated need $levelled, collected into its section."
+    version=$levelled
+  else
+    land "release/$version-changes" "chore(changelog): collect changes/ into $version" \
+      "bin/release: the changes/ fragments merged since $version was dated, collected into its section."
+  fi
   rerun_if_changed "$@"
 fi
 top=$(sed -n '/^## /{p;q;}' CHANGELOG.md)
