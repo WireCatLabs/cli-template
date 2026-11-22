@@ -56,7 +56,7 @@ jobs:
       contents: read
       actions: read
       security-events: write
-    uses: WireCatLabs/cli-base/.github/workflows/release-checks.yml@21b2f80c76fb46cf433deba6edb59cfbeb4b6676 # v0.112.0
+    uses: WireCatLabs/cli-base/.github/workflows/release-checks.yml@cf4e48a7c4ae66478bad24a2555fd7d461e520ef # v0.122.0
 
   build:
     needs: [checks, validation]
