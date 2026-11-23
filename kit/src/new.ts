@@ -667,6 +667,13 @@ const sourceKind = (config: LoadedConfig["config"]): SourceKind =>
   config.category === "tracker" || config.category === "content" ? config.category : "crm"
 const sourceSeeds = (config: LoadedConfig["config"]): string[] =>
   !config.source ? [] : SOURCE_SEEDS[sourceKind(config)]
+// A CRM's sign-in refuses an account another profile holds, which needs the CRM commands' account options.
+const seedOf = (loaded: LoadedConfig, path: string): string => {
+  const seed = configSeedOf(loaded, path)
+  return seed === "src/commands/session.ts" && loaded.config.source && sourceKind(loaded.config) === "crm"
+    ? "src/commands/session-crm.ts"
+    : seed
+}
 
 // pnpm generate writes what the CLI reads of the config into src/generated/, and build needs it before the first one.
 const withConfigScripts = (text: string): string => {
@@ -831,7 +838,7 @@ export const runNew = async (
     await writeOut(target, CONFIG_FILE, loaded.text)
     const seeds = [SOURCE_CHECK, FROM_CONFIG, ...(loaded.verifies ? SESSION : []), ...sourceSeeds(loaded.config)]
     for (const path of seeds)
-      await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", configSeedOf(loaded, path))))
+      await writeOut(target, path, await readFile(join(source.root, "kit/seeds/config", seedOf(loaded, path))))
   }
   if (!rendered.has("AGENTS.md")) await writeOut(target, "AGENTS.md", withReference("", category))
   await writeOut(target, "docs/dev/DESIGN.md", designDoc(names, answers))

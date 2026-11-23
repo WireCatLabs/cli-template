@@ -102,7 +102,9 @@ describe("new --from-config", () => {
     )
 
     const dir = join(cwd, "acme-cli")
-    expect(read(dir, "src/commands/session.ts")).toContain("tokenSessionCommand(")
+    expect(read(dir, "src/commands/session.ts")).toContain("claim: crmAccountClaim(IDENTITY, CRM_ACCOUNT)")
+    expect(existsSync(join(dir, "src/commands/session-crm.ts"))).toBe(false)
+    expect(read(dir, "src/commands/crm.ts")).toContain("account: CRM_ACCOUNT,")
     expect(read(dir, "src/commands/session.test.ts")).toContain("recalledAccount(")
     expect(read(dir, "src/identity.ts")).toContain('  syncs: "your people",')
     const runScope = read(dir, "src/run-scope.test.ts")
