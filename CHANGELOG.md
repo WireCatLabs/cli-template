@@ -5,6 +5,26 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.34.0 — 23.11.2026
+
+### Fixed
+
+- **`bin/release` picks the version after it collects `changes/`.** When npm already had the version, it chose the
+  next one from the changelog before the fragments were in it, so a fragment with `Added` still gave a patch, and
+  `version:check` then refused the release pull request (wordpress-cli 0.1.3, which had to be 0.2.0). The fragments
+  are now collected first, and an `Added` raises the release to a minor. A version dated by hand is raised the same
+  way when the fragments merged since need more. `scripts/release.test.ts` checks both and is kept up to date by
+  `upgrade`, as `bin/release` is. A CLI gets this with its next `upgrade`.
+- **The template builds on cli-core 0.718.0 and cli-base 0.126.1**, so `pnpm audit:commands` passes the family audit
+  again: the published CLIs still name an unknown profile twice, and cli-base 0.126.1 lists that as a shared
+  difference.
+- **A CLI built from a config answers `session.missing` when its profile is not signed in**, with the same words as
+  cli-core's sign-in check. Its CRM, content and tracker commands answered `auth.missing`, which no other WireCat tool
+  gives, so an agent that knew one tool's answer could not read the other's. A CLI generated earlier keeps the old line
+  in `src/commands/`: change it there.
+  A profile this computer does not know at all then answers `profile.unknown` (`not_found`), as cli-core turns a
+  `session.missing` into for an unknown profile; the seeds' tests expect that.
+
 ## 0.33.0 — 21.11.2026
 
 ### Fixed
