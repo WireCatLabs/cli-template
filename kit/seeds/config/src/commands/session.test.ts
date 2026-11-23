@@ -42,7 +42,7 @@ it("session start keeps nothing when the service refuses the token", async () =>
 
 it("a sign-in kept in a private file is listed among the sessions; api list names the generated operations", async () => {
   const keyring = memoryKeyring()
-  const started = await runCli(["files", "session", "start", "--credential-storage", "file", "--json"], {
+  const started = await runCli(["private", "session", "start", "--credential-storage", "file", "--json"], {
     keyring,
     service: fakeServiceApi(),
     stdin: FAKE_API_TOKEN,
@@ -50,8 +50,8 @@ it("a sign-in kept in a private file is listed among the sessions; api list name
   expect(started.code, started.err).toBe(0)
   const sessions = await runCli(["session", "list", "--json"], { keyring })
   expect(sessions.code, sessions.err).toBe(0)
-  expect(sessions.json().items).toEqual(expect.arrayContaining([expect.objectContaining({ profile: "files" })]))
+  expect(sessions.json().items).toEqual(expect.arrayContaining([expect.objectContaining({ profile: "private" })]))
   const operations = await runCli(["api", "list", "--json"], { keyring })
   expect((operations.json().items as unknown[]).length).toBeGreaterThan(0)
-  expect((await runCli(["files", "session", "end", "--json"], { keyring })).code).toBe(0)
+  expect((await runCli(["private", "session", "end", "--json"], { keyring })).code).toBe(0)
 })

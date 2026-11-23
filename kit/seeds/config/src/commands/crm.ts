@@ -2,10 +2,10 @@ import { CliError } from "@wirecat/cli-base"
 import { retrying } from "@wirecat/cli-base/http"
 import { openAppStore, recalledAccount, serviceApiCall } from "@wirecat/cli-core/cli"
 import { crmSourceFromManifest } from "@wirecat/cli-core/crm"
-import { addCrmCommands, type CrmRun, openCrmStore } from "@wirecat/cli-core/crm/cli"
+import { addCrmCommands, type CrmAccountOptions, type CrmRun, openCrmStore } from "@wirecat/cli-core/crm/cli"
 import { Pacer, pacePathFor } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
-import { API } from "../config.js"
+import { API, configuration } from "../config.js"
 import { contextOf, PACE, tokenOf } from "../context.js"
 import { HOOK_OPTIONS, LIVE, SOURCE } from "../generated/wirecat-config.js"
 import { IDENTITY } from "../identity.js"
@@ -57,6 +57,13 @@ const open = async (command: Command, { readOnly }: { readOnly: boolean }): Prom
   }
 }
 
+/** One account, one profile: `account remove` and the sign-in refuse what another profile here holds. */
+export const CRM_ACCOUNT: CrmAccountOptions = {
+  provider: SOURCE.provider,
+  service: API.service,
+  resolveSettings: configuration.resolveSettings,
+}
+
 /** cli-core's CRM commands over the source wirecat.config.ts describes: sync, store status, deals, search. */
 export const crmCommands = (): Command[] => {
   const holder = new Command(IDENTITY.command)
@@ -66,6 +73,7 @@ export const crmCommands = (): Command[] => {
     leads: SOURCE.kinds.includes("lead"),
     // People and companies whose entity names a search, and the users when the source names a call for them.
     live: LIVE,
+    account: CRM_ACCOUNT,
   })
   return [...holder.commands]
 }
