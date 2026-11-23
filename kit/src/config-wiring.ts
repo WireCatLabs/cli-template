@@ -187,10 +187,22 @@ const withSiteRunScope = (text: string): string =>
     ],
   ])
 
+// Desktop asks for the site and the user name too, and passes them as cli-core's --site and --login.
+const withSiteSignIn = (text: string): string =>
+  replaceOnce(
+    IDENTITY,
+    text,
+    '{ id: "token", label: "API token", words: ["{profile}", "session", "start", "--json"], stdin: true }',
+    '{\n        id: "app-password",\n        label: "Application password",\n' +
+      '        words: ["{profile}", "session", "start", "--json"],\n' +
+      '        stdin: true,\n        site: "--site",\n        login: "--login",\n      }',
+  )
+
 /** The rewrites for a CLI on the owner's own site (an application password), after the sample's. */
 export const SITE_WIRING: Readonly<Record<string, (text: string) => string>> = {
   [HARNESS]: withSiteHarness,
   [RUN_SCOPE]: withSiteRunScope,
+  [IDENTITY]: withSiteSignIn,
 }
 
 /** The files each source kind's commands bring, from kit/seeds/config. */

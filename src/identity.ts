@@ -28,6 +28,8 @@ export const DESKTOP = {
   signIn: {
     gives: "Lets your agent read and change your account through clidev.",
     asks: "An API token or key from the service.",
+    // Desktop signs in from this alone: it asks for the token in its window and sends it on stdin.
+    methods: [{ id: "token", label: "API token", words: ["{profile}", "session", "start", "--json"], stdin: true }],
   },
 } satisfies ManifestIdentity
 

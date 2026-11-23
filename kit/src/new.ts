@@ -471,6 +471,10 @@ const signInTexts = (command: string, signIn: string): { gives: string; asks: st
   }
 }
 
+const TOKEN_METHOD =
+  "    // Desktop signs in from this alone: it asks for the token in its window and sends it on stdin.\n" +
+  '    methods: [{ id: "token", label: "API token", words: ["{profile}", "session", "start", "--json"], stdin: true }],\n'
+
 export const withDesktopTexts = (text: string, command: string, tagline: string, signIn: string): string => {
   const taglineLine = /^ {2}tagline: .*,$/m
   const block = /^ {2}signIn: \{\n[\s\S]*?\n {2}\},\n/m
@@ -478,7 +482,7 @@ export const withDesktopTexts = (text: string, command: string, tagline: string,
     throw new Error(`${IDENTITY_FILE}: no tagline and signIn to rewrite`)
   const texts = signInTexts(command, signIn)
   const signInBlock = texts
-    ? `  signIn: {\n    gives: ${JSON.stringify(texts.gives)},\n    asks: ${JSON.stringify(texts.asks)},\n  },\n`
+    ? `  signIn: {\n    gives: ${JSON.stringify(texts.gives)},\n    asks: ${JSON.stringify(texts.asks)},\n${signIn === "token" ? TOKEN_METHOD : ""}  },\n`
     : ""
   return text.replace(taglineLine, `  tagline: ${JSON.stringify(tagline)},`).replace(block, signInBlock)
 }

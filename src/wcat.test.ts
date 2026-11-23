@@ -16,5 +16,6 @@ describe("WCAT", () => {
 
     expect(v.safeParse(manifestSchema, manifest).issues).toBeUndefined()
     expect(manifest.desktop.tagline).toBe(WCAT.tagline)
+    expect(manifest.desktop.signIn?.methods).toEqual(WCAT.signIn?.methods)
   })
 })
