@@ -59,7 +59,7 @@ it("sync before session start says to sign in, and after it --offline sends noth
   const keyring = memoryKeyring()
   const fake = fakeServiceApi()
   const unsigned = await runCli(["work", "sync", "--json"], { keyring, service: fake })
-  expect(unsigned.json()).toMatchObject({ error: { code: "authentication_error" } })
+  expect(unsigned.json()).toMatchObject({ error: { code: "not_found", reason: "profile.unknown" } })
   expect(unsigned.err).toContain("session start")
   await runCli(["work", "session", "start", "--json"], { keyring, service: fake, stdin: FAKE_API_TOKEN })
   const sent = fake.calls.length
