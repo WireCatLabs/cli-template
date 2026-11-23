@@ -18,10 +18,8 @@ const accountOf = (command: Command) => {
   if (!account)
     throw new CliError(
       "authentication_error",
-      `${profile} is not signed in; run ${IDENTITY.command} ${profile} session start`,
-      {
-        reason: "auth.missing",
-      },
+      `profile ${profile} is not signed in — run \`${IDENTITY.command} ${profile} session start\``,
+      { reason: "session.missing" },
     )
   return account
 }
