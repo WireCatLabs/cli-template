@@ -221,7 +221,9 @@ describe("new", () => {
   })
 
   it("offers one category for each of cli-core's kinds, the tracker and content", () => {
-    expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(KINDS.length + 2)
+    expect(INTERVIEW.find((question) => question.key === "category")?.choices).toHaveLength(
+      new Set<string>([...KINDS, "tracker"]).size + 1,
+    )
   })
 
   it("offers the untrusted input of the category in the menu, and takes any choice as a flag", async () => {
