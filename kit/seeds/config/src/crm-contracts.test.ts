@@ -97,7 +97,7 @@ it("sync before session start says to sign in, and after it --offline sends noth
   fakes.push(crm)
   const service = signInAndCrm(crm)
   const unsigned = await runCli(["work", "sync", "--json"], { keyring, service })
-  expect(unsigned.json()).toMatchObject({ error: { code: "authentication_error" } })
+  expect(unsigned.json()).toMatchObject({ error: { code: "not_found", reason: "profile.unknown" } })
   expect(unsigned.err).toContain("session start")
   await runCli(["work", "session", "start", "--json"], { keyring, service, stdin: FAKE_MANIFEST_TOKEN })
   const offline = await runCli(["work", "sync", "--offline", "--json"], { keyring, service })

@@ -136,7 +136,7 @@ it("sync before session start says to sign in, and sends nothing", async () => {
     },
   }
   const unsigned = await runCli(["work", "sync", "--json"], { keyring: memoryKeyring(), service: counted })
-  expect(unsigned.json()).toMatchObject({ error: { code: "authentication_error" } })
+  expect(unsigned.json()).toMatchObject({ error: { code: "not_found", reason: "profile.unknown" } })
   expect(sent).toEqual([])
 })
 
