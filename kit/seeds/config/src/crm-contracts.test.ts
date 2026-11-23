@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
-import { parseCrmManifest } from "@wirecat/cli-core/crm"
+import { crmManifestProblems, parseCrmManifest } from "@wirecat/cli-core/crm"
 import {
   type CrmManifestFake,
   crmManifestFake,
@@ -27,6 +27,11 @@ afterEach(async () => {
   // A call the fake refused is one the API description does not allow: the source would fail on the real service.
   expect(fakes.splice(0).flatMap((fake) => fake.refusals)).toEqual([])
   await Promise.all(stores.splice(0).map((store) => store.close()))
+})
+
+// `pnpm source:check` says the same by hand; this keeps it in CI.
+it("the source reads only operations and paths the generated API has", () => {
+  expect(crmManifestProblems(manifest, API.manifest, definitions)).toEqual([])
 })
 
 describe("crmSourceContract over a fake of the API, from wirecat.config.ts", () => {
