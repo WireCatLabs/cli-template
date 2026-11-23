@@ -591,6 +591,9 @@ describe("new from this repository", () => {
     const withToken = read(join(token, "cal-cli"), "src/identity.ts")
     expect(withToken).toContain('  tagline: "A new WireCat CLI, started from cli-template",\n')
     expect(withToken).toContain('    asks: "An API token or key from the service.",\n')
+    expect(withToken).toContain(
+      'methods: [{ id: "token", label: "API token", words: ["{profile}", "session", "start", "--json"], stdin: true }],',
+    )
     const withNone = read(join(none, "cal-cli"), "src/identity.ts")
     expect(withNone).toContain('  tagline: "Cal events, offline",\n')
     expect(withNone).not.toContain("signIn")

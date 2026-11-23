@@ -184,6 +184,7 @@ describe("new --from-config", () => {
     expect(read(dir, "src/commands/api.ts")).toContain("serverVariables: siteOf")
     // The site the CLI was made against is not one it serves: each profile's own is added at run time.
     expect(read(dir, "src/identity.ts")).not.toContain("wp.acme.example")
+    expect(read(dir, "src/identity.ts")).toContain('site: "--site",\n        login: "--login",')
     expect(read(dir, "README.md")).toContain("`<route>.delete.force`")
   })
 
