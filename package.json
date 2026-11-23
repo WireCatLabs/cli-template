@@ -25,6 +25,7 @@
     "config",
     "contracts",
     "docs",
+    "glama.json",
     "lint",
     "scripts",
     "server.json",
