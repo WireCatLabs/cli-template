@@ -2,7 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process"
 import { chmodSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, expect, it } from "vitest"
+import { afterEach, expect, it as vitestIt } from "vitest"
 
 const root = join(import.meta.dirname, "..")
 const devBin = join(root, "node_modules/@wirecat/cli-base/dist/dev/bin.js")
@@ -10,6 +10,9 @@ const dirs: string[] = []
 afterEach(() => {
   for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true })
 })
+
+// bin/release takes the release lock with flock, which macOS and Windows do not ship.
+const it = vitestIt.skipIf(spawnSync("sh", ["-c", "command -v flock"]).status !== 0)
 
 const git = (cwd: string, ...args: string[]) => execFileSync("git", args, { cwd, encoding: "utf8" })
 
