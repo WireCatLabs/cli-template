@@ -47,7 +47,8 @@ export const NAME_QUESTIONS: Question[] = [
 
 // Keyed by cli-core's kinds, so a kind cli-core adds fails the typecheck until it has a category here; a type import,
 // so the kit still runs on Node alone. The values predate the kinds and stay, since scripts pass them to --category.
-const CATEGORIES: Record<Kind, Choice> = {
+// `tracker` is named beside Kind so this compiles against a cli-core before and after it became a kind.
+const CATEGORIES: Record<Kind | "tracker", Choice> = {
   messages: { value: "messenger", label: "messenger" },
   mail: { value: "mail", label: "mail" },
   notes: { value: "notes", label: "notes" },
@@ -55,6 +56,7 @@ const CATEGORIES: Record<Kind, Choice> = {
   meetings: { value: "meetings", label: "meetings" },
   events: { value: "calendar", label: "calendar" },
   crm: { value: "crm", label: "CRM (sales: deals, contacts, companies)" },
+  tracker: { value: "tracker", label: "issue tracker (issues, projects, teams)" },
 }
 
 export const INTERVIEW: Question[] = [
@@ -63,12 +65,8 @@ export const INTERVIEW: Question[] = [
     title: "Category",
     flag: "category",
     text: "What kind of tool is it?",
-    // A tracker's issues and a blog's posts are not kinds a search reads yet, so they have no key in CATEGORIES.
-    choices: [
-      ...Object.values(CATEGORIES),
-      { value: "tracker", label: "issue tracker (issues, projects, teams)" },
-      { value: "content", label: "blog or site content (posts, pages, tags)" },
-    ],
+    // A blog's posts are not a kind a search reads yet, so they have no key in CATEGORIES.
+    choices: [...Object.values(CATEGORIES), { value: "content", label: "blog or site content (posts, pages, tags)" }],
   },
   {
     key: "contentLang",
