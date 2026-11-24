@@ -28,8 +28,8 @@ const artifacts = generate(
   [
     typesGenerator({ path: "src/generated/types.ts" }),
     valibotGenerator({ path: "src/generated/schemas.ts", typesImport: "./types.js" }),
-    manifestGenerator({ path: "src/generated/manifest.ts" }),
-    definitionsGenerator({ path: "src/generated/definitions.ts" }),
+    manifestGenerator({ path: "src/generated/manifest.ts", coreImport: "@wirecat/cli-base/codegen/runtime" }),
+    definitionsGenerator({ path: "src/generated/definitions.ts", coreImport: "@wirecat/cli-base/codegen/runtime" }),
     coverageGenerator({
       path: "docs/dev/API_COVERAGE.md",
       title: "API coverage",

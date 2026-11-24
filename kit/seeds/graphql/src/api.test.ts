@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { graphqlFake, type SchemaNode, sampleOf } from "@wirecat/cli-base/codegen"
+import { graphqlFake, sampleOf } from "@wirecat/cli-base/codegen"
+import type { SchemaNode } from "@wirecat/cli-base/codegen/runtime"
 import { apiFlagOf, manifestBaseUrl, sendsBytes } from "@wirecat/cli-core/cli"
 import { pacePathFor } from "@wirecat/cli-core/sends"
 import { afterEach, expect, it } from "vitest"
