@@ -2,7 +2,7 @@
 # Publishes the version in package.json and tags it. Run on a clean `main` that matches origin/main. An agent may run
 # it without --local; --local is for the owner's first release only. When npm already has that version, or a higher
 # one, it raises it to the next free one through a pull request and publishes that (WC-REL-5). Nothing is published
-# until `pnpm release:check` passes.
+# until `pnpm release:check` passes: without --local its tests run in release.yml, the other checks here.
 #
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml, npm trusted publishing)
 #   bin/release --local   # publishes from this computer: NPM_TOKEN if exported, else the keyring, else `npm login`
@@ -197,7 +197,14 @@ if published; then
 fi
 
 echo "== checks for $version =="
-pnpm release:check
+if [ "$mode" = ci ]; then
+  # release.yml runs the tests on this commit before it publishes. Run here too, they only time out on a busy computer.
+  checks=$(node -p 'require("./package.json").scripts["release:check"]' |
+    sed -e 's/pnpm test:coverage && //' -e 's/ && pnpm test:coverage//')
+  sh -c "$checks"
+else
+  pnpm release:check
+fi
 
 if [ "$mode" = ci ]; then
   last_run() {

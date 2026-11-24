@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process"
-import { chmodSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, expect, it as vitestIt } from "vitest"
@@ -23,7 +23,7 @@ const stub = (dir: string, name: string, body: string) => {
 
 // npm has 0.1.2, so bin/release raises the version through a pull request. gh refuses to open it, which stops the run
 // right after the release branch is pushed, before anything could publish.
-const raised = (fragment: string, dated = "") => {
+const raised = (fragment: string, dated = "", releaseCheck = "") => {
   const work = mkdtempSync(join(tmpdir(), "release-level-"))
   dirs.push(work)
   const origin = join(work, "origin.git")
@@ -43,14 +43,23 @@ const raised = (fragment: string, dated = "") => {
   mkdirSync(join(repo, "changes"))
   writeFileSync(
     join(repo, "package.json"),
-    `${JSON.stringify({ name: "@example/acme-cli", version: dated ? "0.1.3" : "0.1.2" }, null, 2)}\n`,
+    `${JSON.stringify(
+      {
+        name: "@example/acme-cli",
+        version: dated ? "0.1.3" : "0.1.2",
+        ...(releaseCheck && { scripts: { "release:check": releaseCheck } }),
+      },
+      null,
+      2,
+    )}\n`,
   )
   writeFileSync(join(repo, "src/version.ts"), `export const VERSION = "${dated ? "0.1.3" : "0.1.2"}"\n`)
   writeFileSync(
     join(repo, "CHANGELOG.md"),
     `# Changelog\n\n${dated}## 0.1.2 — 19.11.2026\n\n### Fixed\n\n- **One.** A fix.\n`,
   )
-  writeFileSync(join(repo, "changes/feat-pages.md"), fragment)
+  writeFileSync(join(repo, "changes/.keep"), "")
+  if (fragment) writeFileSync(join(repo, "changes/feat-pages.md"), fragment)
   git(repo, "add", "-A")
   git(repo, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "init")
   git(repo, "tag", "v0.1.2")
@@ -59,7 +68,7 @@ const raised = (fragment: string, dated = "") => {
   stub(
     stubs,
     "pnpm",
-    `[ "$1" = install ] && exit 0\n[ "$1 $2" = "exec cli-dev" ] && shift 2 && exec node "${devBin}" "$@"\nexit 1`,
+    `echo "$*" >> "${join(work, "pnpm.log")}"\n[ "$1" = install ] && exit 0\n[ "$1 $2" = "exec cli-dev" ] && shift 2 && exec node "${devBin}" "$@"\n[ -n "${releaseCheck}" ] && exit 0\nexit 1`,
   )
   stub(
     stubs,
@@ -81,7 +90,8 @@ const raised = (fragment: string, dated = "") => {
     },
   })
   const branches = git(origin, "branch", "--format=%(refname:short)").split("\n").filter(Boolean)
-  return { run, branches, show: (branch: string, file: string) => git(origin, "show", `${branch}:${file}`) }
+  const pnpmCalls = () => readFileSync(join(work, "pnpm.log"), "utf8").split("\n").filter(Boolean)
+  return { run, branches, pnpmCalls, show: (branch: string, file: string) => git(origin, "show", `${branch}:${file}`) }
 }
 
 it("raises a taken version to the level its changes/ fragments need: an Added is a minor", () => {
@@ -108,4 +118,16 @@ it("raises a version dated by hand when the fragments merged since need more", (
   expect(branches).toContain("release/0.2.0")
   expect(JSON.parse(show("release/0.2.0", "package.json")).version).toBe("0.2.0")
   expect(show("release/0.2.0", "CHANGELOG.md")).toMatch(/## 0\.2\.0 — 20\.11\.2026\n\n### Added[\s\S]*### Fixed/)
+})
+
+it("leaves the tests to release.yml and runs the other checks before it starts the release run", () => {
+  const { run, pnpmCalls } = raised(
+    "",
+    "## 0.1.3 — 20.11.2026\n\n### Fixed\n\n- **Two.** Another fix.\n\n",
+    "pnpm lint && pnpm test:coverage && pnpm docs:check",
+  )
+  expect(run.stdout).toContain("== checks for 0.1.3 ==")
+  expect(pnpmCalls()).toEqual(expect.arrayContaining(["lint", "docs:check"]))
+  expect(pnpmCalls()).not.toContain("test:coverage")
+  expect(pnpmCalls()).not.toContain("release:check")
 })
