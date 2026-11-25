@@ -121,3 +121,34 @@ it("every option of the content commands runs over a synced copy", async () => {
   const refused = await ran(["api", create.command, "--body", "{}", "--dry-run"])
   expect(refused.json()).toMatchObject({ error: { code: "permission_error", details: { permission: "posts.create" } } })
 })
+
+// The mass-deletion guard is the owner's to lift, by count: a rescan only lists everything again.
+it("holds a sync that would mark every post deleted, rescan or not, until --allow-deletions names the count", async () => {
+  const keyring = memoryKeyring()
+  const [login, password] = FAKE_API_TOKEN.split(":") as [string, string]
+  await runCli(["guard", "session", "start", "--site", FAKE_SITE, "--login", login, "--json"], {
+    keyring,
+    service: fakeServiceApi(),
+    stdin: password,
+  })
+  const service = contentManifestFake(SOURCE, { api: API.manifest })
+  const ran = (argv: string[]) => runCli(["guard", ...argv, "--json"], { keyring, service })
+  const posts = async () =>
+    ((await ran(["posts", "list"])).json() as { items: { external_id: string; type: string }[] }).items.filter(
+      (one) => one.type === "post",
+    )
+  expect((await ran(["sync"])).code).toBe(0)
+  const ids = service.ids("post")
+  const listed = (await posts()).length
+  expect(listed).toBeGreaterThan(0)
+  for (const id of ids) service.remove("post", id)
+
+  const held = await ran(["sync", "--rescan"])
+  expect(held.code, held.err).toBe(0)
+  expect(held.out).toContain(`--allow-deletions ${ids.length}`)
+  expect((await posts()).length).toBe(listed)
+
+  const allowed = await ran(["sync", "--rescan", "--allow-deletions", String(ids.length)])
+  expect(allowed.code, allowed.err).toBe(0)
+  expect(await posts()).toEqual([])
+})

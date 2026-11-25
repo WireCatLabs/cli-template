@@ -1,5 +1,5 @@
 import { join } from "node:path"
-import { type ApiModel, adaptOpenApi, type Override, readWpJson, wpJsonToOpenApi } from "@wirecat/cli-base/codegen"
+import { type ApiModel, adaptOpenApi, type ModelOverride, readWpJson, wpJsonToOpenApi } from "@wirecat/cli-base/codegen"
 
 // SAMPLE: the WordPress namespaces the CLI offers. A plugin's namespace belongs to the sites that run the plugin;
 // batch/v1 is never offered, as one batch call runs other routes' writes past their own keys.
@@ -11,7 +11,7 @@ const NAMESPACES = ["wp/v2"]
  */
 export const specModel = async (
   root: string,
-): Promise<{ model: ApiModel; notes: string[]; overrides: Record<string, Override> }> => {
+): Promise<{ model: ApiModel; notes: string[]; overrides: Record<string, ModelOverride> }> => {
   const index = readWpJson(join(root, "spec/clidev"))
   // An application password's answer is marked secret by the converter, and cli-core offers no api command for it.
   const { document, omissions, overrides } = wpJsonToOpenApi(index, {
