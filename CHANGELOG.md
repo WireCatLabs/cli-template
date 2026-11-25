@@ -32,6 +32,10 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 - **A CRM CLI from a config checks its source against the generated API in CI.** `pnpm source:check` did it only when
   someone ran it by hand, so a config that reads an operation or path the API lacks passed CI. The seed's
   `crm-contracts.test.ts` now runs the same check.
+- **`bin/release` leaves the test matrix check to GitHub too.** `test:matrix:check` reads the argv log the tests
+  write, so once `bin/release` stopped running the tests here it failed on every release (0.35.0 of this template).
+  `ci.yml` now runs it right after `pnpm test`, so `release.yml` checks it on the commit it publishes, and a pull
+  request checks it as well, which it never did. A CLI gets both with its next `upgrade`.
 
 ## 0.34.0 — 23.11.2026
 
