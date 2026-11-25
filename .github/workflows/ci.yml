@@ -77,6 +77,9 @@ jobs:
         run: pnpm build
       - if: steps.scope.outputs.quick != 'true'
         run: pnpm test
+      # Reads the argv log the tests just wrote; bin/release leaves it here with the tests.
+      - if: steps.scope.outputs.quick != 'true'
+        run: pnpm run --if-present test:matrix:check
       - if: steps.scope.outputs.quick != 'true'
         run: pnpm smoke:node
 

@@ -124,10 +124,11 @@ it("leaves the tests to release.yml and runs the other checks before it starts t
   const { run, pnpmCalls } = raised(
     "",
     "## 0.1.3 — 20.11.2026\n\n### Fixed\n\n- **Two.** Another fix.\n\n",
-    "pnpm lint && pnpm test:coverage && pnpm docs:check",
+    "pnpm lint && pnpm test:coverage && pnpm test:matrix:check && pnpm docs:check",
   )
   expect(run.stdout).toContain("== checks for 0.1.3 ==")
   expect(pnpmCalls()).toEqual(expect.arrayContaining(["lint", "docs:check"]))
   expect(pnpmCalls()).not.toContain("test:coverage")
+  expect(pnpmCalls()).not.toContain("test:matrix:check")
   expect(pnpmCalls()).not.toContain("release:check")
 })
