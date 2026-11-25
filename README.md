@@ -259,7 +259,8 @@ Checked on the tools' own pages in November 2026. "Not documented" means the pag
 - **Some of it stays hand-written.** What only one service does goes into hooks. Writes to a CRM, OAuth sign-in and
   services without an OpenAPI description (Bitrix24's RPC methods, for example) are code you write, with cli-core's
   helpers. The CLI signs in with a token by default: OAuth is yours to wire up, from cli-core's `oauth` module.
-- **A config covers CRM sources today.** Other categories need their source written by hand.
+- **A config covers `crm`, `tracker` and `content` today.** A tracker needs a GraphQL schema, not an OpenAPI
+  description. Other categories need their source written by hand.
 - **The live check needs a test account.** WireCat's own CLIs need it before every release. A CLI made with
   `--preset generic` may skip it, and you then release without proof the CLI works against the real service.
 - **One base URL.** The api group calls one base URL, and the generator stops on a keyword it does not understand, so
@@ -267,8 +268,6 @@ Checked on the tools' own pages in November 2026. "Not documented" means the pag
 
 ## Roadmap
 
-- **GraphQL in `new`.** cli-base already generates commands from a GraphQL schema, and cli-core's next release
-  sends the calls. `new` does not take a GraphQL schema yet.
 - **Configs for more categories,** starting with files and documents, where Drive and Yandex Disk show the most to
   gain.
 - **OAuth from the description.** The sign-in built from the description's `securitySchemes`, not by hand.
