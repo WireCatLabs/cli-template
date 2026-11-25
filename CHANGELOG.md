@@ -5,6 +5,34 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.35.0 — 25.11.2026
+
+### Added
+
+- **A new CLI carries `glama.json`, naming `leemour` as its maintainer.** `glama.ai` lists an MCP server's repository
+  under its owner only with this file, and seven CLIs made from the template had none.
+- **A CRM CLI from a config has `account remove`, and its sign-in refuses an account another profile holds.**
+  cli-core's shared command keeps the local copy while another profile here still reads it, and `session start` of a
+  second profile to the same account is refused (`session.duplicate`), as the hand-written CRM CLIs do.
+  The seed's `src/commands/crm.ts` passes `account` to `addCrmCommands`, and a CRM config's `session.ts` passes
+  `claim: crmAccountClaim(…)`.
+- **A new CLI with a token sign-in tells WireCat Desktop how to sign it in.** `src/identity.ts` declares the token
+  method (`session start --json`, the token on stdin) under `signIn.methods`, so `--wcat-describe` carries it and
+  Desktop asks for the token in its own window, with no change to Desktop. Before, a new CLI added to Desktop by its
+  npm name could sign in only in a terminal. `clidev new` writes it only for `--sign-in token`.
+
+### Fixed
+
+- **The README says a config covers `crm`, `tracker` and `content`.** It still said CRM only, and its roadmap still
+  promised GraphQL in `new`, which 0.30.0 shipped.
+- **`bin/release` leaves the tests to GitHub.** Without `--local` it runs every check of `release:check` here except
+  `test:coverage`, which `release.yml` runs on the same commit before it publishes. On a busy computer the local tests
+  timed out and stopped releases whose tests passed on GitHub. `--local` and `--first` still run all of
+  `release:check`.
+- **A CRM CLI from a config checks its source against the generated API in CI.** `pnpm source:check` did it only when
+  someone ran it by hand, so a config that reads an operation or path the API lacks passed CI. The seed's
+  `crm-contracts.test.ts` now runs the same check.
+
 ## 0.34.0 — 23.11.2026
 
 ### Fixed
