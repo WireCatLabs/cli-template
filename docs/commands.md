@@ -53,11 +53,11 @@ clidev commands info [path]
 
 ## `clidev session`
 
-keep this profile's Example Comments token in the OS keyring
+keep this profile's Example Comments API token in the OS keyring
 
 ### `clidev session start`
 
-sign this profile in: the Example Comments API token is asked hidden or read from stdin, never taken as an argument, checked against the service, and only then kept in the keyring, or in a private file
+sign this profile in: the Example Comments API token is asked hidden or read from stdin, never taken as an argument, checked with Example Comments, and only then kept in the keyring, or in a private file
 
 **Changes something on this computer only.**
 

@@ -19,6 +19,7 @@ The order: **category → spec → generate → source → ready**. Read a refer
 
 - [references/openapi.md](references/openapi.md): the service publishes OpenAPI, Swagger or Google Discovery (step 4).
 - [references/sources.md](references/sources.md): the CLI syncs documents or CRM records into the store (step 5).
+- [references/sign-in.md](references/sign-in.md): `session start` with a token or in the browser (step 5).
 - [references/release.md](references/release.md): the first release and the live check (step 7).
 - [references/review-brief.md](references/review-brief.md): the brief for the reviewer of each slice (step 6).
 
@@ -137,6 +138,7 @@ CI's `repo-setup` fails until `bin/setup-github` has run; the tests still run be
   server there); every list pages the same way
   the reference CLI does; `--json` answers have the same envelope and field names as the reference CLI's for the same
   thing (a meeting is a meeting in zoom-cli and here).
+- **Sign-in** is cli-core's, never a copy: [references/sign-in.md](references/sign-in.md).
 - A secret (token, cookie, session) lives in the keyring through cli-core's token store; it is never an argument,
   never printed, never logged, never in the store.
 - Tests against a strict fake that refuses what the real service refuses: `fakeApi` from the spec, or one built from

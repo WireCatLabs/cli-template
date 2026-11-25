@@ -34,10 +34,11 @@ Keep, the same for every service:
 - **Token storage**, cli-core's `ProfileTokenStore` (`@wirecat/cli-core/cli`), built in `src/context.ts`: the
   environment variable, then the keyring, then a private file; a run with moved folders never replaces the owner's
   entry (WC-SECR-4, WC-SECR-24). `need(profile)` is the one `session.missing` refusal every token CLI gives.
-- **Sign-in**, `src/commands/session.ts`: `session start | status | end | list`. The token is read hidden or from
-  stdin, never as an argument, and checked against the service before it is kept (WC-ACCT-12, WC-SECR-5). Replace
-  the `me` check with your service's. A service with OAuth signs in through cli-core's oauth module instead, as
-  [gcal-cli](https://github.com/WireCatLabs/gcal-cli) does (WC-SECR-22).
+- **Sign-in**, `src/commands/session.ts`: `session start | status | end | list` is cli-core's `tokenSessionCommand`.
+  The token is read hidden or from stdin, never as an argument, and checked with the service before it is kept
+  (WC-ACCT-12, WC-SECR-5). Replace the `me` check in `verify` with your service's. A service that signs in in the
+  browser uses cli-core's `oauthSessionCommand` with `oauthPreset` instead (WC-SECR-22). Build no session commands of
+  your own.
 - **The command context**, `src/context.ts`: settings, the keyring and the run come from cli-core's `baseContext`
   only, and every request runs inside its `run()`, with the `events` it gives passed to the transport. That is what
   bounds a command by `--timeout` and records a run named after it (WC-LIFE-5, WC-LIFE-15).
