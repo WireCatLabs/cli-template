@@ -23,7 +23,7 @@ const stub = (dir: string, name: string, body: string) => {
 
 // npm has 0.1.2, so bin/release raises the version through a pull request. gh refuses to open it, which stops the run
 // right after the release branch is pushed, before anything could publish.
-const raised = (fragment: string, dated = "", releaseCheck = "") => {
+const raised = (fragment: string, dated = "", releaseCheck = "", liveChecked = false) => {
   const work = mkdtempSync(join(tmpdir(), "release-level-"))
   dirs.push(work)
   const origin = join(work, "origin.git")
@@ -37,8 +37,10 @@ const raised = (fragment: string, dated = "", releaseCheck = "") => {
   cpSync(join(root, "bin/release"), join(repo, "bin/release"))
   for (const file of ["release-lock.sh", "release-lock-info.mjs"])
     cpSync(join(root, "config/wirecat", file), join(repo, "config/wirecat", file))
-  mkdirSync(join(repo, "kit"))
-  writeFileSync(join(repo, "kit/.keep"), "")
+  if (!liveChecked) {
+    mkdirSync(join(repo, "kit"))
+    writeFileSync(join(repo, "kit/.keep"), "")
+  }
   mkdirSync(join(repo, "src"))
   mkdirSync(join(repo, "changes"))
   writeFileSync(
@@ -62,6 +64,12 @@ const raised = (fragment: string, dated = "", releaseCheck = "") => {
   if (fragment) writeFileSync(join(repo, "changes/feat-pages.md"), fragment)
   git(repo, "add", "-A")
   git(repo, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "init")
+  if (liveChecked) {
+    mkdirSync(join(repo, "docs/dev"), { recursive: true })
+    execFileSync("node", [devBin, "live", "record", "--script", "bin/live"], { cwd: repo })
+    git(repo, "add", "-A")
+    git(repo, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "live check")
+  }
   git(repo, "tag", "v0.1.2")
   git(repo, "push", "-q", "origin", "main", "v0.1.2")
 
@@ -75,7 +83,22 @@ const raised = (fragment: string, dated = "", releaseCheck = "") => {
     "npm",
     'case "$*" in\n  *" versions "*) echo \'["0.1.2"]\' ;;\n  "view @example/acme-cli version "*|"view @example/acme-cli@0.1.2 version "*) echo 0.1.2 ;;\n  *) exit 1 ;;\nesac',
   )
-  stub(stubs, "gh", "exit 1")
+  // With a live record, gh lands the version pull request, so the run goes on to what follows the raise.
+  stub(
+    stubs,
+    "gh",
+    liveChecked
+      ? `echo "$*" >> "${join(work, "gh.log")}"
+case "$*" in
+  "pr create "*) echo https://github.com/example/acme-cli/pull/1 ;;
+  *"--jq length"*) echo 1 ;;
+  "pr checks "*) ;;
+  *mergeStateStatus*) echo CLEAN ;;
+  "pr merge "*) git push -q origin "$(git for-each-ref --format='%(refname:short)' refs/heads/release/ | head -1):main" ;;
+  *) exit 1 ;;
+esac`
+      : "exit 1",
+  )
   const run = spawnSync("sh", ["bin/release"], {
     cwd: repo,
     encoding: "utf8",
@@ -90,8 +113,15 @@ const raised = (fragment: string, dated = "", releaseCheck = "") => {
     },
   })
   const branches = git(origin, "branch", "--format=%(refname:short)").split("\n").filter(Boolean)
+  const ghCalls = () => readFileSync(join(work, "gh.log"), "utf8")
   const pnpmCalls = () => readFileSync(join(work, "pnpm.log"), "utf8").split("\n").filter(Boolean)
-  return { run, branches, pnpmCalls, show: (branch: string, file: string) => git(origin, "show", `${branch}:${file}`) }
+  return {
+    run,
+    branches,
+    ghCalls,
+    pnpmCalls,
+    show: (branch: string, file: string) => git(origin, "show", `${branch}:${file}`),
+  }
 }
 
 it("raises a taken version to the level its changes/ fragments need: an Added is a minor", () => {
@@ -131,4 +161,13 @@ it("leaves the tests to release.yml and runs the other checks before it starts t
   expect(pnpmCalls()).not.toContain("test:coverage")
   expect(pnpmCalls()).not.toContain("test:matrix:check")
   expect(pnpmCalls()).not.toContain("release:check")
+})
+
+it("stops a raised version that has no live check of its own before it starts the release run", () => {
+  const { run, ghCalls } = raised("### Added\n\n- **Pages.** Pages are written.\n", "", "pnpm lint", true)
+  expect(run.stdout).toContain("publishing 0.2.0 instead")
+  expect(run.stderr).toContain("no live check recorded for 0.2.0")
+  expect(run.status).not.toBe(0)
+  expect(run.stdout).not.toContain("== checks for 0.2.0 ==")
+  expect(ghCalls()).not.toMatch(/^(run|workflow) /m)
 })

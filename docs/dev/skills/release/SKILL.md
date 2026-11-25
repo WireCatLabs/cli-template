@@ -36,7 +36,8 @@ The rules are the handbook's [Releases page](../../../../node_modules/@wirecat/c
    owner's yes (`WC-TEST-18`). When it passes, `pnpm exec cli-dev live record --script <the script you ran>` appends
    the version, the commit, the date and a hash of the checked files to `docs/dev/live-checks.txt`; commit that line.
    `bin/release` refuses a version with no line, or whose `src/`, `package.json` or lockfile differ from the hashed
-   ones (`WC-REL-17`). It needs no branch commit, so a fresh clone releases after the squash merge.
+   ones (`WC-REL-17`). It needs no branch commit, so a fresh clone releases after the squash merge. When
+   `bin/release` raises the version, it lands the raise and then stops until the new version has its own line.
 9. **The pull request.** Open `chore(release): <version>` with a `## Conformance` section: the `release:check`
    result, the live check's line, the fresh audit's report and the slice reviews' results. `release-pr.yml` fails a
    pull request that changes the version without one.
