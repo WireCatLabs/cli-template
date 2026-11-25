@@ -95,7 +95,7 @@ const signInOf = (preset: string): string => {
 
 const notWiredYet = (config: CliConfig): string[] => [
   ...(config.auth.preset === "oauth2-pkce"
-    ? ["auth: the oauth2-pkce sign-in; session keeps the template's sample"]
+    ? ["auth: the oauth2-pkce sign-in; session keeps the token sample until you switch it to oauthSessionCommand"]
     : []),
   ...(config.auth.preset === "token" && !config.auth.verify
     ? ["auth.verify: the call that checks a token; without it at new, session keeps the template's sample"]

@@ -258,7 +258,8 @@ Checked on the tools' own pages in November 2026. "Not documented" means the pag
 - **Node and TypeScript only.** Node 22.16 or 24 and later, with pnpm. It builds no single binary.
 - **Some of it stays hand-written.** What only one service does goes into hooks. Writes to a CRM, OAuth sign-in and
   services without an OpenAPI description (Bitrix24's RPC methods, for example) are code you write, with cli-core's
-  helpers. The CLI signs in with a token by default: OAuth is yours to wire up, from cli-core's `oauth` module.
+  helpers. The CLI signs in with a token by default, through cli-core's `tokenSessionCommand`. For OAuth, switch
+  `src/commands/session.ts` to cli-core's `oauthSessionCommand`.
 - **A config covers `crm`, `tracker` and `content` today.** A tracker needs a GraphQL schema, not an OpenAPI
   description. Other categories need their source written by hand.
 - **The live check needs a test account.** WireCat's own CLIs need it before every release. A CLI made with

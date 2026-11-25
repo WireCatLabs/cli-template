@@ -9,7 +9,7 @@ it("session start reads the token from stdin and checks it before keeping it; st
   const keyring = memoryKeyring()
   const service = fakeComments()
   const started = await runCli(["personal", "session", "start", "--json"], { keyring, service, stdin: FAKE_TOKEN })
-  expect(started.json().item).toMatchObject({ verified: true, user: { id: "u1" } })
+  expect(started.json().item).toMatchObject({ verified: true, id: "u1" })
   const status = await runCli(["personal", "session", "status", "--check", "--json"], { keyring, service })
   expect(status.json().item).toMatchObject({ state: "saved", token_from: "keyring", verified: true })
   expect((await runCli(["session", "list", "--json"], { keyring })).json().items).toContainEqual(
