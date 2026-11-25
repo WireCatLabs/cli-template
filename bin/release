@@ -198,9 +198,11 @@ fi
 
 echo "== checks for $version =="
 if [ "$mode" = ci ]; then
-  # release.yml runs the tests on this commit before it publishes. Run here too, they only time out on a busy computer.
+  # release.yml runs the tests on this commit before it publishes, and the test matrix check that needs their argv
+  # log. Run here too, they only time out on a busy computer.
   checks=$(node -p 'require("./package.json").scripts["release:check"]' |
-    sed -e 's/pnpm test:coverage && //' -e 's/ && pnpm test:coverage//')
+    sed -e 's/pnpm test:coverage && //' -e 's/ && pnpm test:coverage//' \
+      -e 's/pnpm test:matrix:check && //' -e 's/ && pnpm test:matrix:check//')
   sh -c "$checks"
 else
   pnpm release:check

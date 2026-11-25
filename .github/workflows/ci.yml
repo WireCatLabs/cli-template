@@ -77,6 +77,12 @@ jobs:
         run: pnpm build
       - if: steps.scope.outputs.quick != 'true'
         run: pnpm test
+      # Reads the argv log the tests just wrote; bin/release leaves it here with the tests. Node 22.16 loads the
+      # matrix's .ts program only with the flag.
+      - if: steps.scope.outputs.quick != 'true'
+        env:
+          NODE_OPTIONS: --experimental-strip-types
+        run: pnpm run --if-present test:matrix:check
       - if: steps.scope.outputs.quick != 'true'
         run: pnpm smoke:node
 
