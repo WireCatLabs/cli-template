@@ -15,6 +15,9 @@ Every step here is the owner's: hand over the absolute path and the one command,
 3. **The first publish.** After the release pull request merges, the owner runs `bin/release --first`: it publishes
    from the owner's machine, since npm's trusted publishing needs the package to exist, and prints the trusted
    publisher to set on npm. Every later release goes through CI.
+   A later release records the version `package.json` holds when the check runs. When `changes/` fragments raise it,
+   `bin/release` first lands the version pull request; if it then stops (a failed check), the rerun asks for a record
+   of the new version, so run `bin/live` once more on main (linear-cli 0.3.0, 2026-11-24).
 4. **The lists.** The pull requests to cli-base, cli-core and cli-docs with the entries `new` printed.
 
 A live check runs only with the owner's yes for that run. An agent never runs the CLI against the owner's account on
