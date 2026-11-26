@@ -5,6 +5,24 @@ Notable changes to `@wirecat/cli-template`. One section per version, newest firs
 
 <!-- cspell:words bitrix clawhub gcal katex openclaw smol whatsapp -->
 
+## 0.37.0 — 26.11.2026
+
+### Changed — may break callers
+
+- **The sample sign-in is cli-core's `tokenSessionCommand`.** A new CLI's `src/commands/session.ts` no longer builds
+  `session start`, `status`, `end` and `list` by hand: it hands cli-core a `verify` that asks the service whose the
+  token is. `session start --json` now shows the account's fields at the top of its item (`id`, `name`) in place of a
+  `user` object. The [sign-in reference](kit/skills/new-cli/references/sign-in.md) says how to switch to
+  `oauthSessionCommand` for a sign-in in the browser.
+
+### Fixed
+
+- **cli-core 1.3.0.** `session status` and `session list` are cli-core's own commands now, so the MCP snapshot
+  `contracts/mcp-catalogue.json` no longer lists them as this CLI's own.
+- **`bin/release` checks the live record of the version it publishes.** It checked the version in `package.json`
+  before it raised it, so a raised version went out with no live check of its own (slack-cli 0.3.0, checked as
+  0.2.0). The check now runs once the version is settled, before the checks and the release run.
+
 ## 0.36.0 — 25.11.2026
 
 ### Changed — may break callers
