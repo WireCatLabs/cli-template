@@ -21,6 +21,7 @@ Works with:
   wordpress               WordPress posts and pages, searchable with your other WireCat data
   linear                  Linear issues and projects, searchable with your other WireCat data
 
+              clidev session list  your profiles and their logged-in accounts
 Next:         clidev commands      every command, by section
               clidev help options  output, offline, timeouts, dry run
 For agents:   clidev skill show    rules and the discovery loop
