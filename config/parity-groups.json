@@ -1,7 +1,7 @@
 [
   {
     "name": "template",
-    "members": ["clidev", "tg", "max", "memo", "drive", "zm", "wa"],
+    "members": ["clidev", "tg", "max", "wcat", "drive", "zm", "wa"],
     "covers": ["commands", "upgrade"],
     "differences": [
       {
@@ -51,13 +51,13 @@
   },
   {
     "name": "template-skill",
-    "members": ["clidev", "tg", "max", "memo", "zm", "wa"],
+    "members": ["clidev", "tg", "max", "wcat", "zm", "wa"],
     "covers": ["skill"],
     "differences": []
   },
   {
     "name": "template-runs",
-    "members": ["clidev", "tg", "max", "wa", "memo", "drive", "zm"],
+    "members": ["clidev", "tg", "max", "wa", "wcat", "drive", "zm"],
     "covers": ["runs"],
     "differences": []
   }

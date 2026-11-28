@@ -67,7 +67,7 @@ const REFERENCES: Record<string, string[]> = {
   files: ["ydisk-cli", "drive-cli", "notion-cli"],
   calendar: ["gcal-cli"],
   meetings: ["zoom-cli"],
-  notes: ["cli-memo"],
+  notes: ["files-cli"],
   crm: ["bitrix24-cli"],
 }
 
@@ -155,7 +155,7 @@ export const withMonthlyTime = (text: string, time: MonthlyTime): string => {
 export const parityGroups = (command: string): unknown[] => [
   {
     name: command,
-    members: [command, "tg", "max", "memo", "drive", "zm", "wa"],
+    members: [command, "tg", "max", "wcat", "drive", "zm", "wa"],
     covers: ["commands", "upgrade"],
     differences: [],
   },

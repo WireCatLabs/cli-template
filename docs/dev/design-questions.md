@@ -17,7 +17,7 @@ Ask these only when the reference CLI does not already answer them, after the se
 ## Search
 
 1. What should a search find: titles only, the full text, names of people?
-2. Should `search all` and `memo context <person>` show its records?
+2. Should `search all` and `wcat context <person>` show its records?
 3. What must work without a network?
 
 ## Security
