@@ -1,6 +1,7 @@
 # Use it
 
-This page explains how a command is built, and how an agent uses the tool. Read it before your first command.
+Run your first command, read the answer from a script, and give your agent the same commands. Each command names
+the account it works on, and your agent can do only what the profile's permissions allow.
 
 ## The profile comes first
 
@@ -15,8 +16,8 @@ command without one stops with exit code 2 and lists the profiles on this comput
 
 ## Output for scripts
 
-Every command except `mcp serve` on stdin and stdout takes `--json`, and prints one JSON value on stdout. Errors are JSON on stderr, with a code to branch
-on. The [command reference](commands.md) lists the codes.
+Every command except `mcp serve` on stdin and stdout takes `--json`, and prints one JSON value on stdout. Errors
+are JSON on stderr, with a code to branch on. The [command reference](commands.md) lists the codes.
 
 ## Agents
 
@@ -28,8 +29,8 @@ leaves Hermes out. `clidev personal mcp serve` serves the profile's commands ove
 claude mcp add clidev -- clidev personal mcp serve
 ```
 
-The server offers every command, the ones that write included. The profile's permissions decide what runs; see
-[settings](configuration.md#permissions).
+The server offers every command, the ones that write included. The profile's permissions decide what runs, as
+[settings](configuration.md#permissions) explains.
 
 For ChatGPT and Claude in the browser,
 `clidev personal mcp serve --http --public-url https://laptop.example.ts.net` serves on `127.0.0.1` (port 8765, or

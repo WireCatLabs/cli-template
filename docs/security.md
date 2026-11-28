@@ -1,12 +1,14 @@
 # Security
 
-What WireCat CLIs share — the keyring, permissions, MCP and what never reaches a log — is on the
-[shared security page](https://wirecat.dev/en/docs/security). This page keeps only what is particular to `clidev`.
+Know where `clidev` keeps your token and settings, what a run record holds, and how to end every browser login.
+The keyring, the permissions and the MCP rules that every WireCat tool shares are on the
+[shared security page](https://wirecat.dev/en/docs/security).
 
 `clidev` keeps its settings in `config.json` and its state in the folders `clidev doctor` shows. Its one service is
 the sample, Example Comments, whose address never resolves. `session start` keeps the service's token in the OS
 keyring, or in a private file where no keyring works; the token goes only into the request's Authorization header,
-never into an address, an answer, a run record or the send journal.
+never into an address, an answer, a run record or the send journal (the list of writes a command made, kept
+so that a retry does not repeat one).
 
 `clidev personal mcp serve --http` listens on `127.0.0.1` only, for browser apps that reach it through your own
 tunnel. Each app logs in with a one-time code, and the server keeps a hash of each login it gives, in the state
