@@ -37,7 +37,7 @@ choice: never pick a profile, and never run the CLI on a real account without th
    meetings → zoom-cli; messenger → whatsapp-cli, then tg-cli; mail → mail-cli; calendar → gcal-cli;
    files and documents → **ydisk-cli** for the wiring, drive-cli for the command tree, notion-cli for a
    source with a change feed;
-   CRM → bitrix24-cli; notes → cli-memo. Read its `README.md`, `docs/dev/DESIGN.md`, `commands --json`, the store
+   CRM → bitrix24-cli; notes → files-cli. Read its `README.md`, `docs/dev/DESIGN.md`, `commands --json`, the store
    writes and the sync. Write down the command tree you will mirror.
 2. **What cli-core and cli-base export**: their `package.json` exports and the type declarations in `node_modules`
    (or on their `origin/main` when you need what is not released), and the

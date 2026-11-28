@@ -41,7 +41,7 @@ describe("new", () => {
   it.each([
     ["messenger", "whatsapp-cli", "messenger"],
     ["mail", "mail-cli", "mail"],
-    ["notes", "cli-memo", "notes"],
+    ["notes", "files-cli", "notes"],
     ["files", "notion-cli", "files and documents"],
     ["calendar", "gcal-cli", "calendar"],
     ["meetings", "zoom-cli", "meetings"],

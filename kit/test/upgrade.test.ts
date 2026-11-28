@@ -115,7 +115,7 @@ describe("upgrade", () => {
     expect(read(dir, ".github/workflows/ci.yml")).toContain("node dist/bin/cal.js personal doctor --json")
     const agents = read(dir, "AGENTS.md")
     expect(agents).toContain("Keep CAL_HOME and tokens out of logs.")
-    expect(agents).toContain("[cli-memo](https://github.com/WireCatLabs/cli-memo)")
+    expect(agents).toContain("[files-cli](https://github.com/WireCatLabs/files-cli)")
     expect(read(dir, "docs/meta.json")).toMatch(
       /<<<<<<< this CLI[\s\S]*Calendar[\s\S]*=======[\s\S]*>>>>>>> template now/,
     )
@@ -148,7 +148,7 @@ describe("upgrade", () => {
     await upgrade({ dryRun: false, mode: "replace" })
 
     expect(read(dir, "docs/meta.json")).toBe('{ "title": "cal", "pages": [] }\n')
-    expect(read(dir, "AGENTS.md")).not.toContain("cli-memo")
+    expect(read(dir, "AGENTS.md")).not.toContain("files-cli")
     expect(read(dir, "README.md")).toBe("# cal\n\nOur own words.\n")
     expect(manifest(dir).version).toBe("0.2.0")
   })
