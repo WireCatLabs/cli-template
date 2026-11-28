@@ -1,7 +1,10 @@
 # Settings
 
+Set a limit, change what an agent may do, or choose which runs are kept, for one profile or for all of them. Each
+change is one command, and `config show` tells you where each value came from.
+
 Settings live in one file, `config.json`, in the folder `clidev doctor` shows. Each profile has its own part,
-and `defaults` apply to every profile. This page lists how to see and change them.
+and `defaults` apply to every profile.
 
 ```sh
 clidev personal config show
