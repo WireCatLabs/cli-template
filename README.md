@@ -282,6 +282,23 @@ each file would get and writes nothing. The files that are yours from the start,
 `src/commands/`, `README.md` and `package.json`, are never touched. The details are in the
 [kit reference](kit/README.md#upgrade).
 
+## cli-core's types come from its `-dev` release
+
+The `@wirecat/cli-core` version your users install has no type files. Each cli-core release also publishes the same
+code with them as `X.Y.Z-dev`. A CLI made from this template pins `X.Y.Z` in `package.json` and overrides it in
+`pnpm-workspace.yaml`:
+
+```yaml
+overrides:
+  "@wirecat/cli-core": X.Y.Z-dev
+```
+
+pnpm reads `pnpm-workspace.yaml` only in the project it installs, and npm and Bun never read it, so your checkout
+gets the types and your users get the lean `X.Y.Z`. Without the line, `pnpm typecheck` fails with TS7016, "Could not find a declaration file for
+module '@wirecat/cli-core'". Add the line and run `pnpm install`. `npx cli-dev adopt <x.y.z>` moves the pin and the
+override together, and `pnpm version:check` fails when they disagree
+([WC-TOOL-21](node_modules/@wirecat/cli-base/docs/standards/toolchain.md)).
+
 ## Publishing outside WireCat
 
 A CLI made outside WireCat publishes under its own npm scope, such as `@example/poke-cli`. `new --preset generic`

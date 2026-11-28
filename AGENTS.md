@@ -6,6 +6,14 @@ file and over every other document in this repository. The handbook ships inside
 touches (`WC-<AREA>-<n>`) in the commit message and the pull request. The rules of this CLI alone are in
 [CLAUDE.md](CLAUDE.md).
 
+## cli-core's types
+
+The `@wirecat/cli-core` that users install has no type files; its `X.Y.Z-dev` twin has them. Keep
+`"@wirecat/cli-core": "X.Y.Z"` in `package.json` and `"@wirecat/cli-core": X.Y.Z-dev` under `overrides:` in
+`pnpm-workspace.yaml`, the same `X.Y.Z`. TS7016 ("Could not find a declaration file for module '@wirecat/cli-core'")
+means the override is missing. Move cli-core with `cli-dev adopt <x.y.z>`, which changes both lines; `pnpm
+version:check` fails when they disagree (WC-TOOL-21).
+
 ## Design
 
 [docs/dev/DESIGN.md](docs/dev/DESIGN.md) holds the owner's answers to the
