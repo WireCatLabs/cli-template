@@ -138,7 +138,7 @@ export const wirecatMonthlyTime = (repo: string, taken: Map<string, string>): Mo
 }
 
 const cliBaseFile = (path: string): string =>
-  readFileSync(join(dirname(createRequire(import.meta.url).resolve("@wirecat/cli-base")), "..", path), "utf8")
+  readFileSync(join(dirname(createRequire(import.meta.url).resolve("@wirecat/cli-base/package.json")), path), "utf8")
 
 const ciPage = (): string => cliBaseFile("docs/standards/ci.md")
 
